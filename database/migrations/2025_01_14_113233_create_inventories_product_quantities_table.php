@@ -20,7 +20,7 @@ return new class extends Migration
             $table->decimal('inventory_diff_quantity', 15, 4)->nullable()->default(0);
             $table->boolean('inventory_quantity_set')->default(0);
             $table->date('scheduled_at')->nullable();
-            $table->date('incoming_at');
+            $table->datetime('incoming_at');
 
             $table->foreignId('product_id')
                 ->constrained('products_products')

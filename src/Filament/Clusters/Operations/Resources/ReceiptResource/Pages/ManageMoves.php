@@ -19,7 +19,7 @@ class ManageMoves extends ManageRelatedRecords
 
     protected static string $relationship = 'moves';
 
-    protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
+    protected static ?string $navigationIcon = 'heroicon-o-arrows-right-left';
 
     public function form(Form $form): Form
     {

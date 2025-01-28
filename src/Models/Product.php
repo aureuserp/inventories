@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Webkul\Chatter\Traits\HasChatter;
 use Webkul\Chatter\Traits\HasLogActivity;
 use Webkul\Field\Traits\HasCustomFields;
+use Webkul\Inventory\Enums;
 use Webkul\Inventory\Enums\ProductTracking;
 use Webkul\Product\Models\Product as BaseProduct;
 use Webkul\Security\Models\User;
@@ -70,6 +71,11 @@ class Product extends BaseProduct
         'creator.name'  => 'Creator',
     ];
 
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
+    }
+
     public function routes(): BelongsToMany
     {
         return $this->belongsToMany(Route::class, 'inventories_product_routes', 'product_id', 'route_id');
@@ -98,5 +104,15 @@ class Product extends BaseProduct
     public function responsible(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function getOnHandQuantityAttribute(): float
+    {
+        return $this->quantities()
+            ->whereHas('location', function ($query) {
+                $query->where('type', Enums\LocationType::INTERNAL)
+                    ->where('is_scrap', false);
+            })
+            ->sum('quantity');
     }
 }

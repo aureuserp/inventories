@@ -209,15 +209,4 @@ class EditReceipt extends EditRecord
             }
         });
     }
-
-    public function haveSufficientQty(Operation $record): bool
-    {
-        foreach ($record->moves as $move) {
-            if ($move->product->quantities->sum('qty') < $move->requested_qty) {
-                return false;
-            }
-        }
-
-        return true;
-    }
 }

@@ -68,7 +68,7 @@ class ProductCategoryResource extends Resource
                                 Forms\Components\Fieldset::make(__('inventories::filament/clusters/configurations/resources/product-category.form.sections.settings.fieldsets.logistics.title'))
                                     ->schema([
                                         Forms\Components\Select::make('warehouses')
-                                            ->label(__('inventories::filament/clusters/configurations/resources/product-category.form.sections.settings.fieldsets.logistics.title'))
+                                            ->label(__('inventories::filament/clusters/configurations/resources/product-category.form.sections.settings.fieldsets.logistics.fields.routes'))
                                             ->relationship('routes', 'name')
                                             ->searchable()
                                             ->preload()
@@ -76,9 +76,9 @@ class ProductCategoryResource extends Resource
                                     ])
                                     ->columns(1),
 
-                                Forms\Components\Fieldset::make(__('inventories::filament/clusters/configurations/resources/product-category.form.sections.settings.fieldsets.inventory-valuation.title'))
-                                    ->schema([
-                                    ]),
+                                // Forms\Components\Fieldset::make(__('inventories::filament/clusters/configurations/resources/product-category.form.sections.settings.fieldsets.inventory-valuation.title'))
+                                //     ->schema([
+                                //     ]),
                             ]),
                     ])
                     ->columnSpan(['lg' => 1]),

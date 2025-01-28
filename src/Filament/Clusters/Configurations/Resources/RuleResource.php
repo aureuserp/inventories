@@ -18,6 +18,7 @@ use Webkul\Inventory\Filament\Clusters\Configurations\Resources\RuleResource\Pag
 use Webkul\Inventory\Models\Route;
 use Webkul\Inventory\Models\Rule;
 use Webkul\Inventory\Settings\WarehouseSettings;
+use Webkul\Inventory\Models\OperationType;
 
 class RuleResource extends Resource
 {
@@ -78,7 +79,10 @@ class RuleResource extends Resource
                                             ->relationship('operationType', 'name')
                                             ->searchable()
                                             ->preload()
-                                            ->required(),
+                                            ->required()
+                                            ->getOptionLabelFromRecordUsing(function (OperationType $record) {
+                                                return $record->warehouse->name . ': ' . $record->name;
+                                            }),
                                         Forms\Components\Select::make('source_location_id')
                                             ->label(__('inventories::filament/clusters/configurations/resources/rule.form.sections.general.fields.source-location'))
                                             ->relationship('sourceLocation', 'full_name')

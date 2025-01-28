@@ -10,6 +10,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use Webkul\Inventory\Filament\Clusters\Configurations\Resources\ProductAttributeResource;
 use Webkul\Inventory\Filament\Clusters\Products\Resources\ProductResource;
 use Webkul\Inventory\Settings\ProductSettings;
 use Webkul\Product\Models\ProductAttribute;
@@ -46,13 +47,14 @@ class ManageAttributes extends ManageRelatedRecords
         return $form
             ->schema([
                 Forms\Components\Select::make('attribute_id')
-                    ->label(__('inventories::filament/clusters/products/resources/product/pages/manage-attributes.form.employee'))
+                    ->label(__('inventories::filament/clusters/products/resources/product/pages/manage-attributes.form.attribute'))
                     ->required()
                     ->relationship('attribute', 'name')
                     ->searchable()
-                    ->preload(),
+                    ->preload()
+                    ->createOptionForm(fn (Forms\Form $form): Form => ProductAttributeResource::form($form)),
                 Forms\Components\Select::make('options')
-                    ->label(__('inventories::filament/clusters/products/resources/product/pages/manage-attributes.form.employee'))
+                    ->label(__('inventories::filament/clusters/products/resources/product/pages/manage-attributes.form.values'))
                     ->required()
                     ->relationship(
                         name: 'options',

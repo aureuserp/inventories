@@ -16,6 +16,7 @@ use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
 use Webkul\Field\Filament\Traits\HasCustomFields;
 use Webkul\Inventory\Enums\ProductTracking;
+use Webkul\Inventory\Filament\Clusters\Configurations\Resources\ProductCategoryResource;
 use Webkul\Inventory\Filament\Clusters\Configurations\Resources\ProductCategoryResource\Pages\ManageProducts;
 use Webkul\Inventory\Filament\Clusters\Products;
 use Webkul\Inventory\Filament\Clusters\Products\Resources\ProductResource\Pages;
@@ -203,7 +204,8 @@ class ProductResource extends Resource
                                     ->searchable()
                                     ->preload()
                                     ->default(Category::first()?->id)
-                                    ->hiddenOn(ManageProducts::class),
+                                    ->hiddenOn(ManageProducts::class)
+                                    ->createOptionForm(fn (Forms\Form $form): Form => ProductCategoryResource::form($form)),
                                 Forms\Components\Select::make('company_id')
                                     ->label(__('inventories::filament/clusters/products/resources/product.form.sections.settings.fields.company'))
                                     ->relationship('company', 'name')

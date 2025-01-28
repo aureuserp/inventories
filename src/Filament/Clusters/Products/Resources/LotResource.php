@@ -10,8 +10,11 @@ use Filament\Resources\Pages\Page;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Webkul\Inventory\Filament\Clusters\Operations\Resources\ScrapResource\Pages\CreateScrap;
+use Webkul\Inventory\Filament\Clusters\Operations\Resources\ScrapResource\Pages\EditScrap;
 use Webkul\Inventory\Filament\Clusters\Products;
 use Webkul\Inventory\Filament\Clusters\Products\Resources\LotResource\Pages;
+use Webkul\Inventory\Filament\Clusters\Products\Resources\ProductResource\Pages\ManageQuantities;
 use Webkul\Inventory\Models\Lot;
 use Webkul\Inventory\Settings\TraceabilitySettings;
 
@@ -62,7 +65,8 @@ class LotResource extends Resource
                                     ->required()
                                     ->searchable()
                                     ->preload()
-                                    ->hintIcon('heroicon-m-question-mark-circle', tooltip: __('inventories::filament/clusters/products/resources/lot.form.sections.general.fields.product-hint-tooltip')),
+                                    ->hintIcon('heroicon-m-question-mark-circle', tooltip: __('inventories::filament/clusters/products/resources/lot.form.sections.general.fields.product-hint-tooltip'))
+                                    ->hiddenOn([ManageQuantities::class, CreateScrap::class, EditScrap::class]),
                                 Forms\Components\TextInput::make('reference')
                                     ->label(__('inventories::filament/clusters/products/resources/lot.form.sections.general.fields.reference'))
                                     ->maxLength(255)
@@ -92,7 +96,7 @@ class LotResource extends Resource
                     ->label(__('inventories::filament/clusters/products/resources/lot.table.columns.reference'))
                     ->searchable()
                     ->sortable(),
-                //On hand quantity
+                // On hand quantity
                 Tables\Columns\TextColumn::make('total_quantity')
                     ->label(__('inventories::filament/clusters/products/resources/lot.table.columns.on-hand-qty'))
                     ->searchable()

@@ -53,7 +53,7 @@ class ProductQuantity extends Model
      */
     protected $casts = [
         'inventory_quantity_set' => 'boolean',
-        'scheduled_at'           => 'datetime',
+        'scheduled_at'           => 'date',
         'incoming_at'            => 'datetime',
     ];
 

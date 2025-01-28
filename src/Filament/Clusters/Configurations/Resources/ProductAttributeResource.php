@@ -10,7 +10,6 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Webkul\Inventory\Filament\Clusters\Configurations;
 use Webkul\Inventory\Filament\Clusters\Configurations\Resources\ProductAttributeResource\Pages;
-use Webkul\Inventory\Filament\Clusters\Configurations\Resources\ProductAttributeResource\RelationManagers;
 use Webkul\Inventory\Settings\ProductSettings;
 use Webkul\Product\Enums\AttributeType;
 use Webkul\Product\Models\Attribute;
@@ -60,8 +59,31 @@ class ProductAttributeResource extends Resource
                             ->label(__('inventories::filament/clusters/configurations/resources/product-attribute.form.sections.general.fields.type'))
                             ->required()
                             ->options(AttributeType::class)
-                            ->default(AttributeType::RADIO)
+                            ->default(AttributeType::RADIO->value)
                             ->live(),
+                    ]),
+
+                Forms\Components\Section::make(__('inventories::filament/clusters/configurations/resources/product-attribute.form.sections.options.title'))
+                    ->schema([
+                        Forms\Components\Repeater::make(__('inventories::filament/clusters/configurations/resources/product-attribute.form.sections.options.title'))
+                            ->hiddenLabel()
+                            ->relationship('options')
+                            ->schema([
+                                Forms\Components\TextInput::make('name')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/product-attribute.form.sections.options.fields.name'))
+                                    ->required()
+                                    ->maxLength(255),
+                                Forms\Components\ColorPicker::make('color')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/product-attribute.form.sections.options.fields.color'))
+                                    ->visible(fn (Forms\Get $get): bool => $get('../../type') === AttributeType::COLOR->value),
+                                Forms\Components\TextInput::make('extra_price')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/product-attribute.form.sections.options.fields.extra-price'))
+                                    ->required()
+                                    ->numeric()
+                                    ->default(0.0000)
+                                    ->minValue(0),
+                            ])
+                            ->columns(3),
                     ]),
             ]);
     }
@@ -146,13 +168,6 @@ class ProductAttributeResource extends Resource
                 Tables\Actions\CreateAction::make()
                     ->icon('heroicon-o-plus-circle'),
             ]);
-    }
-
-    public static function getRelations(): array
-    {
-        return [
-            RelationManagers\OptionsRelationManager::class,
-        ];
     }
 
     public static function getPages(): array

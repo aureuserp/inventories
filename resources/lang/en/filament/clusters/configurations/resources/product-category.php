@@ -24,6 +24,10 @@ return [
                 'fieldsets' => [
                     'logistics' => [
                         'title' => 'Logistics',
+
+                        'fields' => [
+                            'routes' => 'Routes',
+                        ],
                     ],
 
                     'inventory-valuation' => [

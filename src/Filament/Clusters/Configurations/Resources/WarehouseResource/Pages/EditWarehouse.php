@@ -5,12 +5,12 @@ namespace Webkul\Inventory\Filament\Clusters\Configurations\Resources\WarehouseR
 use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
+use Webkul\Inventory\Enums;
 use Webkul\Inventory\Filament\Clusters\Configurations\Resources\WarehouseResource;
 use Webkul\Inventory\Models\Location;
 use Webkul\Inventory\Models\OperationType;
 use Webkul\Inventory\Models\Route;
 use Webkul\Inventory\Models\Rule;
-use Webkul\Inventory\Enums;
 
 class EditWarehouse extends EditRecord
 {
@@ -83,9 +83,9 @@ class EditWarehouse extends EditRecord
                 Enums\ReceptionStep::ONE_STEP->value => [
                     'update' => [
                         $warehouse->in_type_id => [
-                            'source_location_id' => $supplierLocation->id,
+                            'source_location_id'      => $supplierLocation->id,
                             'destination_location_id' => $warehouse->lot_stock_location_id,
-                            'deleted_at' => NULL,
+                            'deleted_at'              => null,
                         ],
                     ],
                     'archive' => [$warehouse->store_type_id, $warehouse->qc_type_id],
@@ -93,14 +93,14 @@ class EditWarehouse extends EditRecord
                 Enums\ReceptionStep::TWO_STEPS->value => [
                     'update' => [
                         $warehouse->in_type_id => [
-                            'source_location_id' => $supplierLocation->id,
+                            'source_location_id'      => $supplierLocation->id,
                             'destination_location_id' => $warehouse->input_stock_location_id,
-                            'deleted_at' => NULL,
+                            'deleted_at'              => null,
                         ],
                         $warehouse->store_type_id => [
-                            'source_location_id' => $warehouse->input_stock_location_id,
+                            'source_location_id'      => $warehouse->input_stock_location_id,
                             'destination_location_id' => $warehouse->lot_stock_location_id,
-                            'deleted_at' => NULL,
+                            'deleted_at'              => null,
                         ],
                     ],
                     'archive' => [$warehouse->qc_type_id],
@@ -108,19 +108,19 @@ class EditWarehouse extends EditRecord
                 Enums\ReceptionStep::THREE_STEPS->value => [
                     'update' => [
                         $warehouse->in_type_id => [
-                            'source_location_id' => $supplierLocation->id,
+                            'source_location_id'      => $supplierLocation->id,
                             'destination_location_id' => $warehouse->input_stock_location_id,
-                            'deleted_at' => NULL,
+                            'deleted_at'              => null,
                         ],
                         $warehouse->qc_type_id => [
-                            'source_location_id' => $warehouse->input_stock_location_id,
+                            'source_location_id'      => $warehouse->input_stock_location_id,
                             'destination_location_id' => $warehouse->qc_stock_location_id,
-                            'deleted_at' => NULL,
+                            'deleted_at'              => null,
                         ],
                         $warehouse->store_type_id => [
-                            'source_location_id' => $warehouse->qc_stock_location_id,
+                            'source_location_id'      => $warehouse->qc_stock_location_id,
                             'destination_location_id' => $warehouse->lot_stock_location_id,
-                            'deleted_at' => NULL,
+                            'deleted_at'              => null,
                         ],
                     ],
                 ],
@@ -133,9 +133,9 @@ class EditWarehouse extends EditRecord
                 Enums\DeliveryStep::ONE_STEP->value => [
                     'update' => [
                         $warehouse->out_type_id => [
-                            'source_location_id' => $warehouse->lot_stock_location_id,
+                            'source_location_id'      => $warehouse->lot_stock_location_id,
                             'destination_location_id' => $customerLocation->id,
-                            'deleted_at' => NULL,
+                            'deleted_at'              => null,
                         ],
                     ],
                     'archive' => [$warehouse->pick_type_id, $warehouse->pack_type_id],
@@ -143,14 +143,14 @@ class EditWarehouse extends EditRecord
                 Enums\DeliveryStep::TWO_STEPS->value => [
                     'update' => [
                         $warehouse->pick_type_id => [
-                            'source_location_id' => $warehouse->lot_stock_location_id,
+                            'source_location_id'      => $warehouse->lot_stock_location_id,
                             'destination_location_id' => $warehouse->output_stock_location_id,
-                            'deleted_at' => NULL,
+                            'deleted_at'              => null,
                         ],
                         $warehouse->out_type_id => [
-                            'source_location_id' => $warehouse->output_stock_location_id,
+                            'source_location_id'      => $warehouse->output_stock_location_id,
                             'destination_location_id' => $customerLocation->id,
-                            'deleted_at' => NULL,
+                            'deleted_at'              => null,
                         ],
                     ],
                     'archive' => [$warehouse->pack_type_id],
@@ -158,19 +158,19 @@ class EditWarehouse extends EditRecord
                 Enums\DeliveryStep::THREE_STEPS->value => [
                     'update' => [
                         $warehouse->pick_type_id => [
-                            'source_location_id' => $warehouse->lot_stock_location_id,
+                            'source_location_id'      => $warehouse->lot_stock_location_id,
                             'destination_location_id' => $warehouse->pack_stock_location_id,
-                            'deleted_at' => NULL,
+                            'deleted_at'              => null,
                         ],
                         $warehouse->pack_type_id => [
-                            'source_location_id' => $warehouse->pack_stock_location_id,
+                            'source_location_id'      => $warehouse->pack_stock_location_id,
                             'destination_location_id' => $warehouse->output_stock_location_id,
-                            'deleted_at' => NULL,
+                            'deleted_at'              => null,
                         ],
                         $warehouse->out_type_id => [
-                            'source_location_id' => $warehouse->output_stock_location_id,
+                            'source_location_id'      => $warehouse->output_stock_location_id,
                             'destination_location_id' => $customerLocation->id,
-                            'deleted_at' => NULL,
+                            'deleted_at'              => null,
                         ],
                     ],
                 ],
@@ -196,18 +196,18 @@ class EditWarehouse extends EditRecord
 
         $warehouse->receptionRoute->update([
             'name' => match ($this->data['reception_steps']) {
-                Enums\ReceptionStep::ONE_STEP->value => $warehouse->name.': Receive in 1 step (Stock)',
-                Enums\ReceptionStep::TWO_STEPS->value => $warehouse->name.': Receive in 2 steps (Input + Stock)',
+                Enums\ReceptionStep::ONE_STEP->value    => $warehouse->name.': Receive in 1 step (Stock)',
+                Enums\ReceptionStep::TWO_STEPS->value   => $warehouse->name.': Receive in 2 steps (Input + Stock)',
                 Enums\ReceptionStep::THREE_STEPS->value => $warehouse->name.': Receive in 3 steps (Input + Quality + Stock)',
-            }
+            },
         ]);
 
         $warehouse->deliveryRoute->update([
             'name' => match ($this->data['delivery_steps']) {
-                Enums\DeliveryStep::ONE_STEP->value => $warehouse->name.': Deliver in 1 step (Ship)',
-                Enums\DeliveryStep::TWO_STEPS->value => $warehouse->name.': Deliver in 2 steps (Pick + Ship)',
+                Enums\DeliveryStep::ONE_STEP->value    => $warehouse->name.': Deliver in 1 step (Ship)',
+                Enums\DeliveryStep::TWO_STEPS->value   => $warehouse->name.': Deliver in 2 steps (Pick + Ship)',
                 Enums\DeliveryStep::THREE_STEPS->value => $warehouse->name.': Deliver in 3 steps (Pick + Pack + Ship)',
-            }
+            },
         ]);
 
         $this->updateRules(
@@ -215,41 +215,41 @@ class EditWarehouse extends EditRecord
             [
                 Enums\ReceptionStep::ONE_STEP->value => [
                     'archive' => [
-                        //WH: Vendors → Stock => Partners/Vendors → WH/Stock
+                        // WH: Vendors → Stock => Partners/Vendors → WH/Stock
                         ['source_location_id' => $supplierLocation->id, 'destination_location_id' => $warehouse->lot_stock_location_id, 'operation_type_id' => $warehouse->in_type_id],
-                        //WH: Input → Quality Control => WH/Input → WH/Quality Control
+                        // WH: Input → Quality Control => WH/Input → WH/Quality Control
                         ['source_location_id' => $warehouse->input_stock_location_id, 'destination_location_id' => $warehouse->qc_stock_location_id, 'operation_type_id' => $warehouse->qc_type_id],
-                        //WH: Quality Control → Stock => WH/Quality Control → WH/Stock
+                        // WH: Quality Control → Stock => WH/Quality Control → WH/Stock
                         ['source_location_id' => $warehouse->qc_stock_location_id, 'destination_location_id' => $warehouse->lot_stock_location_id, 'operation_type_id' => $warehouse->store_type_id],
-                        //WH: Input → Stock => WH/Input → WH/Stock
+                        // WH: Input → Stock => WH/Input → WH/Stock
                         ['source_location_id' => $warehouse->input_stock_location_id, 'destination_location_id' => $warehouse->lot_stock_location_id, 'operation_type_id' => $warehouse->store_type_id],
                     ],
                 ],
                 Enums\ReceptionStep::TWO_STEPS->value => [
                     'restore' => [
-                        //WH: Input → Stock => WH/Input → WH/Stock
+                        // WH: Input → Stock => WH/Input → WH/Stock
                         ['source_location_id' => $warehouse->input_stock_location_id, 'destination_location_id' => $warehouse->lot_stock_location_id, 'operation_type_id' => $warehouse->store_type_id],
                     ],
                     'archive' => [
-                        //WH: Vendors → Stock => Partners/Vendors → WH/Stock
+                        // WH: Vendors → Stock => Partners/Vendors → WH/Stock
                         ['source_location_id' => $supplierLocation->id, 'destination_location_id' => $warehouse->lot_stock_location_id, 'operation_type_id' => $warehouse->in_type_id],
-                        //WH: Input → Quality Control => WH/Input → WH/Quality Control
+                        // WH: Input → Quality Control => WH/Input → WH/Quality Control
                         ['source_location_id' => $warehouse->input_stock_location_id, 'destination_location_id' => $warehouse->qc_stock_location_id, 'operation_type_id' => $warehouse->qc_type_id],
-                        //WH: Quality Control → Stock => WH/Quality Control → WH/Stock
+                        // WH: Quality Control → Stock => WH/Quality Control → WH/Stock
                         ['source_location_id' => $warehouse->qc_stock_location_id, 'destination_location_id' => $warehouse->lot_stock_location_id, 'operation_type_id' => $warehouse->store_type_id],
                     ],
                 ],
                 Enums\ReceptionStep::THREE_STEPS->value => [
                     'restore' => [
-                        //WH: Input → Quality Control => WH/Input → WH/Quality Control
+                        // WH: Input → Quality Control => WH/Input → WH/Quality Control
                         ['source_location_id' => $warehouse->input_stock_location_id, 'destination_location_id' => $warehouse->qc_stock_location_id, 'operation_type_id' => $warehouse->qc_type_id],
-                        //WH: Quality Control → Stock => WH/Quality Control → WH/Stock
+                        // WH: Quality Control → Stock => WH/Quality Control → WH/Stock
                         ['source_location_id' => $warehouse->qc_stock_location_id, 'destination_location_id' => $warehouse->lot_stock_location_id, 'operation_type_id' => $warehouse->store_type_id],
                     ],
                     'archive' => [
-                        //WH: Vendors → Stock => Partners/Vendors → WH/Stock
+                        // WH: Vendors → Stock => Partners/Vendors → WH/Stock
                         ['source_location_id' => $supplierLocation->id, 'destination_location_id' => $warehouse->lot_stock_location_id, 'operation_type_id' => $warehouse->in_type_id],
-                        //WH: Input → Stock => WH/Input → WH/Stock
+                        // WH: Input → Stock => WH/Input → WH/Stock
                         ['source_location_id' => $warehouse->input_stock_location_id, 'destination_location_id' => $warehouse->lot_stock_location_id, 'operation_type_id' => $warehouse->store_type_id],
                     ],
                 ],
@@ -261,43 +261,43 @@ class EditWarehouse extends EditRecord
             [
                 Enums\DeliveryStep::ONE_STEP->value => [
                     'restore' => [
-                        //WH: Stock → Customers => WH/Stock → Partners/Customers
+                        // WH: Stock → Customers => WH/Stock → Partners/Customers
                         ['source_location_id' => $warehouse->lot_stock_location_id, 'destination_location_id' => $customerLocation->id, 'operation_type_id' => $warehouse->out_type_id],
                     ],
                     'archive' => [
-                        //WH: Stock → Customers => WH/Stock → Partners/Customers
+                        // WH: Stock → Customers => WH/Stock → Partners/Customers
                         ['source_location_id' => $warehouse->lot_stock_location_id, 'destination_location_id' => $customerLocation->id, 'operation_type_id' => $warehouse->pick_type_id],
-                        //WH: Packing Zone → Output => WH/Packing Zone → WH/Output
+                        // WH: Packing Zone → Output => WH/Packing Zone → WH/Output
                         ['source_location_id' => $warehouse->pack_stock_location_id, 'destination_location_id' => $warehouse->output_stock_location_id, 'operation_type_id' => $warehouse->pack_type_id],
-                        //WH: Output → Customers => WH/Output → Partners/Customers
+                        // WH: Output → Customers => WH/Output → Partners/Customers
                         ['source_location_id' => $warehouse->output_stock_location_id, 'destination_location_id' => $customerLocation->id, 'operation_type_id' => $warehouse->out_type_id],
                     ],
                 ],
                 Enums\DeliveryStep::TWO_STEPS->value => [
                     'restore' => [
-                        //WH: Stock → Customers => WH/Stock → Partners/Customers
+                        // WH: Stock → Customers => WH/Stock → Partners/Customers
                         ['source_location_id' => $warehouse->lot_stock_location_id, 'destination_location_id' => $customerLocation->id, 'operation_type_id' => $warehouse->pick_type_id],
-                        //WH: Output → Customers => WH/Output → Partners/Customers
+                        // WH: Output → Customers => WH/Output → Partners/Customers
                         ['source_location_id' => $warehouse->output_stock_location_id, 'destination_location_id' => $customerLocation->id, 'operation_type_id' => $warehouse->out_type_id],
                     ],
                     'archive' => [
-                        //WH: Stock → Customers => WH/Stock → Partners/Customers
+                        // WH: Stock → Customers => WH/Stock → Partners/Customers
                         ['source_location_id' => $warehouse->lot_stock_location_id, 'destination_location_id' => $customerLocation->id, 'operation_type_id' => $warehouse->out_type_id],
-                        //WH: Packing Zone → Output => WH/Packing Zone → WH/Output
+                        // WH: Packing Zone → Output => WH/Packing Zone → WH/Output
                         ['source_location_id' => $warehouse->pack_stock_location_id, 'destination_location_id' => $warehouse->output_stock_location_id, 'operation_type_id' => $warehouse->pack_type_id],
                     ],
                 ],
                 Enums\DeliveryStep::THREE_STEPS->value => [
                     'restore' => [
-                        //WH: Stock → Customers => WH/Stock → Partners/Customers
+                        // WH: Stock → Customers => WH/Stock → Partners/Customers
                         ['source_location_id' => $warehouse->lot_stock_location_id, 'destination_location_id' => $customerLocation->id, 'operation_type_id' => $warehouse->pick_type_id],
-                        //WH: Packing Zone → Output => WH/Packing Zone → WH/Output
+                        // WH: Packing Zone → Output => WH/Packing Zone → WH/Output
                         ['source_location_id' => $warehouse->pack_stock_location_id, 'destination_location_id' => $warehouse->output_stock_location_id, 'operation_type_id' => $warehouse->pack_type_id],
-                        //WH: Output → Customers => WH/Output → Partners/Customers
+                        // WH: Output → Customers => WH/Output → Partners/Customers
                         ['source_location_id' => $warehouse->output_stock_location_id, 'destination_location_id' => $customerLocation->id, 'operation_type_id' => $warehouse->out_type_id],
                     ],
                     'archive' => [
-                        //WH: Stock → Customers => WH/Stock → Partners/Customers
+                        // WH: Stock → Customers => WH/Stock → Partners/Customers
                         ['source_location_id' => $warehouse->lot_stock_location_id, 'destination_location_id' => $customerLocation->id, 'operation_type_id' => $warehouse->out_type_id],
                     ],
                 ],

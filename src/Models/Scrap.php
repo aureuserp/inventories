@@ -6,7 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Webkul\Chatter\Traits\HasChatter;
+use Webkul\Chatter\Traits\HasLogActivity;
 use Webkul\Inventory\Database\Factories\ScrapFactory;
+use Webkul\Inventory\Enums;
 use Webkul\Partner\Models\Partner;
 use Webkul\Security\Models\User;
 use Webkul\Support\Models\Company;
@@ -14,7 +19,7 @@ use Webkul\Support\Models\UOM;
 
 class Scrap extends Model
 {
-    use HasFactory;
+    use HasChatter, HasFactory, HasLogActivity;
 
     /**
      * Table name.
@@ -34,7 +39,7 @@ class Scrap extends Model
         'state',
         'qty',
         'should_replenish',
-        'date_done',
+        'closed_at',
         'product_id',
         'uom_id',
         'lot_id',
@@ -53,8 +58,9 @@ class Scrap extends Model
      * @var string
      */
     protected $casts = [
+        'state'            => Enums\ScrapState::class,
         'should_replenish' => 'boolean',
-        'date_done'        => 'datetime',
+        'closed_at'        => 'datetime',
     ];
 
     public function product(): BelongsTo
@@ -109,7 +115,37 @@ class Scrap extends Model
 
     public function tags(): BelongsToMany
     {
-        return $this->belongsToMany(Tag::class, 'inventories_scrap_tag', 'scrap_id', 'tag_id');
+        return $this->belongsToMany(Tag::class, 'inventories_scrap_tags', 'scrap_id', 'tag_id');
+    }
+
+    public function moves(): HasMany
+    {
+        return $this->hasMany(Move::class);
+    }
+
+    public function moveLines(): HasManyThrough
+    {
+        return $this->hasManyThrough(MoveLine::class, Move::class);
+    }
+
+    /**
+     * Bootstrap any application services.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::saving(function ($scrap) {
+            $scrap->updateName();
+        });
+    }
+
+    /**
+     * Update the full name without triggering additional events
+     */
+    public function updateName()
+    {
+        $this->name = 'SP/'.$this->id;
     }
 
     protected static function newFactory(): ScrapFactory

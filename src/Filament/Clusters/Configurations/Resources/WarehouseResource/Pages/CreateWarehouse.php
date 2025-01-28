@@ -5,12 +5,12 @@ namespace Webkul\Inventory\Filament\Clusters\Configurations\Resources\WarehouseR
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Facades\Auth;
+use Webkul\Inventory\Enums;
 use Webkul\Inventory\Filament\Clusters\Configurations\Resources\WarehouseResource;
 use Webkul\Inventory\Models\Location;
 use Webkul\Inventory\Models\OperationType;
 use Webkul\Inventory\Models\Route;
 use Webkul\Inventory\Models\Rule;
-use Webkul\Inventory\Enums;
 use Webkul\Inventory\Settings\WarehouseSettings;
 
 class CreateWarehouse extends CreateRecord
@@ -177,9 +177,9 @@ class CreateWarehouse extends CreateRecord
             'print_label'             => false,
             'show_operations'         => false,
             'source_location_id'      => $supplierLocation->id,
-            'destination_location_id' => match($data['reception_steps']) {
-                Enums\ReceptionStep::ONE_STEP => $data['lot_stock_location_id'],
-                Enums\ReceptionStep::TWO_STEPS => $data['input_stock_location_id'],
+            'destination_location_id' => match ($data['reception_steps']) {
+                Enums\ReceptionStep::ONE_STEP    => $data['lot_stock_location_id'],
+                Enums\ReceptionStep::TWO_STEPS   => $data['input_stock_location_id'],
                 Enums\ReceptionStep::THREE_STEPS => $data['input_stock_location_id'],
             },
             'company_id'              => $data['company_id'],
@@ -202,9 +202,9 @@ class CreateWarehouse extends CreateRecord
             'use_existing_lots'       => true,
             'print_label'             => true,
             'show_operations'         => false,
-            'source_location_id' => match($data['reception_steps']) {
-                Enums\ReceptionStep::ONE_STEP => $data['lot_stock_location_id'],
-                Enums\ReceptionStep::TWO_STEPS => $data['output_stock_location_id'],
+            'source_location_id'      => match ($data['reception_steps']) {
+                Enums\ReceptionStep::ONE_STEP    => $data['lot_stock_location_id'],
+                Enums\ReceptionStep::TWO_STEPS   => $data['output_stock_location_id'],
                 Enums\ReceptionStep::THREE_STEPS => $data['output_stock_location_id'],
             },
             'destination_location_id' => $customerLocation->id,
@@ -229,9 +229,9 @@ class CreateWarehouse extends CreateRecord
             'print_label'             => false,
             'show_operations'         => false,
             'source_location_id'      => $data['lot_stock_location_id'],
-            'destination_location_id' => match($data['delivery_steps']) {
-                Enums\DeliveryStep::ONE_STEP => $data['pack_stock_location_id'],
-                Enums\DeliveryStep::TWO_STEPS => $data['output_stock_location_id'],
+            'destination_location_id' => match ($data['delivery_steps']) {
+                Enums\DeliveryStep::ONE_STEP    => $data['pack_stock_location_id'],
+                Enums\DeliveryStep::TWO_STEPS   => $data['output_stock_location_id'],
                 Enums\DeliveryStep::THREE_STEPS => $data['pack_stock_location_id'],
             },
             'company_id'              => $data['company_id'],
@@ -301,9 +301,9 @@ class CreateWarehouse extends CreateRecord
             'use_existing_lots'       => true,
             'print_label'             => false,
             'show_operations'         => false,
-            'source_location_id' => match($data['reception_steps']) {
-                Enums\ReceptionStep::ONE_STEP => $data['input_stock_location_id'],
-                Enums\ReceptionStep::TWO_STEPS => $data['input_stock_location_id'],
+            'source_location_id'      => match ($data['reception_steps']) {
+                Enums\ReceptionStep::ONE_STEP    => $data['input_stock_location_id'],
+                Enums\ReceptionStep::TWO_STEPS   => $data['input_stock_location_id'],
                 Enums\ReceptionStep::THREE_STEPS => $data['qc_stock_location_id'],
             },
             'destination_location_id' => $data['lot_stock_location_id'],
@@ -366,41 +366,41 @@ class CreateWarehouse extends CreateRecord
     {
         $data['reception_route_id'] = Route::create([
             'name' => match ($data['reception_steps']) {
-                Enums\ReceptionStep::ONE_STEP => $data['name'].': Receive in 1 step (Stock)',
-                Enums\ReceptionStep::TWO_STEPS => $data['name'].': Receive in 2 steps (Input + Stock)',
+                Enums\ReceptionStep::ONE_STEP    => $data['name'].': Receive in 1 step (Stock)',
+                Enums\ReceptionStep::TWO_STEPS   => $data['name'].': Receive in 2 steps (Input + Stock)',
                 Enums\ReceptionStep::THREE_STEPS => $data['name'].': Receive in 3 steps (Input + Quality + Stock)',
             },
             'product_selectable'          => false,
             'product_category_selectable' => true,
             'warehouse_selectable'        => true,
             'packaging_selectable'        => false,
-            'creator_id' => $data['creator_id'],
-            'company_id' => $data['company_id'],
+            'creator_id'                  => $data['creator_id'],
+            'company_id'                  => $data['company_id'],
         ])->id;
 
         $data['delivery_route_id'] = Route::create([
             'name' => match ($data['delivery_steps']) {
-                Enums\DeliveryStep::ONE_STEP => $data['name'].': Deliver in 1 step (Ship)',
-                Enums\DeliveryStep::TWO_STEPS => $data['name'].': Deliver in 2 steps (Pick + Ship)',
+                Enums\DeliveryStep::ONE_STEP    => $data['name'].': Deliver in 1 step (Ship)',
+                Enums\DeliveryStep::TWO_STEPS   => $data['name'].': Deliver in 2 steps (Pick + Ship)',
                 Enums\DeliveryStep::THREE_STEPS => $data['name'].': Deliver in 3 steps (Pick + Pack + Ship)',
             },
             'product_selectable'          => false,
             'product_category_selectable' => true,
             'warehouse_selectable'        => true,
             'packaging_selectable'        => false,
-            'creator_id' => $data['creator_id'],
-            'company_id' => $data['company_id'],
+            'creator_id'                  => $data['creator_id'],
+            'company_id'                  => $data['company_id'],
         ])->id;
 
         $data['crossdock_route_id'] = Route::create([
-            'name' => $data['name'].': Cross-Dock',
+            'name'                        => $data['name'].': Cross-Dock',
             'product_selectable'          => true,
             'product_category_selectable' => true,
             'warehouse_selectable'        => false,
             'packaging_selectable'        => false,
-            'creator_id' => $data['creator_id'],
-            'company_id' => $data['company_id'],
-            'deleted_at' => in_array($data['reception_steps'], [Enums\ReceptionStep::TWO_STEPS, Enums\ReceptionStep::THREE_STEPS]) &&
+            'creator_id'                  => $data['creator_id'],
+            'company_id'                  => $data['company_id'],
+            'deleted_at'                  => in_array($data['reception_steps'], [Enums\ReceptionStep::TWO_STEPS, Enums\ReceptionStep::THREE_STEPS]) &&
                 in_array($data['delivery_steps'], [Enums\DeliveryStep::TWO_STEPS, Enums\DeliveryStep::THREE_STEPS]) ? null : now(),
         ])->id;
 
@@ -433,21 +433,21 @@ class CreateWarehouse extends CreateRecord
         ])->id;
 
         $this->routeIds[] = Rule::create([
-            'sort'                     => 2,
-            'name'                     => $data['code'].': Stock → Customers',
-            'route_sequence'           => 10,
-            'group_propagation_option' => Enums\GroupPropagation::PROPAGATE,
-            'action'                   => Enums\RuleAction::PULL,
-            'procure_method'           => Enums\ProcureMethod::MAKE_TO_STOCK,
-            'auto'                     => Enums\RuleAuto::MANUAL,
-            'propagate_cancel'         => false,
-            'propagate_carrier'        => true,
-            'source_location_id'       => $data['lot_stock_location_id'],
-            'destination_location_id'  => $customerLocation->id,
-            'route_id'                 => $data['delivery_route_id'],
-            'operation_type_id'        => $data['out_type_id'],
-            'creator_id'               => $data['creator_id'],
-            'company_id'               => $data['company_id'],
+            'sort'                      => 2,
+            'name'                      => $data['code'].': Stock → Customers',
+            'route_sequence'            => 10,
+            'group_propagation_option'  => Enums\GroupPropagation::PROPAGATE,
+            'action'                    => Enums\RuleAction::PULL,
+            'procure_method'            => Enums\ProcureMethod::MAKE_TO_STOCK,
+            'auto'                      => Enums\RuleAuto::MANUAL,
+            'propagate_cancel'          => false,
+            'propagate_carrier'         => true,
+            'source_location_id'        => $data['lot_stock_location_id'],
+            'destination_location_id'   => $customerLocation->id,
+            'route_id'                  => $data['delivery_route_id'],
+            'operation_type_id'         => $data['out_type_id'],
+            'creator_id'                => $data['creator_id'],
+            'company_id'                => $data['company_id'],
             'deleted_at'                => $data['delivery_steps'] === Enums\DeliveryStep::ONE_STEP ? null : now(),
         ])->id;
 
@@ -503,8 +503,8 @@ class CreateWarehouse extends CreateRecord
             'propagate_carrier'        => true,
             'source_location_id'       => $data['lot_stock_location_id'],
             'destination_location_id'  => $customerLocation->id,
-            'route_id'                 => 1,//To Do: Check how can we not use hardcoded value
-            'operation_type_id'        => $data['out_type_id'],//To Do: Need to update based on the condition
+            'route_id'                 => 1, // To Do: Check how can we not use hardcoded value
+            'operation_type_id'        => $data['out_type_id'], // To Do: Need to update based on the condition
             'creator_id'               => $data['creator_id'],
             'company_id'               => $data['company_id'],
         ])->id;
@@ -634,7 +634,7 @@ class CreateWarehouse extends CreateRecord
             'auto'                     => Enums\RuleAuto::MANUAL,
             'propagate_cancel'         => false,
             'propagate_carrier'        => false,
-            'source_location_id'       => NULL,
+            'source_location_id'       => null,
             'destination_location_id'  => $customerLocation->id,
             'route_id'                 => $data['crossdock_route_id'],
             'operation_type_id'        => $data['in_type_id'],

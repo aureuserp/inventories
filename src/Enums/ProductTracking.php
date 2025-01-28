@@ -8,7 +8,7 @@ enum ProductTracking: string implements HasLabel
 {
     case SERIAL = 'serial';
 
-    case LOST = 'lot';
+    case LOT = 'lot';
 
     case QTY = 'qty';
 
@@ -16,7 +16,7 @@ enum ProductTracking: string implements HasLabel
     {
         return match ($this) {
             self::SERIAL => __('inventories::enums/product-tracking.serial'),
-            self::LOST   => __('inventories::enums/product-tracking.lot'),
+            self::LOT    => __('inventories::enums/product-tracking.lot'),
             self::QTY    => __('inventories::enums/product-tracking.qty'),
         };
     }

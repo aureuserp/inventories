@@ -40,7 +40,7 @@ class RuleSeeder extends Seeder
                 'creator_id'               => $user->id,
                 'created_at'               => now(),
                 'updated_at'               => now(),
-                'deleted_at'               => NULL,//Check this line
+                'deleted_at'               => null, // Check this line
             ], [
                 'id'                       => 2,
                 'sort'                     => 2,
@@ -62,7 +62,7 @@ class RuleSeeder extends Seeder
                 'creator_id'               => $user->id,
                 'created_at'               => now(),
                 'updated_at'               => now(),
-                'deleted_at'               => NULL,
+                'deleted_at'               => null,
             ], [
                 'id'                       => 3,
                 'sort'                     => 3,
@@ -84,7 +84,7 @@ class RuleSeeder extends Seeder
                 'creator_id'               => $user->id,
                 'created_at'               => now(),
                 'updated_at'               => now(),
-                'deleted_at'               => NULL,
+                'deleted_at'               => null,
             ], [
                 'id'                       => 4,
                 'sort'                     => 4,
@@ -106,7 +106,7 @@ class RuleSeeder extends Seeder
                 'creator_id'               => $user->id,
                 'created_at'               => now(),
                 'updated_at'               => now(),
-                'deleted_at'               => NULL,
+                'deleted_at'               => null,
             ], [
                 'id'                       => 5,
                 'sort'                     => 5,
@@ -128,7 +128,7 @@ class RuleSeeder extends Seeder
                 'creator_id'               => $user->id,
                 'created_at'               => now(),
                 'updated_at'               => now(),
-                'deleted_at'               => NULL,
+                'deleted_at'               => null,
             ], [
                 'id'                       => 6,
                 'sort'                     => 6,
@@ -274,7 +274,7 @@ class RuleSeeder extends Seeder
                 'location_dest_from_rule'  => false,
                 'propagate_cancel'         => false,
                 'propagate_carrier'        => false,
-                'source_location_id'       => NULL,
+                'source_location_id'       => null,
                 'destination_location_id'  => 5,
                 'route_id'                 => 4,
                 'operation_type_id'        => 1,
@@ -296,7 +296,7 @@ class RuleSeeder extends Seeder
                 'location_dest_from_rule'  => false,
                 'propagate_cancel'         => true,
                 'propagate_carrier'        => false,
-                'source_location_id'       => NULL,
+                'source_location_id'       => null,
                 'destination_location_id'  => 12,
                 'route_id'                 => 5,
                 'operation_type_id'        => 1,

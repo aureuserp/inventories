@@ -6,10 +6,10 @@ use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Pages\SettingsPage;
-use Webkul\Inventory\Settings\WarehouseSettings;
-use Webkul\Support\Filament\Clusters\Settings;
 use Webkul\Inventory\Models\OperationType;
 use Webkul\Inventory\Models\Warehouse;
+use Webkul\Inventory\Settings\WarehouseSettings;
+use Webkul\Support\Filament\Clusters\Settings;
 
 class ManageWarehouses extends SettingsPage
 {

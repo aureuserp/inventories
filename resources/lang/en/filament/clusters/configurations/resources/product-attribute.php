@@ -16,6 +16,16 @@ return [
                     'type' => 'Type',
                 ],
             ],
+
+            'options' => [
+                'title'  => 'Options',
+
+                'fields' => [
+                    'name'        => 'Name',
+                    'color'       => 'Color',
+                    'extra-price' => 'Extra Price',
+                ],
+            ],
         ],
     ],
 

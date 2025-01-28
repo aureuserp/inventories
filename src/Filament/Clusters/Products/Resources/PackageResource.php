@@ -10,6 +10,7 @@ use Filament\Resources\Pages\Page;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Webkul\Inventory\Filament\Clusters\Configurations\Resources\PackageTypeResource;
 use Webkul\Inventory\Filament\Clusters\Products;
 use Webkul\Inventory\Filament\Clusters\Products\Resources\PackageResource\Pages;
 use Webkul\Inventory\Filament\Clusters\Products\Resources\PackageResource\RelationManagers;
@@ -61,7 +62,8 @@ class PackageResource extends Resource
                                     ->label(__('inventories::filament/clusters/products/resources/package.form.sections.general.fields.package-type'))
                                     ->relationship('packageType', 'name')
                                     ->searchable()
-                                    ->preload(),
+                                    ->preload()
+                                    ->createOptionForm(fn (Form $form): Form => PackageTypeResource::form($form)),
                                 Forms\Components\DatePicker::make('pack_date')
                                     ->label(__('inventories::filament/clusters/products/resources/package.form.sections.general.fields.pack-date'))
                                     ->native(false)

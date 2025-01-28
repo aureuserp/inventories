@@ -3,6 +3,14 @@
 return [
     'title' => 'Quantities',
 
+    'tabs' => [
+        'internal-locations' => 'Internal Locations',
+        'transit-locations'  => 'Transit Locations',
+        'on-hand'            => 'On Hand',
+        'to-count'           => 'To Count',
+        'to-apply'           => 'To Apply',
+    ],
+
     'form' => [
         'fields' => [
             'location'         => 'Location',
@@ -21,6 +29,13 @@ return [
             'quantity'         => 'Quantity',
             'package'          => 'Package',
             'on-hand'          => 'On Hand Quantity',
+
+            'on-hand-before-state-updated' => [
+                'notification' => [
+                    'title' => 'Quantity updated',
+                    'body'  => 'The quantity has been updated successfully.',
+                ],
+            ],
         ],
 
         'header-actions' => [

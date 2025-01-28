@@ -70,6 +70,9 @@ class OperationResource extends Resource
                             ->preload()
                             ->required()
                             ->live()
+                            ->getOptionLabelFromRecordUsing(function (OperationType $record) {
+                                return $record->warehouse->name . ': ' . $record->name;
+                            })
                             ->afterStateUpdated(function (Forms\Set $set, Forms\Get $get) {
                                 $operationType = OperationType::find($get('operation_type_id'));
 
