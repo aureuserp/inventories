@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'title' => 'Quantities',
+    'title' => 'Locations',
 
     'table' => [
         'columns' => [

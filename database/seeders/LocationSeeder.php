@@ -24,6 +24,8 @@ class LocationSeeder extends Seeder
 
         DB::table('inventories_moves')->delete();
 
+        DB::table('inventories_move_lines')->delete();
+
         DB::table('inventories_operation_types')->delete();
 
         DB::table('inventories_warehouses')->delete();
@@ -47,7 +49,7 @@ class LocationSeeder extends Seeder
                 'is_replenish' => false,
                 'parent_id'    => null,
                 'creator_id'   => $user->id,
-                'company_id'   => $user->default_company_id,
+                'company_id'   => null,
                 'deleted_at'   => null,
                 'created_at'   => now(),
                 'updated_at'   => now(),
@@ -65,7 +67,7 @@ class LocationSeeder extends Seeder
                 'is_replenish' => false,
                 'parent_id'    => null,
                 'creator_id'   => $user->id,
-                'company_id'   => $user->default_company_id,
+                'company_id'   => null,
                 'deleted_at'   => null,
                 'created_at'   => now(),
                 'updated_at'   => now(),
@@ -83,7 +85,7 @@ class LocationSeeder extends Seeder
                 'is_replenish' => false,
                 'parent_id'    => null,
                 'creator_id'   => $user->id,
-                'company_id'   => $user->default_company_id,
+                'company_id'   => null,
                 'deleted_at'   => null,
                 'created_at'   => now(),
                 'updated_at'   => now(),
@@ -101,7 +103,7 @@ class LocationSeeder extends Seeder
                 'is_replenish' => false,
                 'parent_id'    => 2,
                 'creator_id'   => $user->id,
-                'company_id'   => $user->default_company_id,
+                'company_id'   => null,
                 'deleted_at'   => null,
                 'created_at'   => now(),
                 'updated_at'   => now(),
@@ -119,7 +121,7 @@ class LocationSeeder extends Seeder
                 'is_replenish' => false,
                 'parent_id'    => 2,
                 'creator_id'   => $user->id,
-                'company_id'   => $user->default_company_id,
+                'company_id'   => null,
                 'deleted_at'   => null,
                 'created_at'   => now(),
                 'updated_at'   => now(),
@@ -137,7 +139,7 @@ class LocationSeeder extends Seeder
                 'is_replenish' => false,
                 'parent_id'    => 3,
                 'creator_id'   => $user->id,
-                'company_id'   => $user->default_company_id,
+                'company_id'   => null,
                 'deleted_at'   => now(),
                 'created_at'   => now(),
                 'updated_at'   => now(),

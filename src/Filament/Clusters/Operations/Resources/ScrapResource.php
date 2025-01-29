@@ -5,13 +5,13 @@ namespace Webkul\Inventory\Filament\Clusters\Operations\Resources;
 use Filament\Forms;
 use Filament\Forms\Components\Actions\Action;
 use Filament\Forms\Form;
-use Filament\Pages\SubNavigationPosition;
 use Filament\Notifications\Notification;
+use Filament\Pages\SubNavigationPosition;
+use Filament\Resources\Pages\Page;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Filament\Resources\Pages\Page;
 use Illuminate\Support\Facades\Auth;
 use Webkul\Field\Filament\Forms\Components\ProgressStepper;
 use Webkul\Inventory\Enums;
@@ -300,10 +300,10 @@ class ScrapResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListScraps::route('/'),
-            'edit'   => Pages\EditScrap::route('/{record}/edit'),
-            'view' => Pages\ViewScrap::route('/{record}/view'),
-            'edit'   => Pages\EditScrap::route('/{record}/edit'),
+            'index'   => Pages\ListScraps::route('/'),
+            'edit'    => Pages\EditScrap::route('/{record}/edit'),
+            'view'    => Pages\ViewScrap::route('/{record}/view'),
+            'edit'    => Pages\EditScrap::route('/{record}/edit'),
             'moves'   => Pages\ManageMoves::route('/{record}/moves'),
         ];
     }

@@ -250,6 +250,7 @@ class ProductResource extends Resource
                     }),
                 Tables\Columns\ImageColumn::make('images')
                     ->label(__('inventories::filament/clusters/products/resources/product.table.columns.images'))
+                    ->placeholder('—')
                     ->circular()
                     ->stacked()
                     ->limit(3)
@@ -260,38 +261,50 @@ class ProductResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('reference')
                     ->label(__('inventories::filament/clusters/products/resources/product.table.columns.reference'))
+                    ->placeholder('—')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('tags.name')
                     ->label(__('inventories::filament/clusters/products/resources/product.table.columns.tags'))
+                    ->placeholder('—')
                     ->badge()
                     ->toggleable(),
                 Tables\Columns\TextColumn::make('responsible.name')
                     ->label(__('inventories::filament/clusters/products/resources/product.table.columns.responsible'))
+                    ->placeholder('—')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('barcode')
                     ->label(__('inventories::filament/clusters/products/resources/product.table.columns.barcode'))
+                    ->placeholder('—')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('company.name')
                     ->label(__('inventories::filament/clusters/products/resources/product.table.columns.company'))
                     ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('price')
                     ->label(__('inventories::filament/clusters/products/resources/product.table.columns.price'))
                     ->sortable(),
                 Tables\Columns\TextColumn::make('cost')
                     ->label(__('inventories::filament/clusters/products/resources/product.table.columns.cost'))
                     ->sortable(),
+                Tables\Columns\TextColumn::make('on_hand_quantity')
+                    ->label(__('inventories::filament/clusters/products/resources/product.table.columns.on-hand'))
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('category.name')
                     ->label(__('inventories::filament/clusters/products/resources/product.table.columns.category'))
                     ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('type')
                     ->label(__('inventories::filament/clusters/products/resources/product.table.columns.type'))
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('deleted_at')
                     ->label(__('inventories::filament/clusters/products/resources/product.table.columns.deleted-at'))
                     ->dateTime()

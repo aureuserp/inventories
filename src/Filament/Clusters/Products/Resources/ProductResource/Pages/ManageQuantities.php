@@ -116,6 +116,10 @@ class ManageQuantities extends ManageRelatedRecords
                     ->searchable()
                     ->preload()
                     ->required()
+                    ->live()
+                    ->afterStateUpdated(function (Forms\Set $set, Forms\Get $get) {
+                        $set('package_id', null);
+                    })
                     ->visible(fn (WarehouseSettings $warehouseSettings) => $warehouseSettings->enable_locations),
                 Forms\Components\Select::make('lot_id')
                     ->label(__('inventories::filament/clusters/products/resources/product/pages/manage-quantities.form.fields.lot'))
@@ -124,8 +128,8 @@ class ManageQuantities extends ManageRelatedRecords
                         titleAttribute: 'name',
                         modifyQueryUsing: fn (Builder $query) => $query->where('product_id', $this->getOwnerRecord()->id),
                     )
+                    ->required()
                     ->searchable()
-                    ->sortable()
                     ->preload()
                     ->createOptionForm(fn (Form $form): Form => LotResource::form($form))
                     ->createOptionAction(function (Action $action) {
@@ -139,7 +143,11 @@ class ManageQuantities extends ManageRelatedRecords
                     ->visible(fn (TraceabilitySettings $traceabilitySettings) => $traceabilitySettings->enable_lots_serial_numbers && $this->getOwnerRecord()->tracking != Enums\ProductTracking::QTY),
                 Forms\Components\Select::make('package_id')
                     ->label(__('inventories::filament/clusters/products/resources/product/pages/manage-quantities.form.fields.package'))
-                    ->relationship('package', 'name')
+                    ->relationship(
+                        name: 'package',
+                        titleAttribute: 'name',
+                        modifyQueryUsing: fn (Builder $query, Forms\Get $get) => $query->where('location_id', $get('location_id')),
+                    )
                     ->searchable()
                     ->preload()
                     ->createOptionForm(fn (Form $form): Form => PackageResource::form($form))
@@ -294,6 +302,19 @@ class ManageQuantities extends ManageRelatedRecords
                                 'incoming_at' => now(),
                             ]
                         );
+
+                        if ($record->package) {
+                            $record->package->update([
+                                'location_id' => $record->location_id,
+                                'pack_date'   => now(),
+                            ]);
+                        }
+
+                        if ($record->lot) {
+                            $record->lot->update([
+                                'location_id' => $record->location_id,
+                            ]);
+                        }
 
                         $this->createMove($record, $record->quantity, $adjustmentLocation->id, $record->location_id);
                     })

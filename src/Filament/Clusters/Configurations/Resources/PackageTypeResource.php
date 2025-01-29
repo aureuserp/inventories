@@ -118,6 +118,7 @@ class PackageTypeResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('barcode')
                     ->label(__('inventories::filament/clusters/configurations/resources/package-type.table.columns.barcode'))
+                    ->placeholder('—')
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('created_at')

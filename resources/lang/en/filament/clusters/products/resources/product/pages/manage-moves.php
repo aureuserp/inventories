@@ -3,6 +3,14 @@
 return [
     'title' => 'IN/OUT',
 
+    'tabs' => [
+        'todo'     => 'To Do',
+        'done'     => 'Done',
+        'incoming' => 'Incoming',
+        'outgoing' => 'Outgoing',
+        'internal' => 'Internal',
+    ],
+
     'table' => [
         'columns' => [
             'date'                 => 'Date',

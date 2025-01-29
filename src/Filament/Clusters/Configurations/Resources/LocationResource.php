@@ -180,12 +180,11 @@ class LocationResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('storageCategory.name')
                     ->label(__('inventories::filament/clusters/configurations/resources/location.table.columns.storage-category'))
-                    ->numeric()
+                    ->placeholder('—')
                     ->sortable()
                     ->hiddenOn(ManageLocations::class),
                 Tables\Columns\TextColumn::make('company.name')
                     ->label(__('inventories::filament/clusters/configurations/resources/location.table.columns.company'))
-                    ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('deleted_at')
                     ->label(__('inventories::filament/clusters/configurations/resources/location.table.columns.deleted-at'))

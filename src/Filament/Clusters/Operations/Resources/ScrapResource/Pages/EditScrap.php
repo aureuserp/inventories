@@ -65,13 +65,13 @@ class EditScrap extends EditRecord
                             'location_id' => $record->destination_location_id,
                             'product_id'  => $record->product_id,
                             'lot_id'      => $record->lot_id,
-                            'package_id' => $record->package_id,
+                            'package_id'  => $record->package_id,
                         ], [
-                            'quantity'               => $record->qty,
+                            'quantity'                => $record->qty,
                             'inventory_diff_quantity' => -$record->qty,
-                            'company_id'             => $record->company_id,
-                            'creator_id'             => Auth::id(),
-                            'incoming_at'            => now(),
+                            'company_id'              => $record->company_id,
+                            'creator_id'              => Auth::id(),
+                            'incoming_at'             => now(),
                         ]
                     );
 

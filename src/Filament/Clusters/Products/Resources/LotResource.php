@@ -10,6 +10,9 @@ use Filament\Resources\Pages\Page;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Webkul\Inventory\Enums;
+use Webkul\Inventory\Filament\Clusters\Operations\Resources\ReceiptResource\Pages\EditReceipt;
 use Webkul\Inventory\Filament\Clusters\Operations\Resources\ScrapResource\Pages\CreateScrap;
 use Webkul\Inventory\Filament\Clusters\Operations\Resources\ScrapResource\Pages\EditScrap;
 use Webkul\Inventory\Filament\Clusters\Products;
@@ -62,11 +65,16 @@ class LotResource extends Resource
                                 Forms\Components\Select::make('product_id')
                                     ->label(__('inventories::filament/clusters/products/resources/lot.form.sections.general.fields.product'))
                                     ->relationship('product', 'name')
+                                    ->relationship(
+                                        name: 'product',
+                                        titleAttribute: 'name',
+                                        modifyQueryUsing: fn (Builder $query) => $query->where('tracking', Enums\ProductTracking::LOT),
+                                    )
                                     ->required()
                                     ->searchable()
                                     ->preload()
                                     ->hintIcon('heroicon-m-question-mark-circle', tooltip: __('inventories::filament/clusters/products/resources/lot.form.sections.general.fields.product-hint-tooltip'))
-                                    ->hiddenOn([ManageQuantities::class, CreateScrap::class, EditScrap::class]),
+                                    ->hiddenOn([EditReceipt::class, ManageQuantities::class, CreateScrap::class, EditScrap::class]),
                                 Forms\Components\TextInput::make('reference')
                                     ->label(__('inventories::filament/clusters/products/resources/lot.form.sections.general.fields.reference'))
                                     ->maxLength(255)
@@ -94,6 +102,7 @@ class LotResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('reference')
                     ->label(__('inventories::filament/clusters/products/resources/lot.table.columns.reference'))
+                    ->placeholder('—')
                     ->searchable()
                     ->sortable(),
                 // On hand quantity

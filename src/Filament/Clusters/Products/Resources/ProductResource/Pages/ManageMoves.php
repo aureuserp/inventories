@@ -6,14 +6,19 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRelatedRecords;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Webkul\Inventory\Enums;
 use Webkul\Inventory\Filament\Clusters\Products\Resources\ProductResource;
 use Webkul\Inventory\Settings\OperationSettings;
 use Webkul\Inventory\Settings\TraceabilitySettings;
 use Webkul\Inventory\Settings\WarehouseSettings;
+use Webkul\TableViews\Filament\Components\PresetView;
+use Webkul\TableViews\Filament\Concerns\HasTableViews;
 
 class ManageMoves extends ManageRelatedRecords
 {
+    use HasTableViews;
+
     protected static string $resource = ProductResource::class;
 
     protected static string $relationship = 'moveLines';
@@ -23,6 +28,50 @@ class ManageMoves extends ManageRelatedRecords
     public static function getNavigationLabel(): string
     {
         return __('inventories::filament/clusters/products/resources/product/pages/manage-moves.title');
+    }
+
+    public function getPresetTableViews(): array
+    {
+        return [
+            'todo_moves' => PresetView::make(__('inventories::filament/clusters/products/resources/product/pages/manage-moves.tabs.todo'))
+                ->favorite()
+                ->icon('heroicon-o-clipboard-document-list')
+                ->modifyQueryUsing(function (Builder $query) {
+                    $query->whereHas('location', function (Builder $query) {
+                        $query->where('type', Enums\LocationType::INTERNAL);
+                    });
+                })
+                ->modifyQueryUsing(fn (Builder $query) => $query->whereNotIn('state', [Enums\MoveState::DRAFT, Enums\MoveState::DONE, Enums\MoveState::CANCELED])),
+            'done_moves' => PresetView::make(__('inventories::filament/clusters/products/resources/product/pages/manage-moves.tabs.done'))
+                ->favorite()
+                ->default()
+                ->icon('heroicon-o-check-circle')
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('state', Enums\MoveState::DONE)),
+            'incoming_moves' => PresetView::make(__('inventories::filament/clusters/products/resources/product/pages/manage-moves.tabs.incoming'))
+                ->favorite()
+                ->icon('heroicon-o-arrow-down-tray')
+                ->modifyQueryUsing(function (Builder $query) {
+                    $query->whereHas('operation.operationType', function (Builder $query) {
+                        $query->where('type', Enums\OperationType::INCOMING);
+                    });
+                }),
+            'outgoing_moves' => PresetView::make(__('inventories::filament/clusters/products/resources/product/pages/manage-moves.tabs.outgoing'))
+                ->favorite()
+                ->icon('heroicon-o-arrow-up-tray')
+                ->modifyQueryUsing(function (Builder $query) {
+                    $query->whereHas('operation.operationType', function (Builder $query) {
+                        $query->where('type', Enums\OperationType::OUTGOING);
+                    });
+                }),
+            'internal_moves' => PresetView::make(__('inventories::filament/clusters/products/resources/product/pages/manage-moves.tabs.internal'))
+                ->favorite()
+                ->icon('heroicon-o-arrows-right-left')
+                ->modifyQueryUsing(function (Builder $query) {
+                    $query->whereHas('operation.operationType', function (Builder $query) {
+                        $query->where('type', Enums\OperationType::INTERNAL);
+                    });
+                }),
+        ];
     }
 
     public function table(Table $table): Table
@@ -75,6 +124,9 @@ class ManageMoves extends ManageRelatedRecords
                             ->body(__('inventories::filament/clusters/products/resources/product/pages/manage-moves.table.actions.delete.notification.body')),
                     ),
             ])
-            ->defaultSort('created_at', 'desc');
+            ->defaultSort('created_at', 'desc')
+            ->modifyQueryUsing(function (Builder $query) {
+                $query->where('state', Enums\MoveState::DONE);
+            });
     }
 }

@@ -3,22 +3,33 @@
 namespace Webkul\Inventory\Filament\Clusters\Operations\Resources;
 
 use Filament\Forms;
+use Filament\Forms\Components\Actions\Action;
 use Filament\Forms\Form;
 use Filament\Infolists;
 use Filament\Infolists\Infolist;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Filament\Tables\Filters\QueryBuilder\Constraints\RelationshipConstraint\Operators\IsRelatedToOperator;
 use Illuminate\Support\Facades\Auth;
 use Webkul\Field\Filament\Forms\Components\ProgressStepper;
 use Webkul\Field\Filament\Traits\HasCustomFields;
 use Webkul\Inventory\Enums;
+use Webkul\Inventory\Filament\Clusters\Products\Resources\LotResource;
+use Webkul\Inventory\Filament\Clusters\Products\Resources\PackageResource;
 use Webkul\Inventory\Models\Move;
 use Webkul\Inventory\Models\Operation;
 use Webkul\Inventory\Models\OperationType;
 use Webkul\Inventory\Models\Product;
+use Webkul\Inventory\Models\ProductQuantity;
+use Webkul\Inventory\Settings\OperationSettings;
 use Webkul\Inventory\Settings\ProductSettings;
+use Webkul\Inventory\Settings\TraceabilitySettings;
 use Webkul\Inventory\Settings\WarehouseSettings;
+use Webkul\TableViews\Filament\Components\PresetView;
 
 class OperationResource extends Resource
 {
@@ -27,6 +38,8 @@ class OperationResource extends Resource
     protected static ?string $model = Operation::class;
 
     protected static bool $shouldRegisterNavigation = false;
+
+    protected static ?string $recordTitleAttribute = 'name';
 
     public static function form(Form $form): Form
     {
@@ -71,7 +84,7 @@ class OperationResource extends Resource
                             ->required()
                             ->live()
                             ->getOptionLabelFromRecordUsing(function (OperationType $record) {
-                                return $record->warehouse->name . ': ' . $record->name;
+                                return $record->warehouse->name.': '.$record->name;
                             })
                             ->afterStateUpdated(function (Forms\Set $set, Forms\Get $get) {
                                 $operationType = OperationType::find($get('operation_type_id'));
@@ -86,7 +99,7 @@ class OperationResource extends Resource
                             ->searchable()
                             ->preload()
                             ->required()
-                            ->visible(fn (WarehouseSettings $warehouseSettings): bool => $warehouseSettings->enable_locations)
+                            ->visible(fn (WarehouseSettings $warehouseSettings, Forms\Get $get): bool => $warehouseSettings->enable_locations && OperationType::find($get('operation_type_id'))?->type != Enums\OperationType::INCOMING)
                             ->disabled(fn ($record): bool => in_array($record?->state, [Enums\OperationState::DONE, Enums\OperationState::CANCELED])),
                         Forms\Components\Select::make('destination_location_id')
                             ->label(__('inventories::filament/clusters/operations/resources/operation.form.sections.general.fields.destination-location'))
@@ -94,7 +107,7 @@ class OperationResource extends Resource
                             ->searchable()
                             ->preload()
                             ->required()
-                            ->visible(fn (WarehouseSettings $warehouseSettings): bool => $warehouseSettings->enable_locations)
+                            ->visible(fn (WarehouseSettings $warehouseSettings, Forms\Get $get): bool => $warehouseSettings->enable_locations && OperationType::find($get('operation_type_id'))?->type != Enums\OperationType::OUTGOING)
                             ->disabled(fn ($record): bool => in_array($record?->state, [Enums\OperationState::DONE, Enums\OperationState::CANCELED])),
                     ])
                     ->columns(2),
@@ -175,29 +188,35 @@ class OperationResource extends Resource
                     ->visible(fn (WarehouseSettings $warehouseSettings): bool => $warehouseSettings->enable_locations),
                 Tables\Columns\TextColumn::make('partner.name')
                     ->label(__('inventories::filament/clusters/operations/resources/operation.table.columns.contact'))
+                    ->placeholder('—')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('user.name')
                     ->label(__('inventories::filament/clusters/operations/resources/operation.table.columns.responsible'))
+                    ->placeholder('—')
                     ->searchable()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('scheduled_at')
                     ->label(__('inventories::filament/clusters/operations/resources/operation.table.columns.scheduled-at'))
+                    ->placeholder('—')
                     ->dateTime()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('deadline')
                     ->label(__('inventories::filament/clusters/operations/resources/operation.table.columns.deadline'))
+                    ->placeholder('—')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('closed_at')
                     ->label(__('inventories::filament/clusters/operations/resources/operation.table.columns.closed-at'))
+                    ->placeholder('—')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('origin')
                     ->label(__('inventories::filament/clusters/operations/resources/operation.table.columns.source-document'))
+                    ->placeholder('—')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('operationType.name')
@@ -207,6 +226,7 @@ class OperationResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('company.name')
                     ->label(__('inventories::filament/clusters/operations/resources/operation.table.columns.company'))
+                    ->placeholder('—')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('state')
@@ -215,14 +235,132 @@ class OperationResource extends Resource
                     ->sortable()
                     ->badge(),
             ])
-            ->filters([
-                //
+            ->groups([
+                Tables\Grouping\Group::make('state')
+                    ->label(__('inventories::filament/clusters/operations/resources/operation.table.groups.state')),
+                Tables\Grouping\Group::make('origin')
+                    ->label(__('inventories::filament/clusters/operations/resources/operation.table.groups.source-document')),
+                Tables\Grouping\Group::make('operationType.name')
+                    ->label(__('inventories::filament/clusters/operations/resources/operation.table.groups.operation-type')),
+                Tables\Grouping\Group::make('schedule_at')
+                    ->label(__('inventories::filament/clusters/operations/resources/operation.table.groups.schedule-at'))
+                    ->date(),
+                Tables\Grouping\Group::make('created_at')
+                    ->label(__('inventories::filament/clusters/operations/resources/operation.table.groups.created-at'))
+                    ->date(),
             ])
+            ->filters([
+                Tables\Filters\QueryBuilder::make()
+                    ->constraints(static::mergeCustomTableQueryBuilderConstraints([
+                        Tables\Filters\QueryBuilder\Constraints\TextConstraint::make('name')
+                            ->label(__('inventories::filament/clusters/operations/resources/operation.table.filters.name')),
+                        Tables\Filters\QueryBuilder\Constraints\SelectConstraint::make('state')
+                            ->label(__('inventories::filament/clusters/operations/resources/operation.table.filters.state'))
+                            ->multiple()
+                            ->options(Enums\OperationState::class)
+                            ->icon('heroicon-o-bars-2'),
+                        Tables\Filters\QueryBuilder\Constraints\RelationshipConstraint::make('partner')
+                            ->label(__('inventories::filament/clusters/operations/resources/operation.table.filters.partner'))
+                            ->multiple()
+                            ->selectable(
+                                IsRelatedToOperator::make()
+                                    ->titleAttribute('name')
+                                    ->searchable()
+                                    ->multiple()
+                                    ->preload(),
+                            )
+                            ->icon('heroicon-o-user'),
+                        Tables\Filters\QueryBuilder\Constraints\RelationshipConstraint::make('user')
+                            ->label(__('inventories::filament/clusters/operations/resources/operation.table.filters.responsible'))
+                            ->multiple()
+                            ->selectable(
+                                IsRelatedToOperator::make()
+                                    ->titleAttribute('name')
+                                    ->searchable()
+                                    ->multiple()
+                                    ->preload(),
+                            )
+                            ->icon('heroicon-o-user'),
+                        Tables\Filters\QueryBuilder\Constraints\RelationshipConstraint::make('owner')
+                            ->label(__('inventories::filament/clusters/operations/resources/operation.table.filters.owner'))
+                            ->multiple()
+                            ->selectable(
+                                IsRelatedToOperator::make()
+                                    ->titleAttribute('name')
+                                    ->searchable()
+                                    ->multiple()
+                                    ->preload(),
+                            )
+                            ->icon('heroicon-o-user'),
+                        Tables\Filters\QueryBuilder\Constraints\RelationshipConstraint::make('sourceLocation')
+                            ->label(__('inventories::filament/clusters/operations/resources/operation.table.filters.source-location'))
+                            ->multiple()
+                            ->selectable(
+                                IsRelatedToOperator::make()
+                                    ->titleAttribute('full_name')
+                                    ->searchable()
+                                    ->multiple()
+                                    ->preload(),
+                            )
+                            ->icon('heroicon-o-map-pin'),
+                        Tables\Filters\QueryBuilder\Constraints\RelationshipConstraint::make('destinationLocation')
+                            ->label(__('inventories::filament/clusters/operations/resources/operation.table.filters.destination-location'))
+                            ->multiple()
+                            ->selectable(
+                                IsRelatedToOperator::make()
+                                    ->titleAttribute('full_name')
+                                    ->searchable()
+                                    ->multiple()
+                                    ->preload(),
+                            )
+                            ->icon('heroicon-o-map-pin'),
+                        Tables\Filters\QueryBuilder\Constraints\DateConstraint::make('deadline')
+                            ->label(__('inventories::filament/clusters/operations/resources/operation.table.filters.deadline'))
+                            ->icon('heroicon-o-calendar'),
+                        Tables\Filters\QueryBuilder\Constraints\DateConstraint::make('scheduled_at')
+                            ->label(__('inventories::filament/clusters/operations/resources/operation.table.filters.scheduled-at')),
+                        Tables\Filters\QueryBuilder\Constraints\DateConstraint::make('closed_at')
+                            ->label(__('inventories::filament/clusters/operations/resources/operation.table.filters.closed-at')),
+                        Tables\Filters\QueryBuilder\Constraints\DateConstraint::make('created_at')
+                            ->label(__('inventories::filament/clusters/operations/resources/operation.table.filters.created-at')),
+                        Tables\Filters\QueryBuilder\Constraints\DateConstraint::make('updated_at')
+                            ->label(__('inventories::filament/clusters/operations/resources/operation.table.filters.updated-at')),
+                        Tables\Filters\QueryBuilder\Constraints\RelationshipConstraint::make('company')
+                            ->label(__('inventories::filament/clusters/operations/resources/operation.table.filters.company'))
+                            ->multiple()
+                            ->selectable(
+                                IsRelatedToOperator::make()
+                                    ->titleAttribute('name')
+                                    ->searchable()
+                                    ->multiple()
+                                    ->preload(),
+                            )
+                            ->icon('heroicon-o-building-office'),
+                        Tables\Filters\QueryBuilder\Constraints\RelationshipConstraint::make('creator')
+                            ->label(__('inventories::filament/clusters/operations/resources/operation.table.filters.creator'))
+                            ->multiple()
+                            ->selectable(
+                                IsRelatedToOperator::make()
+                                    ->titleAttribute('name')
+                                    ->searchable()
+                                    ->multiple()
+                                    ->preload(),
+                            )
+                            ->icon('heroicon-o-user'),
+                    ])),
+            ], layout: \Filament\Tables\Enums\FiltersLayout::Modal)
             ->filtersTriggerAction(
                 fn (Tables\Actions\Action $action) => $action
                     ->slideOver(),
             )
-            ->filtersFormColumns(2);
+            ->filtersTriggerAction(
+                fn (Tables\Actions\Action $action) => $action
+                    ->slideOver(),
+            )
+            ->filtersFormColumns(2)
+            ->checkIfRecordIsSelectableUsing(
+                fn (Model $record): bool => static::can('delete', $record) && $record->state !== Enums\OperationState::DONE,
+            );
     }
 
     public static function infolist(Infolist $infolist): Infolist
@@ -429,7 +567,8 @@ class OperationResource extends Resource
                     ->required()
                     ->visible(fn (Move $move): bool => $move->id && $move->state !== Enums\MoveState::DRAFT)
                     ->disabled(fn ($record): bool => in_array($record?->state, [Enums\MoveState::DONE, Enums\OperationState::CANCELED]))
-                    ->suffixAction(static::getMoveLinesAction()),
+                    ->suffixAction(fn ($record) => static::getMoveLinesAction($record)),
+                // ->suffixAction(static::getMoveLinesAction()),
                 Forms\Components\Select::make('uom_id')
                     ->label(__('inventories::filament/clusters/operations/resources/operation.form.tabs.operations.fields.unit'))
                     ->relationship(
@@ -460,7 +599,7 @@ class OperationResource extends Resource
             ->addable(fn ($record): bool => ! in_array($record?->state, [Enums\OperationState::DONE, Enums\OperationState::CANCELED]));
     }
 
-    public static function getMoveLinesAction(): Forms\Components\Actions\Action
+    public static function getMoveLinesAction($move): Forms\Components\Actions\Action
     {
         return Forms\Components\Actions\Action::make('manageLines')
             ->icon('heroicon-m-bars-4')
@@ -476,12 +615,50 @@ class OperationResource extends Resource
                             ->relationship('destinationLocation', 'full_name')
                             ->searchable()
                             ->preload()
-                            ->required(),
+                            ->required()
+                            ->live()
+                            ->afterStateUpdated(function (Forms\Set $set) {
+                                $set('result_package_id', null);
+                            }),
                         Forms\Components\Select::make('result_package_id')
                             ->label(__('inventories::filament/clusters/operations/resources/operation.form.tabs.operations.fields.lines.fields.package'))
                             ->relationship('resultPackage', 'name')
+                            ->relationship(
+                                name: 'resultPackage',
+                                titleAttribute: 'name',
+                                modifyQueryUsing: fn (Builder $query, Forms\Get $get) => $query->where('location_id', $get('destination_location_id')),
+                            )
                             ->searchable()
-                            ->preload(),
+                            ->preload()
+                            ->createOptionForm(fn (Form $form): Form => PackageResource::form($form))
+                            ->createOptionAction(function (Action $action) use ($move) {
+                                $action->mutateFormDataUsing(function (array $data) use ($move) {
+                                    $data['company_id'] = $move->company_id;
+
+                                    return $data;
+                                });
+                            })
+                            ->visible(fn (OperationSettings $operationSettings) => $operationSettings->enable_packages),
+                        Forms\Components\Select::make('lot_id')
+                            ->label(__('inventories::filament/clusters/operations/resources/operation.form.tabs.operations.fields.lines.fields.lot'))
+                            ->relationship(
+                                name: 'lot',
+                                titleAttribute: 'name',
+                                modifyQueryUsing: fn (Builder $query) => $query->where('product_id', $move->product_id),
+                            )
+                            ->searchable()
+                            ->preload()
+                            ->disableOptionWhen(fn () => ! $move->operationType->use_existing_lots)
+                            ->createOptionForm(fn (Form $form): Form => LotResource::form($form))
+                            ->createOptionAction(function (Action $action) use ($move) {
+                                $action->visible($move->operationType->use_create_lots)
+                                    ->mutateFormDataUsing(function (array $data) use ($move) {
+                                        $data['product_id'] = $move->product_id;
+
+                                        return $data;
+                                    });
+                            })
+                            ->visible(fn (TraceabilitySettings $traceabilitySettings): bool => $traceabilitySettings->enable_lots_serial_numbers && $move->product->tracking == Enums\ProductTracking::LOT),
                         Forms\Components\TextInput::make('qty')
                             ->label(__('inventories::filament/clusters/operations/resources/operation.form.tabs.operations.fields.lines.fields.quantity'))
                             ->numeric()
@@ -490,7 +667,7 @@ class OperationResource extends Resource
                     ])
                     ->defaultItems(0)
                     ->addActionLabel('Add Line')
-                    ->columns(3)
+                    ->columns(4)
                     ->mutateRelationshipDataBeforeCreateUsing(function (array $data, Move $move): array {
                         $data['reference'] = $move->reference;
                         $data['state'] = $move->state;
@@ -529,5 +706,282 @@ class OperationResource extends Resource
 
                 $set('received_qty', $totalQty);
             });
+    }
+
+    public static function getPresetTableViews(): array
+    {
+        return [
+            'todo_receipts' => PresetView::make(__('inventories::filament/clusters/operations/resources/operation.tabs.todo'))
+                ->favorite()
+                ->icon('heroicon-s-clipboard-document-list')
+                ->modifyQueryUsing(fn (Builder $query) => $query->whereNotIn('state', [Enums\OperationState::DONE, Enums\OperationState::CANCELED])),
+            'my_receipts' => PresetView::make(__('inventories::filament/clusters/operations/resources/operation.tabs.my'))
+                ->favorite()
+                ->icon('heroicon-s-user')
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('user_id', Auth::id())),
+            'favorite_receipts' => PresetView::make(__('inventories::filament/clusters/operations/resources/operation.tabs.starred'))
+                ->favorite()
+                ->icon('heroicon-s-star')
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('is_favorite', true)),
+            'draft_receipts' => PresetView::make(__('inventories::filament/clusters/operations/resources/operation.tabs.draft'))
+                ->favorite()
+                ->icon('heroicon-s-pencil-square')
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('state', Enums\OperationState::DRAFT)),
+            'waiting_receipts' => PresetView::make(__('inventories::filament/clusters/operations/resources/operation.tabs.waiting'))
+                ->favorite()
+                ->icon('heroicon-s-clock')
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('state', Enums\OperationState::WAITING)),
+            'ready_receipts' => PresetView::make(__('inventories::filament/clusters/operations/resources/operation.tabs.ready'))
+                ->favorite()
+                ->icon('heroicon-s-play-circle')
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('state', Enums\OperationState::READY)),
+            'done_receipts' => PresetView::make(__('inventories::filament/clusters/operations/resources/operation.tabs.done'))
+                ->favorite()
+                ->icon('heroicon-s-check-circle')
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('state', Enums\OperationState::DONE)),
+            'canceled_receipts' => PresetView::make(__('inventories::filament/clusters/operations/resources/operation.tabs.canceled'))
+                ->icon('heroicon-s-x-circle')
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('state', Enums\OperationState::CANCELED)),
+        ];
+    }
+
+    public static function handleUpdate(Operation $record)
+    {
+        foreach ($record->moves as $move) {
+            $move->fill([
+                'name'                    => $move->product->name,
+                'uom_id'                  => $move->uom_id ?? $move->product->uom_id,
+                'requested_uom_qty'       => $move->requested_qty,
+                'operation_type_id'       => $record->operation_type_id,
+                'source_location_id'      => $record->source_location_id,
+                'destination_location_id' => $record->destination_location_id,
+                'scheduled_at'            => $record->scheduled_at ?? now(),
+                'reference'               => $record->name,
+            ]);
+
+            if ($move->received_qty <= 0) {
+                if ($record->state === Enums\OperationState::READY) {
+                    $move->update(['state' => Enums\MoveState::CONFIRMED]);
+                } else {
+                    $move->update(['state' => Enums\MoveState::DRAFT]);
+                }
+
+                $move->lines()->delete();
+
+                continue;
+            }
+
+            $move->update(['state' => Enums\MoveState::ASSIGNED]);
+
+            static::createOrUpdateMoveLines($move);
+        }
+    }
+
+    public static function markAsTodo(Operation $record)
+    {
+        if (! $record->moves->count()) {
+            Notification::make()
+                ->success()
+                ->title(__('inventories::filament/clusters/operations/resources/operation.header-actions.todo.notification.warning.title'))
+                ->body(__('inventories::filament/clusters/operations/resources/operation.header-actions.todo.notification.warning.body'))
+                ->warning()
+                ->send();
+
+            return;
+        }
+
+        $record->update(['state' => Enums\OperationState::READY]);
+
+        foreach ($record->moves as $move) {
+            $move->update([
+                'state'        => Enums\MoveState::CONFIRMED,
+                'received_qty' => $move->requested_qty,
+            ]);
+
+            static::createOrUpdateMoveLines($move);
+        }
+
+        Notification::make()
+            ->success()
+            ->title(__('inventories::filament/clusters/operations/resources/operation.header-actions.todo.notification.success.title'))
+            ->body(__('inventories::filament/clusters/operations/resources/operation.header-actions.todo.notification.success.body'))
+            ->success()
+            ->send();
+    }
+
+    public static function validate(Operation $record)
+    {
+        foreach ($record->moves as $move) {
+            $isLotTracking = $move->product->tracking == Enums\ProductTracking::LOT;
+
+            if (! $isLotTracking) {
+                continue;
+            }
+
+            if ($move->lines->isEmpty()) {
+                Notification::make()
+                    ->success()
+                    ->title(__('inventories::filament/clusters/operations/resources/operation.header-actions.validate.notification.warning.title'))
+                    ->body(__('inventories::filament/clusters/operations/resources/operation.header-actions.validate.notification.warning.body'))
+                    ->warning()
+                    ->send();
+
+                return;
+            }
+
+            if ($move->lines->contains(fn ($line) => ! $line->lot_id)) {
+                Notification::make()
+                    ->success()
+                    ->title(__('inventories::filament/clusters/operations/resources/operation.header-actions.validate.notification.warning.title'))
+                    ->body(__('inventories::filament/clusters/operations/resources/operation.header-actions.validate.notification.warning.body'))
+                    ->warning()
+                    ->send();
+
+                return;
+            }
+        }
+
+        $record->update([
+            'state' => Enums\OperationState::DONE,
+        ]);
+
+        foreach ($record->moves as $move) {
+            $move->update([
+                'state'        => Enums\MoveState::DONE,
+                'is_picked'    => true,
+                'received_qty' => $move->received_qty > 0 ? $move->received_qty : $move->requested_qty,
+            ]);
+
+            static::createOrUpdateMoveLines($move);
+
+            foreach ($move->lines()->get() as $moveLine) {
+                $sourceQuantity = ProductQuantity::where('product_id', $moveLine->product_id)
+                    ->where('location_id', $moveLine->source_location_id)
+                    ->where('lot_id', $moveLine->lot_id ?? null)
+                    ->first();
+
+                if ($sourceQuantity) {
+                    $remainingQty = $sourceQuantity->quantity - $moveLine->qty;
+
+                    if ($remainingQty == 0) {
+                        $sourceQuantity->delete();
+                    } else {
+                        $sourceQuantity->update([
+                            'quantity'                => $remainingQty,
+                            'reserved_quantity'       => $sourceQuantity->reserved_quantity - $moveLine->qty,
+                            'inventory_diff_quantity' => $sourceQuantity->inventory_diff_quantity + $moveLine->qty,
+                        ]);
+                    }
+                } else {
+                    ProductQuantity::create([
+                        'product_id'              => $moveLine->product_id,
+                        'location_id'             => $moveLine->source_location_id,
+                        'lot_id'                  => $moveLine->lot_id,
+                        'quantity'                => -$moveLine->qty,
+                        'inventory_diff_quantity' => $moveLine->qty,
+                        'company_id'              => $moveLine->sourceLocation->company_id,
+                        'creator_id'              => Auth::id(),
+                        'incoming_at'             => now(),
+                    ]);
+                }
+
+                $destinationQuantity = ProductQuantity::where('product_id', $moveLine->product_id)
+                    ->where('location_id', $moveLine->destination_location_id)
+                    ->where('lot_id', $moveLine->lot_id ?? null)
+                    ->where('package_id', $moveLine->result_package_id ?? null)
+                    ->first();
+
+                if ($destinationQuantity) {
+                    $destinationQuantity->update([
+                        'quantity'                => $destinationQuantity->quantity + $moveLine->qty,
+                        'reserved_quantity'       => $destinationQuantity->reserved_quantity + $moveLine->qty,
+                        'inventory_diff_quantity' => $destinationQuantity->inventory_diff_quantity - $moveLine->qty,
+                    ]);
+                } else {
+                    ProductQuantity::create([
+                        'product_id'              => $moveLine->product_id,
+                        'location_id'             => $moveLine->destination_location_id,
+                        'package_id'              => $moveLine->result_package_id,
+                        'lot_id'                  => $moveLine->lot_id,
+                        'quantity'                => $moveLine->qty,
+                        'reserved_quantity'       => $moveLine->qty,
+                        'inventory_diff_quantity' => -$moveLine->qty,
+                        'incoming_at'             => now(),
+                        'creator_id'              => Auth::id(),
+                        'company_id'              => $moveLine->destinationLocation->company_id,
+                    ]);
+                }
+
+                // if ($record->package) {
+                //     $record->package->update([
+                //         'location_id' => $record->location_id,
+                //         'pack_date'   => now(),
+                //     ]);
+                // }
+
+                // if ($record->lot) {
+                //     $record->lot->update([
+                //         'location_id' => $record->location_id,
+                //     ]);
+                // }
+            }
+        }
+    }
+
+    public static function createOrUpdateMoveLines(Move $record)
+    {
+        $lines = $record->lines()->orderBy('created_at')->get();
+
+        if ($lines->isEmpty()) {
+            $record->lines()->create([
+                'lot_name'                => null,
+                'state'                   => $record->state,
+                'reference'               => $record->reference,
+                'picking_description'     => $record->description_picking,
+                'qty'                     => $record->received_qty,
+                'uom_qty'                 => $record->requested_uom_qty,
+                'is_picked'               => $record->is_picked,
+                'scheduled_at'            => $record->scheduled_at,
+                'operation_id'            => $record->operation_id,
+                'product_id'              => $record->product_id,
+                'uom_id'                  => $record->uom_id,
+                'source_location_id'      => $record->source_location_id,
+                'destination_location_id' => $record->destination_location_id,
+                'company_id'              => $record->company_id,
+                'creator_id'              => Auth::id(),
+            ]);
+        }
+
+        $remainingQty = $record->received_qty;
+
+        $linesToKeep = collect();
+
+        foreach ($lines as $line) {
+            if ($remainingQty > 0) {
+                $newQty = min($line->qty, $remainingQty);
+
+                $linesToKeep->push([
+                    'state'   => $record->state,
+                    'line'    => $line,
+                    'new_qty' => $newQty,
+                ]);
+
+                $remainingQty -= $newQty;
+            }
+        }
+
+        $lines->each(function ($line) use ($linesToKeep, $record) {
+            $lineToKeep = $linesToKeep->firstWhere('line.id', $line->id);
+
+            if ($lineToKeep) {
+                $line->update([
+                    'state'   => $record->state,
+                    'qty'     => $lineToKeep['new_qty'],
+                    'uom_qty' => $lineToKeep['new_qty'],
+                ]);
+            } else {
+                $line->delete();
+            }
+        });
     }
 }

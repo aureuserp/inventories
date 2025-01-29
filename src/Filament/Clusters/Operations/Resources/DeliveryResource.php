@@ -21,6 +21,8 @@ class DeliveryResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-truck';
 
+    protected static ?string $recordTitleAttribute = 'name';
+
     protected static ?int $navigationSort = 3;
 
     protected static ?string $cluster = Operations::class;

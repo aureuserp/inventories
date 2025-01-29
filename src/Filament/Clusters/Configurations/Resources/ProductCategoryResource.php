@@ -95,11 +95,14 @@ class ProductCategoryResource extends Resource
                 Tables\Columns\TextColumn::make('full_name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('parent_path')
+                    ->placeholder('—')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('parent.name')
+                    ->placeholder('—')
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('creator.name')
+                    ->placeholder('—')
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')

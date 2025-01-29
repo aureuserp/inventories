@@ -15,10 +15,10 @@ use Webkul\Inventory\Enums;
 use Webkul\Inventory\Filament\Clusters\Configurations;
 use Webkul\Inventory\Filament\Clusters\Configurations\Resources\RouteResource\Pages\ManageRules;
 use Webkul\Inventory\Filament\Clusters\Configurations\Resources\RuleResource\Pages;
+use Webkul\Inventory\Models\OperationType;
 use Webkul\Inventory\Models\Route;
 use Webkul\Inventory\Models\Rule;
 use Webkul\Inventory\Settings\WarehouseSettings;
-use Webkul\Inventory\Models\OperationType;
 
 class RuleResource extends Resource
 {
@@ -81,7 +81,7 @@ class RuleResource extends Resource
                                             ->preload()
                                             ->required()
                                             ->getOptionLabelFromRecordUsing(function (OperationType $record) {
-                                                return $record->warehouse->name . ': ' . $record->name;
+                                                return $record->warehouse->name.': '.$record->name;
                                             }),
                                         Forms\Components\Select::make('source_location_id')
                                             ->label(__('inventories::filament/clusters/configurations/resources/rule.form.sections.general.fields.source-location'))

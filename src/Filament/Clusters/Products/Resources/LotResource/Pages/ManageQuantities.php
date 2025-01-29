@@ -21,7 +21,7 @@ class ManageQuantities extends ManageRelatedRecords
 
     protected static string $relationship = 'quantities';
 
-    protected static ?string $navigationIcon = 'heroicon-o-scale';
+    protected static ?string $navigationIcon = 'heroicon-o-map-pin';
 
     /**
      * @param  array<string, mixed>  $parameters

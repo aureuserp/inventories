@@ -44,6 +44,7 @@ return [
                         'fields' => [
                             'location' => 'Store To',
                             'package'  => 'Destination Package',
+                            'lot'      => 'Lot/Serial Number',
                             'quantity' => 'Quantity',
                         ],
                     ],
@@ -94,10 +95,28 @@ return [
         ],
 
         'groups' => [
+            'state' => 'State',
+            'source-document' => 'Source Document',
+            'operation-type'  => 'Operation Type',
+            'schedule-at' => 'Schedule At',
             'created-at' => 'Created At',
         ],
 
         'filters' => [
+            'name' => 'Name',
+            'state' => 'State',
+            'partner' => 'Partner',
+            'responsible' => 'Responsible',
+            'owner' => 'Owner', 
+            'source-location' => 'Source Location',
+            'destination-location' => 'Destination Location',
+            'deadline' => 'Deadline',
+            'scheduled-at' => 'Scheduled At',
+            'closed-at' => 'Closed At',
+            'created-at' => 'Created At',
+            'updated-at' => 'Updated At',
+            'company' => 'Company',
+            'creator' => 'Creator',
         ],
 
         'actions' => [
@@ -159,6 +178,7 @@ return [
                 ],
             ],
         ],
+
         'tabs' => [
             'operations' => [
                 'title'   => 'Operations',
@@ -186,6 +206,42 @@ return [
             ],
             'note' => [
                 'title' => 'Note',
+            ],
+        ],
+    ],
+
+    'tabs' => [
+        'todo'     => 'To Do',
+        'my'       => 'My Transfers',
+        'starred'  => 'Starred',
+        'draft'    => 'Draft',
+        'waiting'  => 'Waiting',
+        'ready'    => 'Ready',
+        'done'     => 'Done',
+        'canceled' => 'Canceled',
+    ],
+
+    'header-actions' => [
+        'todo' => [
+            'notification' => [
+                'warning' => [
+                    'title' => 'Receipt has no moves',
+                    'body'  => 'The receipt has no moves to mark as todo.',
+                ],
+
+                'success' => [
+                    'title' => 'Receipt marked as todo',
+                    'body'  => 'The receipt has been marked as todo successfully.',
+                ],
+            ],
+        ],
+
+        'validate' => [
+            'notification' => [
+                'warning' => [
+                    'title' => 'Supply Lot/Serial Number',
+                    'body'  => 'You need to supply a Lot/Serial Number for products',
+                ],
             ],
         ],
     ],

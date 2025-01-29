@@ -32,26 +32,26 @@ return [
 
     'table' => [
         'columns' => [
-            'date' => 'Date',
-            'reference' => 'Reference',
-            'product' => 'Product',
-            'package' => 'Package',
-            'quantity' => 'Quantity',
-            'uom' => 'Unit of Measure',
+            'date'            => 'Date',
+            'reference'       => 'Reference',
+            'product'         => 'Product',
+            'package'         => 'Package',
+            'quantity'        => 'Quantity',
+            'uom'             => 'Unit of Measure',
             'source-location' => 'Source Location',
-            'scrap-location' => 'Scrap Location',
-            'unit' => 'Unit of Measure',
-            'lot' => 'Lot/Serial',
-            'tags' => 'Tags',
+            'scrap-location'  => 'Scrap Location',
+            'unit'            => 'Unit of Measure',
+            'lot'             => 'Lot/Serial',
+            'tags'            => 'Tags',
         ],
 
         'actions' => [
             'delete' => [
                 'notification' => [
                     'title' => 'Scrap deleted',
-                    'body' => 'The scrap has been deleted successfully.',
+                    'body'  => 'The scrap has been deleted successfully.',
                 ],
-            ],            
-        ]
+            ],
+        ],
     ],
 ];

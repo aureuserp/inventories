@@ -120,6 +120,7 @@ return [
             'company'     => 'Company',
             'price'       => 'Price',
             'cost'        => 'Cost',
+            'on-hand'     => 'On Hand',
             'tags'        => 'Tags',
             'deleted-at'  => 'Deleted At',
             'created-at'  => 'Created At',

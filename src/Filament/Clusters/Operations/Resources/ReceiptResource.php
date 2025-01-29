@@ -24,6 +24,8 @@ class ReceiptResource extends Resource
 
     protected static ?int $navigationSort = 1;
 
+    protected static ?string $recordTitleAttribute = 'name';
+
     protected static ?string $cluster = Operations::class;
 
     protected static SubNavigationPosition $subNavigationPosition = SubNavigationPosition::Top;
@@ -51,6 +53,7 @@ class ReceiptResource extends Resource
                     Tables\Actions\ViewAction::make(),
                     Tables\Actions\EditAction::make(),
                     Tables\Actions\DeleteAction::make()
+                        ->hidden(fn (Operation $record): bool => $record->state == Enums\OperationState::DONE)
                         ->successNotification(
                             Notification::make()
                                 ->success()

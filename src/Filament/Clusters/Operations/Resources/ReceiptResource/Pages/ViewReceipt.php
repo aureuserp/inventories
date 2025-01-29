@@ -6,6 +6,7 @@ use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Webkul\Chatter\Filament\Actions\ChatterAction;
+use Webkul\Inventory\Enums;
 use Webkul\Inventory\Filament\Clusters\Operations\Resources\ReceiptResource;
 
 class ViewReceipt extends ViewRecord
@@ -18,6 +19,7 @@ class ViewReceipt extends ViewRecord
             ChatterAction::make()
                 ->setResource(static::$resource),
             Actions\DeleteAction::make()
+                ->hidden(fn () => $this->getRecord()->state == Enums\OperationState::DONE)
                 ->successNotification(
                     Notification::make()
                         ->success()
