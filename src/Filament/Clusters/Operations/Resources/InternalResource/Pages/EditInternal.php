@@ -49,7 +49,8 @@ class EditInternal extends EditRecord
                 ->hidden(fn () => $this->getRecord()->state == Enums\OperationState::DONE),
             Actions\Action::make('return')
                 ->label(__('inventories::filament/clusters/operations/resources/internal/pages/edit-internal.header-actions.return.label'))
-                ->color('gray'),
+                ->color('gray')
+                ->visible(fn () => $this->getRecord()->state == Enums\OperationState::DONE),
             Actions\DeleteAction::make()
                 ->hidden(fn () => $this->getRecord()->state == Enums\OperationState::DONE)
                 ->successNotification(

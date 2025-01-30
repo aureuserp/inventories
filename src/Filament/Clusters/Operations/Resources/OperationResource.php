@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Filament\Tables\Filters\QueryBuilder\Constraints\RelationshipConstraint\Operators\IsRelatedToOperator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rules\Enum;
 use Webkul\Field\Filament\Forms\Components\ProgressStepper;
 use Webkul\Field\Filament\Traits\HasCustomFields;
 use Webkul\Inventory\Enums;
@@ -568,7 +569,6 @@ class OperationResource extends Resource
                     ->visible(fn (Move $move): bool => $move->id && $move->state !== Enums\MoveState::DRAFT)
                     ->disabled(fn ($record): bool => in_array($record?->state, [Enums\MoveState::DONE, Enums\OperationState::CANCELED]))
                     ->suffixAction(fn ($record) => static::getMoveLinesAction($record)),
-                // ->suffixAction(static::getMoveLinesAction()),
                 Forms\Components\Select::make('uom_id')
                     ->label(__('inventories::filament/clusters/operations/resources/operation.form.tabs.operations.fields.unit'))
                     ->relationship(
@@ -601,6 +601,28 @@ class OperationResource extends Resource
 
     public static function getMoveLinesAction($move): Forms\Components\Actions\Action
     {
+        $columns = 2;
+
+        if (
+            app(TraceabilitySettings::class)->enable_lots_serial_numbers
+            && $move->product->tracking == Enums\ProductTracking::LOT
+            && $move->sourceLocation->type == Enums\LocationType::SUPPLIER
+        ) {
+            $columns++;
+        }
+        
+        if ($move->sourceLocation->type == Enums\LocationType::INTERNAL) {
+            $columns++;
+        }
+
+        if (app(OperationSettings::class)->enable_packages) {
+            $columns++;
+        }
+
+        if (app(ProductSettings::class)->enable_uom) {
+            $columns++;
+        }
+
         return Forms\Components\Actions\Action::make('manageLines')
             ->icon('heroicon-m-bars-4')
             ->label(__('inventories::filament/clusters/operations/resources/operation.form.tabs.operations.fields.lines.modal-heading'))
@@ -610,23 +632,109 @@ class OperationResource extends Resource
                     ->hiddenLabel()
                     ->relationship('lines')
                     ->schema([
-                        Forms\Components\Select::make('destination_location_id')
-                            ->label(__('inventories::filament/clusters/operations/resources/operation.form.tabs.operations.fields.lines.fields.location'))
-                            ->relationship('destinationLocation', 'full_name')
+                        Forms\Components\Select::make('lot_id')
+                            ->label(__('inventories::filament/clusters/operations/resources/operation.form.tabs.operations.fields.lines.fields.lot'))
+                            ->relationship(
+                                name: 'lot',
+                                titleAttribute: 'name',
+                                modifyQueryUsing: fn (Builder $query) => $query->where('product_id', $move->product_id),
+                            )
+                            ->searchable()
+                            ->preload()
+                            ->required()
+                            ->disabled(fn (): bool => in_array($move->state, [Enums\MoveState::DONE, Enums\MoveState::CANCELED]))
+                            ->disableOptionWhen(fn () => ! $move->operationType->use_existing_lots)
+                            ->createOptionForm(fn (Form $form): Form => LotResource::form($form))
+                            ->createOptionAction(function (Action $action) use ($move) {
+                                $action->visible($move->operationType->use_create_lots)
+                                    ->mutateFormDataUsing(function (array $data) use ($move) {
+                                        $data['product_id'] = $move->product_id;
+
+                                        return $data;
+                                    });
+                            })
+                            ->visible(fn (TraceabilitySettings $traceabilitySettings): bool =>
+                                $traceabilitySettings->enable_lots_serial_numbers
+                                && $move->product->tracking == Enums\ProductTracking::LOT
+                                && $move->sourceLocation->type == Enums\LocationType::SUPPLIER
+                            ),
+                        Forms\Components\Select::make('quantity_id')
+                            ->label(__(__('inventories::filament/clusters/operations/resources/operation.form.tabs.operations.fields.lines.fields.pick-from')))
+                            ->options(function () use ($move) {
+                                return ProductQuantity::with(['location', 'lot', 'package'])
+                                    ->where('product_id', $move->product_id)
+                                    ->whereHas('location', function (Builder $query) use($move) {
+                                        $query->where('id', $move->source_location_id)
+                                            ->orWhere('parent_id', $move->source_location_id);
+                                    })
+                                    ->get()
+                                    ->mapWithKeys(function ($quantity) {
+                                        $nameParts = array_filter([
+                                            $quantity->location->full_name,
+                                            $quantity->lot?->name,
+                                            $quantity->package?->name,
+                                        ]);
+
+                                        return [$quantity->id => implode(' - ', $nameParts)];
+                                    })
+                                    ->toArray();
+                            })
                             ->searchable()
                             ->preload()
                             ->required()
                             ->live()
+                            ->afterStateHydrated(function (Forms\Components\Select $component, $record) {
+                                $productQuantity = ProductQuantity::with(['location', 'lot', 'package'])
+                                    ->where('product_id', $record?->product_id)
+                                    ->where('location_id', $record?->source_location_id)
+                                    ->where('lot_id', $record?->lot_id ?? null)
+                                    ->where('package_id', $record?->package_id ?? null)
+                                    ->first();
+                                
+                                $component->state($productQuantity?->id);
+                            })
+                            ->afterStateUpdated(function (Forms\Set $set, Forms\Get $get) {
+                                $productQuantity = ProductQuantity::find($get('quantity_id'));
+
+                                $set('lot_id', $productQuantity?->lot_id);
+
+                                $set('result_package_id', $productQuantity?->package_id);
+
+                                $set('qty', $productQuantity?->quantity);
+                            })
+                            ->visible($move->sourceLocation->type == Enums\LocationType::INTERNAL),
+                        Forms\Components\Select::make('destination_location_id')
+                            ->label(__('inventories::filament/clusters/operations/resources/operation.form.tabs.operations.fields.lines.fields.location'))
+                            ->relationship(
+                                name: 'destinationLocation',
+                                titleAttribute: 'full_name',
+                                modifyQueryUsing: fn (Builder $query) => $query
+                                    ->where('type', '<>', Enums\LocationType::VIEW)
+                                    ->where(function ($query) use($move) {
+                                        $query->where('id', $move->destination_location_id)
+                                            ->orWhere('parent_id', $move->destination_location_id);
+                                    }),
+                            )
+                            ->searchable()
+                            ->preload()
+                            ->required()
+                            ->live()
+                            ->default($move->destination_location_id)
                             ->afterStateUpdated(function (Forms\Set $set) {
                                 $set('result_package_id', null);
-                            }),
+                            })
+                            ->disabled(fn (): bool => in_array($move->state, [Enums\MoveState::DONE, Enums\MoveState::CANCELED])),
                         Forms\Components\Select::make('result_package_id')
                             ->label(__('inventories::filament/clusters/operations/resources/operation.form.tabs.operations.fields.lines.fields.package'))
-                            ->relationship('resultPackage', 'name')
                             ->relationship(
                                 name: 'resultPackage',
                                 titleAttribute: 'name',
-                                modifyQueryUsing: fn (Builder $query, Forms\Get $get) => $query->where('location_id', $get('destination_location_id')),
+                                modifyQueryUsing: fn (Builder $query, Forms\Get $get, $record) => $query
+                                    ->where(function ($query) use ($get, $record) {
+                                        $query->where('location_id', $get('destination_location_id'))
+                                            ->orWhere('id', $record->package_id)
+                                            ->orWhereNull('location_id');
+                                    }),
                             )
                             ->searchable()
                             ->preload()
@@ -638,37 +746,39 @@ class OperationResource extends Resource
                                     return $data;
                                 });
                             })
+                            ->disabled(fn (): bool => in_array($move->state, [Enums\MoveState::DONE, Enums\MoveState::CANCELED]))
                             ->visible(fn (OperationSettings $operationSettings) => $operationSettings->enable_packages),
-                        Forms\Components\Select::make('lot_id')
-                            ->label(__('inventories::filament/clusters/operations/resources/operation.form.tabs.operations.fields.lines.fields.lot'))
-                            ->relationship(
-                                name: 'lot',
-                                titleAttribute: 'name',
-                                modifyQueryUsing: fn (Builder $query) => $query->where('product_id', $move->product_id),
-                            )
-                            ->searchable()
-                            ->preload()
-                            ->disableOptionWhen(fn () => ! $move->operationType->use_existing_lots)
-                            ->createOptionForm(fn (Form $form): Form => LotResource::form($form))
-                            ->createOptionAction(function (Action $action) use ($move) {
-                                $action->visible($move->operationType->use_create_lots)
-                                    ->mutateFormDataUsing(function (array $data) use ($move) {
-                                        $data['product_id'] = $move->product_id;
-
-                                        return $data;
-                                    });
-                            })
-                            ->visible(fn (TraceabilitySettings $traceabilitySettings): bool => $traceabilitySettings->enable_lots_serial_numbers && $move->product->tracking == Enums\ProductTracking::LOT),
                         Forms\Components\TextInput::make('qty')
                             ->label(__('inventories::filament/clusters/operations/resources/operation.form.tabs.operations.fields.lines.fields.quantity'))
                             ->numeric()
                             ->minValue(0)
-                            ->required(),
+                            ->required()
+                            ->disabled(fn (): bool => in_array($move->state, [Enums\MoveState::DONE, Enums\MoveState::CANCELED])),
+                        Forms\Components\Select::make('uom_id')
+                            ->label(__('inventories::filament/clusters/operations/resources/operation.form.tabs.operations.fields.lines.fields.uom'))
+                            ->relationship(
+                                'uom',
+                                'name',
+                                fn ($query) => $query->where('category_id', 1),
+                            )
+                            ->searchable()
+                            ->preload()
+                            ->required()
+                            ->visible(fn (ProductSettings $productSettings) => $productSettings->enable_uom)
+                            ->disabled(fn (): bool => in_array($move->state, [Enums\MoveState::DONE, Enums\MoveState::CANCELED])),
                     ])
                     ->defaultItems(0)
-                    ->addActionLabel('Add Line')
-                    ->columns(4)
+                    ->addActionLabel(__('inventories::filament/clusters/operations/resources/operation.form.tabs.operations.fields.lines.add-line'))
+                    ->columns($columns)
                     ->mutateRelationshipDataBeforeCreateUsing(function (array $data, Move $move): array {
+                        if (isset($data['quantity_id'])) {
+                            $productQuantity = ProductQuantity::find($data['quantity_id']);
+
+                            $data['lot_id'] = $productQuantity?->lot_id;
+
+                            $data['package_id'] = $productQuantity?->package_id;
+                        }
+
                         $data['reference'] = $move->reference;
                         $data['state'] = $move->state;
                         $data['uom_qty'] = $data['qty'];
@@ -676,26 +786,30 @@ class OperationResource extends Resource
                         $data['operation_id'] = $move->operation_id;
                         $data['move_id'] = $move->id;
                         $data['source_location_id'] = $move->source_location_id;
-                        $data['uom_id'] = $move->uom_id;
+                        $data['uom_id'] ??= $move->uom_id;
                         $data['creator_id'] = Auth::id();
                         $data['product_id'] = $move->product_id;
                         $data['company_id'] = $move->company_id;
 
                         return $data;
-                    }),
+                    })
+                    ->mutateRelationshipDataBeforeSaveUsing(function (array $data): array {
+                        if (isset($data['quantity_id'])) {
+                            $productQuantity = ProductQuantity::find($data['quantity_id']);
+
+                            $data['lot_id'] = $productQuantity?->lot_id;
+
+                            $data['package_id'] = $productQuantity?->package_id;
+                        }
+
+                        return $data;
+                    })
+                    ->deletable(fn (): bool => ! in_array($move->state, [Enums\MoveState::DONE, Enums\MoveState::CANCELED]))
+                    ->addable(fn (): bool => ! in_array($move->state, [Enums\MoveState::DONE, Enums\MoveState::CANCELED])),
             ])
             ->modalWidth('6xl')
             ->mountUsing(function (Forms\ComponentContainer $form, Move $record) {
-                $form->fill([
-                    'lines' => $record->lines()->get()->map(function ($line) {
-                        return [
-                            'id'                      => $line->id,
-                            'destination_location_id' => $line->destination_location_id,
-                            'result_package_id'       => $line->result_package_id,
-                            'qty'                     => $line->qty,
-                        ];
-                    })->toArray(),
-                ]);
+                $form->fill([]);
             })
             ->action(function (Forms\Set $set, array $data, Move $record): void {
                 $totalQty = $record->lines()->sum('qty');
@@ -765,15 +879,11 @@ class OperationResource extends Resource
                 } else {
                     $move->update(['state' => Enums\MoveState::DRAFT]);
                 }
-
-                $move->lines()->delete();
-
-                continue;
+            } else {
+                $move->update(['state' => Enums\MoveState::ASSIGNED]);
             }
 
-            $move->update(['state' => Enums\MoveState::ASSIGNED]);
-
-            static::createOrUpdateMoveLines($move);
+            static::updateOrCreateMoveLines($move);
         }
     }
 
@@ -798,7 +908,7 @@ class OperationResource extends Resource
                 'received_qty' => $move->requested_qty,
             ]);
 
-            static::createOrUpdateMoveLines($move);
+            static::updateOrCreateMoveLines($move);
         }
 
         Notification::make()
@@ -812,28 +922,56 @@ class OperationResource extends Resource
     public static function validate(Operation $record)
     {
         foreach ($record->moves as $move) {
-            $isLotTracking = $move->product->tracking == Enums\ProductTracking::LOT;
-
-            if (! $isLotTracking) {
-                continue;
-            }
-
             if ($move->lines->isEmpty()) {
                 Notification::make()
-                    ->success()
-                    ->title(__('inventories::filament/clusters/operations/resources/operation.header-actions.validate.notification.warning.title'))
-                    ->body(__('inventories::filament/clusters/operations/resources/operation.header-actions.validate.notification.warning.body'))
+                    ->title(__('inventories::filament/clusters/operations/resources/operation.header-actions.validate.notification.warning.lines-missing.title'))
+                    ->body(__('inventories::filament/clusters/operations/resources/operation.header-actions.validate.notification.warning.lines-missing.body'))
                     ->warning()
                     ->send();
 
                 return;
             }
 
+            foreach ($move->lines as $line) {
+                if (! $line->package_id) {
+                    continue;
+                }
+
+                if (! $line->result_package_id) {
+                    continue;
+                }
+                
+                if ($line->package_id != $line->result_package_id) {
+                    continue;
+                }
+
+                $sourceQuantity = ProductQuantity::where('product_id', $line->product_id)
+                    ->where('location_id', $line->source_location_id)
+                    ->where('lot_id', $line->lot_id ?? null)
+                    ->where('package_id', $line->package_id ?? null)
+                    ->first();
+
+                if ($sourceQuantity?->quantity != $line->qty) {
+                    Notification::make()
+                        ->title(__('inventories::filament/clusters/operations/resources/operation.header-actions.validate.notification.warning.partial-package.title'))
+                        ->body(__('inventories::filament/clusters/operations/resources/operation.header-actions.validate.notification.warning.partial-package.body'))
+                        ->warning()
+                        ->send();
+
+                    return;
+                }
+            }
+
+            $isLotTracking = $move->product->tracking == Enums\ProductTracking::LOT;
+
+            if (! $isLotTracking) {
+                continue;
+            }
+
             if ($move->lines->contains(fn ($line) => ! $line->lot_id)) {
                 Notification::make()
-                    ->success()
-                    ->title(__('inventories::filament/clusters/operations/resources/operation.header-actions.validate.notification.warning.title'))
-                    ->body(__('inventories::filament/clusters/operations/resources/operation.header-actions.validate.notification.warning.body'))
+                    ->title(__('inventories::filament/clusters/operations/resources/operation.header-actions.validate.notification.warning.lot-missing.title'))
+                    ->body(__('inventories::filament/clusters/operations/resources/operation.header-actions.validate.notification.warning.lot-missing.body'))
                     ->warning()
                     ->send();
 
@@ -852,12 +990,13 @@ class OperationResource extends Resource
                 'received_qty' => $move->received_qty > 0 ? $move->received_qty : $move->requested_qty,
             ]);
 
-            static::createOrUpdateMoveLines($move);
+            static::updateOrCreateMoveLines($move);
 
             foreach ($move->lines()->get() as $moveLine) {
                 $sourceQuantity = ProductQuantity::where('product_id', $moveLine->product_id)
                     ->where('location_id', $moveLine->source_location_id)
                     ->where('lot_id', $moveLine->lot_id ?? null)
+                    ->where('package_id', $moveLine->package_id ?? null)
                     ->first();
 
                 if ($sourceQuantity) {
@@ -877,6 +1016,7 @@ class OperationResource extends Resource
                         'product_id'              => $moveLine->product_id,
                         'location_id'             => $moveLine->source_location_id,
                         'lot_id'                  => $moveLine->lot_id,
+                        'package_id'              => $moveLine->package_id,
                         'quantity'                => -$moveLine->qty,
                         'inventory_diff_quantity' => $moveLine->qty,
                         'company_id'              => $moveLine->sourceLocation->company_id,
@@ -912,12 +1052,12 @@ class OperationResource extends Resource
                     ]);
                 }
 
-                // if ($record->package) {
-                //     $record->package->update([
-                //         'location_id' => $record->location_id,
-                //         'pack_date'   => now(),
-                //     ]);
-                // }
+                if ($moveLine->result_package_id) {
+                    $moveLine->resultPackage->update([
+                        'location_id' => $moveLine->destination_location_id,
+                        'pack_date'   => now(),
+                    ]);
+                }
 
                 // if ($record->lot) {
                 //     $record->lot->update([
@@ -928,60 +1068,82 @@ class OperationResource extends Resource
         }
     }
 
-    public static function createOrUpdateMoveLines(Move $record)
+    public static function updateOrCreateMoveLines(Move $record)
     {
         $lines = $record->lines()->orderBy('created_at')->get();
 
-        if ($lines->isEmpty()) {
-            $record->lines()->create([
-                'lot_name'                => null,
-                'state'                   => $record->state,
-                'reference'               => $record->reference,
-                'picking_description'     => $record->description_picking,
-                'qty'                     => $record->received_qty,
-                'uom_qty'                 => $record->requested_uom_qty,
-                'is_picked'               => $record->is_picked,
-                'scheduled_at'            => $record->scheduled_at,
-                'operation_id'            => $record->operation_id,
-                'product_id'              => $record->product_id,
-                'uom_id'                  => $record->uom_id,
-                'source_location_id'      => $record->source_location_id,
-                'destination_location_id' => $record->destination_location_id,
-                'company_id'              => $record->company_id,
-                'creator_id'              => Auth::id(),
-            ]);
-        }
-
         $remainingQty = $record->received_qty;
 
-        $linesToKeep = collect();
+        $updatedLines = collect();
 
         foreach ($lines as $line) {
             if ($remainingQty > 0) {
                 $newQty = min($line->qty, $remainingQty);
 
-                $linesToKeep->push([
+                $line->update([
+                    'qty' => $newQty,
+                    'uom_qty' => $newQty,
                     'state'   => $record->state,
-                    'line'    => $line,
-                    'new_qty' => $newQty,
                 ]);
+
+                $updatedLines->push($line->source_location_id.'-'.$line->lot_id.'-'.$line->package_id);
 
                 $remainingQty -= $newQty;
-            }
-        }
-
-        $lines->each(function ($line) use ($linesToKeep, $record) {
-            $lineToKeep = $linesToKeep->firstWhere('line.id', $line->id);
-
-            if ($lineToKeep) {
-                $line->update([
-                    'state'   => $record->state,
-                    'qty'     => $lineToKeep['new_qty'],
-                    'uom_qty' => $lineToKeep['new_qty'],
-                ]);
             } else {
                 $line->delete();
             }
-        });
+        }
+
+        if ($remainingQty <= 0) {
+            return;
+        }
+
+        $productQuantities = ProductQuantity::with(['location', 'lot', 'package'])
+            ->where('product_id', $record->product_id)
+            ->whereHas('location', function (Builder $query) use ($record) {
+                $query->where('id', $record->source_location_id)
+                    ->orWhere('parent_id', $record->source_location_id);
+            })
+            ->when(
+                $record->sourceLocation->type != Enums\LocationType::SUPPLIER
+                && $record->product->tracking == Enums\ProductTracking::LOT,
+                fn($query) => $query->whereNotNull('lot_id')
+            )
+            ->get();
+
+        foreach ($productQuantities as $productQuantity) {
+            if ($remainingQty <= 0)  {
+                break;
+            }
+            
+            if ($updatedLines->contains($productQuantity->location_id.'-'.$productQuantity->lot_id.'-'.$productQuantity->package_id)) {
+                continue;
+            }
+
+            $newQty = min($productQuantity->quantity, $remainingQty);
+
+            $record->lines()->create([
+                'qty'                     => $newQty,
+                'uom_qty'                 => $newQty,
+                'lot_name'                => $productQuantity->lot?->name,
+                'lot_id'                  => $productQuantity->lot_id,
+                'package_id'              => $productQuantity->package_id,
+                'result_package_id'       => $newQty == $productQuantity->quantity ? $productQuantity->package_id : null,
+                'source_location_id'      => $productQuantity->location_id,
+                'state'                   => $record->state,
+                'reference'               => $record->reference,
+                'picking_description'     => $record->description_picking,
+                'is_picked'               => $record->is_picked,
+                'scheduled_at'            => $record->scheduled_at,
+                'operation_id'            => $record->operation_id,
+                'product_id'              => $record->product_id,
+                'uom_id'                  => $record->uom_id,
+                'destination_location_id' => $record->destination_location_id,
+                'company_id'              => $record->company_id,
+                'creator_id'              => Auth::id(),
+            ]);
+
+            $remainingQty -= $newQty;
+        }
     }
 }

@@ -40,12 +40,15 @@ return [
 
                     'lines' => [
                         'modal-heading' => 'Manage Stock Moves',
+                        'add-line'      => 'Add Line',
 
                         'fields' => [
+                            'lot'      => 'Lot/Serial Number',
+                            'pick-from' => 'Pick From',
                             'location' => 'Store To',
                             'package'  => 'Destination Package',
-                            'lot'      => 'Lot/Serial Number',
                             'quantity' => 'Quantity',
+                            'uom'      => 'Unit of Measure',
                         ],
                     ],
                 ],
@@ -239,8 +242,20 @@ return [
         'validate' => [
             'notification' => [
                 'warning' => [
-                    'title' => 'Supply Lot/Serial Number',
-                    'body'  => 'You need to supply a Lot/Serial Number for products',
+                    'lines-missing' => [
+                        'title' => 'Receipt has no moves',
+                        'body'  => 'The receipt has no moves to mark as todo.',
+                    ],
+                    
+                    'lot-missing' => [
+                        'title' => 'Supply Lot/Serial Number',
+                        'body'  => 'You need to supply a Lot/Serial Number for products',
+                    ],
+                    
+                    'partial-package' => [
+                        'title' => 'Can not move same package content',
+                        'body'  => 'You cannot move the same package content more than once in the same transfer or split the same package into two location.',
+                    ],
                 ],
             ],
         ],
