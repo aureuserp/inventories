@@ -1,9 +1,10 @@
 <?php
 
 return [
-    'draft'     => 'Draft',
-    'confirmed' => 'Confirmed',
-    'assigned'  => 'Assigned',
-    'done'      => 'Done',
-    'canceled'  => 'Canceled',
+    'draft'              => 'Draft',
+    'confirmed'          => 'Waiting',
+    'assigned'           => 'Ready',
+    'partially-assigned' => 'Partially Ready',
+    'done'               => 'Done',
+    'canceled'           => 'Canceled',
 ];

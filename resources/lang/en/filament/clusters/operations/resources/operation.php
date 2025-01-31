@@ -243,8 +243,8 @@ return [
             'notification' => [
                 'warning' => [
                     'lines-missing' => [
-                        'title' => 'Receipt has no moves',
-                        'body'  => 'The receipt has no moves to mark as todo.',
+                        'title' => 'No quantities are reserved',
+                        'body'  => 'No quantities are reserved for the transfer.',
                     ],
                     
                     'lot-missing' => [

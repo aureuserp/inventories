@@ -11,6 +11,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Webkul\Inventory\Enums;
+use Filament\Infolists\Infolist;
 use Webkul\Inventory\Filament\Clusters\Operations;
 use Webkul\Inventory\Filament\Clusters\Operations\Resources\InternalResource\Pages;
 use Webkul\Inventory\Models\Operation;
@@ -74,6 +75,11 @@ class InternalResource extends Resource
                     $query->where('type', Enums\OperationType::INTERNAL);
                 });
             });
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return OperationResource::infolist($infolist);
     }
 
     public static function getRecordSubNavigation(Page $page): array

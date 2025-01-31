@@ -38,13 +38,31 @@ class EditInternal extends EditRecord
                 ->requiresConfirmation()
                 ->action(function (Operation $record) {
                     OperationResource::markAsTodo($record);
+
+                    $this->fillForm();
                 })
                 ->hidden(fn () => $this->getRecord()->state !== Enums\OperationState::DRAFT),
+            Actions\Action::make('check_availability')
+                ->label(__('inventories::filament/clusters/operations/resources/internal/pages/edit-internal.header-actions.check-availability.label'))
+                ->action(function (Operation $record) {
+                    OperationResource::checkAvailability($record);
+
+                    $this->fillForm();
+                })
+                ->hidden(function() {
+                    if (! in_array($this->getRecord()->state, [Enums\OperationState::CONFIRMED, Enums\OperationState::ASSIGNED])) {
+                        return true;
+                    }
+
+                    return ! $this->getRecord()->moves->contains(fn($move) => in_array($move->state, [Enums\MoveState::CONFIRMED, Enums\MoveState::PARTIALLY_ASSIGNED]));
+                }),
             Actions\Action::make('validate')
                 ->label(__('inventories::filament/clusters/operations/resources/internal/pages/edit-internal.header-actions.validate.label'))
                 ->color('gray')
                 ->action(function (Operation $record) {
                     OperationResource::validate($record);
+
+                    $this->fillForm();
                 })
                 ->hidden(fn () => $this->getRecord()->state == Enums\OperationState::DONE),
             Actions\Action::make('return')
@@ -60,10 +78,5 @@ class EditInternal extends EditRecord
                         ->body(__('inventories::filament/clusters/operations/resources/internal/pages/edit-internal.header-actions.delete.notification.body')),
                 ),
         ];
-    }
-
-    protected function afterSave(): void
-    {
-        OperationResource::handleUpdate($this->getRecord());
     }
 }

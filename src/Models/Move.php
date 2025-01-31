@@ -166,32 +166,6 @@ class Move extends Model
         return $this->belongsTo(User::class);
     }
 
-    protected static function booted()
-    {
-        static::creating(function ($move) {
-            $product = Product::find($move->product_id);
-
-            $move->fill([
-                'name'              => $move->name ?? $product->name,
-                'procure_method'    => $move->procure_method ?? Enums\ProcureMethod::MAKE_TO_STOCK,
-                'state'             => $move->state ?? Enums\MoveState::DRAFT,
-                'uom_id'            => $move->uom_id ?? $product->uom_id,
-                'requested_uom_qty' => $move->requested_qty,
-                'scheduled_at'      => $move->scheduled_at ?? now(),
-            ]);
-
-            if ($move->operation) {
-                $move->fill([
-                    'operation_type_id'       => $move->operation->operation_type_id,
-                    'source_location_id'      => $move->operation->source_location_id,
-                    'destination_location_id' => $move->operation->destination_location_id,
-                    'scheduled_at'            => $move->scheduled_at ?? ($move->operation->scheduled_at ?? now()),
-                    'reference'               => $move->operation->name,
-                ]);
-            }
-        });
-    }
-
     protected static function newFactory(): MoveFactory
     {
         return MoveFactory::new();

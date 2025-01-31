@@ -11,6 +11,10 @@ return [
             'label' => 'Mark as Todo',
         ],
 
+        'check-availability' => [
+            'label' => 'Check Availability',
+        ],
+
         'validate' => [
             'label' => 'Validate',
         ],

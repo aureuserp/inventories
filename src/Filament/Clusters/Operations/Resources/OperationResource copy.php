@@ -588,36 +588,10 @@ class OperationResource extends Resource
                     ->disabled(fn ($record): bool => in_array($record?->state, [Enums\MoveState::DONE, Enums\OperationState::CANCELED])),
             ])
             ->columns(4)
-            ->mutateRelationshipDataBeforeCreateUsing(function (array $data, $record) {
-                $product = Product::find($data['product_id']);
+            ->mutateRelationshipDataBeforeCreateUsing(function (array $data) {
+                $data['creator_id'] = Auth::id();
 
-                $data = array_merge($data, [
-                    'creator_id'              => Auth::id(),
-                    'company_id'              => Auth::user()->default_company_id,
-                    'state'                   => $record->state->value,
-                    'name'                    => $product->name,
-                    'procure_method'          => Enums\ProcureMethod::MAKE_TO_STOCK,
-                    'uom_id'                  => $data['uom_id'] ?? $product->uom_id,
-                    'requested_uom_qty'       => $data['requested_qty'],
-                    'operation_type_id'       => $record->operation_type_id,
-                    'source_location_id'      => $record->source_location_id,
-                    'destination_location_id' => $record->destination_location_id,
-                    'scheduled_at'            => $record->scheduled_at ?? now(),
-                    'reference'               => $record->name,
-                ]);
-
-                return $data;
-            })
-            ->mutateRelationshipDataBeforeSaveUsing(function (array $data, $record) {
-                $moveQty = null;
-
-                if ($data['received_qty'] != $record->requested_qty) {
-                    $moveQty = $data['received_qty'];
-                }
-
-                static::updateOrCreateMoveLines($record, $moveQty);
-
-                static::updateOperationState($record->operation);
+                $data['company_id'] = Auth::user()->default_company_id;
 
                 return $data;
             })
@@ -687,7 +661,7 @@ class OperationResource extends Resource
                         Forms\Components\Select::make('quantity_id')
                             ->label(__(__('inventories::filament/clusters/operations/resources/operation.form.tabs.operations.fields.lines.fields.pick-from')))
                             ->options(function ($record) use ($move) {
-                                if (in_array($record?->state, [Enums\MoveState::DONE, Enums\MoveState::CANCELED])) {
+                                if (in_array($record->state, [Enums\MoveState::DONE, Enums\MoveState::CANCELED])) {
                                     $nameParts = array_filter([
                                         $record->sourceLocation->full_name,
                                         $record->lot?->name,
@@ -722,7 +696,7 @@ class OperationResource extends Resource
                             ->required()
                             ->live()
                             ->afterStateHydrated(function (Forms\Components\Select $component, $record) {
-                                if (in_array($record?->state, [Enums\MoveState::DONE, Enums\MoveState::CANCELED])) {
+                                if (in_array($record->state, [Enums\MoveState::DONE, Enums\MoveState::CANCELED])) {
                                     $component->state($record->id);
 
                                     return;
@@ -777,7 +751,7 @@ class OperationResource extends Resource
                                 modifyQueryUsing: fn (Builder $query, Forms\Get $get, $record) => $query
                                     ->where(function ($query) use ($get, $record) {
                                         $query->where('location_id', $get('destination_location_id'))
-                                            ->orWhere('id', $record?->package_id)
+                                            ->orWhere('id', $record->package_id)
                                             ->orWhereNull('location_id');
                                     }),
                             )
@@ -859,7 +833,9 @@ class OperationResource extends Resource
             ->action(function (Forms\Set $set, array $data, Move $record): void {
                 $totalQty = $record->lines()->sum('qty');
 
-                static::updateOrCreateMoveLines($record, $totalQty);
+                $record->update([
+                    'received_qty' => $totalQty,
+                ]);
 
                 $set('received_qty', $totalQty);
             });
@@ -902,6 +878,56 @@ class OperationResource extends Resource
         ];
     }
 
+    public static function handleUpdate(Operation $record)
+    {
+        foreach ($record->moves as $move) {
+            $move->fill([
+                'name'                    => $move->product->name,
+                'uom_id'                  => $move->uom_id ?? $move->product->uom_id,
+                'requested_uom_qty'       => $move->requested_qty,
+                'operation_type_id'       => $record->operation_type_id,
+                'source_location_id'      => $record->source_location_id,
+                'destination_location_id' => $record->destination_location_id,
+                'scheduled_at'            => $record->scheduled_at ?? now(),
+                'reference'               => $record->name,
+            ]);
+
+            if ($move->received_qty <= 0) {
+                if ($record->state === Enums\OperationState::ASSIGNED) {
+                    $move->fill(['state' => Enums\MoveState::CONFIRMED]);
+                } else {
+                    $move->fill(['state' => Enums\MoveState::DRAFT]);
+                }
+            } else {
+                $move->fill(['state' => Enums\MoveState::ASSIGNED]);
+            }
+
+            static::updateOrCreateMoveLines($move);
+
+            $move->update([
+                'received_qty' => $move->lines->sum('qty'),
+            ]);
+        }
+    }
+
+    private static function updateOperationState(Operation $record)
+    {
+        $record->refresh();
+        
+        if ($record->state === Enums\OperationState::DONE) {
+            return;
+        }
+
+        if ($record->moves->every(fn($move) => $move->state === Enums\MoveState::CONFIRMED)) {
+            $record->update(['state' => Enums\OperationState::CONFIRMED]);
+        } elseif ($record->moves->contains(fn($move) => 
+            $move->state === Enums\MoveState::ASSIGNED || 
+            $move->state === Enums\MoveState::PARTIALLY_ASSIGNED
+        )) {
+            $record->update(['state' => Enums\OperationState::ASSIGNED]);
+        }
+    }
+
     public static function markAsTodo(Operation $record)
     {
         if (! $record->moves->count()) {
@@ -917,13 +943,18 @@ class OperationResource extends Resource
 
         foreach ($record->moves as $move) {
             $move->fill([
+                'state'        => Enums\MoveState::CONFIRMED,
                 'received_qty' => $move->requested_qty,
             ]);
 
-            static::updateOrCreateMoveLines($move, $move->requested_qty);
+            static::updateOrCreateMoveLines($move);
+
+            $move->update([
+                'received_qty' => $move->lines->sum('qty'),
+            ]);
         }
 
-        static::updateOperationState($record);
+        $record->update(['state' => Enums\OperationState::ASSIGNED]);
 
         Notification::make()
             ->success()
@@ -933,19 +964,8 @@ class OperationResource extends Resource
             ->send();
     }
 
-    public static function checkAvailability(Operation $record)
-    {
-        foreach ($record->moves as $move) {
-            static::updateOrCreateMoveLines($move);
-        }
-
-        static::updateOperationState($record);
-    }
-
     public static function validate(Operation $record)
     {
-        static::checkAvailability($record);
-
         foreach ($record->moves as $move) {
             if ($move->lines->isEmpty()) {
                 Notification::make()
@@ -976,7 +996,7 @@ class OperationResource extends Resource
                     ->where('package_id', $line->package_id ?? null)
                     ->first();
 
-                if ($sourceQuantity && $sourceQuantity->quantity != $line->qty) {
+                if ($sourceQuantity?->quantity != $line->qty) {
                     Notification::make()
                         ->title(__('inventories::filament/clusters/operations/resources/operation.header-actions.validate.notification.warning.partial-package.title'))
                         ->body(__('inventories::filament/clusters/operations/resources/operation.header-actions.validate.notification.warning.partial-package.body'))
@@ -1006,15 +1026,14 @@ class OperationResource extends Resource
 
         foreach ($record->moves as $move) {
             $move->update([
-                'state' => Enums\MoveState::DONE,
-                'is_picked' => true,
+                'state'        => Enums\MoveState::DONE,
+                'is_picked'    => true,
+                'received_qty' => $move->received_qty > 0 ? $move->received_qty : $move->requested_qty,
             ]);
 
+            static::updateOrCreateMoveLines($move);
+
             foreach ($move->lines()->get() as $moveLine) {
-                $moveLine->update([
-                    'state' => Enums\MoveState::DONE,
-                ]);
-                
                 $sourceQuantity = ProductQuantity::where('product_id', $moveLine->product_id)
                     ->where('location_id', $moveLine->source_location_id)
                     ->where('lot_id', $moveLine->lot_id ?? null)
@@ -1091,59 +1110,51 @@ class OperationResource extends Resource
             }
         }
 
-        static::updateOperationState($record);
+        $record->update([
+            'state' => Enums\OperationState::DONE,
+        ]);
     }
 
-    public static function updateOrCreateMoveLines(Move $record, $moveQty = null)
+    public static function updateOrCreateMoveLines(Move $record)
     {
         $lines = $record->lines()->orderBy('created_at')->get();
 
-        $remainingQty = $moveQty ?? $record->requested_qty;
+        $remainingQty = $record->received_qty;
 
         $updatedLines = collect();
 
         $availableQuantity = 0;
 
-        $isSupplierSource = $record->sourceLocation->type === Enums\LocationType::SUPPLIER;
+        $productQuantities = ProductQuantity::with(['location', 'lot', 'package'])
+            ->where('product_id', $record->product_id)
+            ->whereHas('location', function (Builder $query) use ($record) {
+                $query->where('id', $record->source_location_id)
+                    ->orWhere('parent_id', $record->source_location_id);
+            })
+            ->when(
+                $record->sourceLocation->type != Enums\LocationType::SUPPLIER
+                && $record->product->tracking == Enums\ProductTracking::LOT,
+                fn($query) => $query->whereNotNull('lot_id')
+            )
+            ->get();
 
-        $productQuantities = collect();
-
-        if (! $isSupplierSource) {
-            $productQuantities = ProductQuantity::with(['location', 'lot', 'package'])
-                ->where('product_id', $record->product_id)
-                ->whereHas('location', function (Builder $query) use ($record) {
-                    $query->where('id', $record->source_location_id)
-                        ->orWhere('parent_id', $record->source_location_id);
-                })
-                ->when(
-                    $record->sourceLocation->type != Enums\LocationType::SUPPLIER
-                    && $record->product->tracking == Enums\ProductTracking::LOT,
-                    fn($query) => $query->whereNotNull('lot_id')
-                )
-                ->get();
-        }
+        $totalAvailableQty = $productQuantities->sum('quantity');
 
         foreach ($lines as $line) {
-            $currentLocationQty = null;
-            
-            if (! $isSupplierSource) {
-                $currentLocationQty = $productQuantities
-                    ->where('location_id', $line->source_location_id)
-                    ->where('lot_id', $line->lot_id)
-                    ->where('package_id', $line->package_id)
-                    ->first()?->quantity ?? 0;
+            $currentLocationQty = $productQuantities
+                ->where('location_id', $line->source_location_id)
+                ->where('lot_id', $line->lot_id)
+                ->where('package_id', $line->package_id)
+                ->first()?->quantity ?? 0;
 
-                if ($currentLocationQty <= 0) {
-                    $line->delete();
+            if ($currentLocationQty <= 0) {
+                $line->delete();
 
-                    continue;
-                }
+                continue;
             }
 
             if ($remainingQty > 0) {
-                $newQty = $isSupplierSource 
-                    ? $newQty = min($line->qty, $remainingQty)
-                    : min($line->qty, $currentLocationQty, $remainingQty);
+                $newQty = min($line->qty, $currentLocationQty, $remainingQty);
                 
                 if ($newQty != $line->qty) {
                     $line->update([
@@ -1154,9 +1165,7 @@ class OperationResource extends Resource
                 }
 
                 $updatedLines->push($line->source_location_id.'-'.$line->lot_id.'-'.$line->package_id);
-
                 $remainingQty -= $newQty;
-
                 $availableQuantity += $newQty;
             } else {
                 $line->delete();
@@ -1164,11 +1173,31 @@ class OperationResource extends Resource
         }
 
         if ($remainingQty > 0) {
-            if ($isSupplierSource) {
+            foreach ($productQuantities as $productQuantity) {
+                if ($remainingQty <= 0) {
+                    break;
+                }
+                
+                if ($updatedLines->contains($productQuantity->location_id.'-'.$productQuantity->lot_id.'-'.$productQuantity->package_id)) {
+                    continue;
+                }
+
+                if ($productQuantity->quantity <= 0) {
+                    continue;
+                }
+
+                $newQty = min($productQuantity->quantity, $remainingQty);
+
+                $availableQuantity += $newQty;
+
                 $record->lines()->create([
-                    'qty' => $remainingQty,
-                    'uom_qty' => $remainingQty,
-                    'source_location_id' => $record->source_location_id,
+                    'qty' => $newQty,
+                    'uom_qty' => $newQty,
+                    'lot_name' => $productQuantity->lot?->name,
+                    'lot_id' => $productQuantity->lot_id,
+                    'package_id' => $productQuantity->package_id,
+                    'result_package_id' => $newQty == $productQuantity->quantity ? $productQuantity->package_id : null,
+                    'source_location_id' => $productQuantity->location_id,
                     'state' => Enums\MoveState::ASSIGNED,
                     'reference' => $record->reference,
                     'picking_description' => $record->description_picking,
@@ -1181,67 +1210,26 @@ class OperationResource extends Resource
                     'company_id' => $record->company_id,
                     'creator_id' => Auth::id(),
                 ]);
-                
-                $availableQuantity += $remainingQty;
-            } else {
-                foreach ($productQuantities as $productQuantity) {
-                    if ($remainingQty <= 0) {
-                        break;
-                    }
-                    
-                    if ($updatedLines->contains($productQuantity->location_id.'-'.$productQuantity->lot_id.'-'.$productQuantity->package_id)) {
-                        continue;
-                    }
 
-                    if ($productQuantity->quantity <= 0) {
-                        continue;
-                    }
-
-                    $newQty = min($productQuantity->quantity, $remainingQty);
-
-                    $availableQuantity += $newQty;
-
-                    $record->lines()->create([
-                        'qty' => $newQty,
-                        'uom_qty' => $newQty,
-                        'lot_name' => $productQuantity->lot?->name,
-                        'lot_id' => $productQuantity->lot_id,
-                        'package_id' => $productQuantity->package_id,
-                        'result_package_id' => $newQty == $productQuantity->quantity ? $productQuantity->package_id : null,
-                        'source_location_id' => $productQuantity->location_id,
-                        'state' => Enums\MoveState::ASSIGNED,
-                        'reference' => $record->reference,
-                        'picking_description' => $record->description_picking,
-                        'is_picked' => $record->is_picked,
-                        'scheduled_at' => $record->scheduled_at,
-                        'operation_id' => $record->operation_id,
-                        'product_id' => $record->product_id,
-                        'uom_id' => $record->uom_id,
-                        'destination_location_id' => $record->destination_location_id,
-                        'company_id' => $record->company_id,
-                        'creator_id' => Auth::id(),
-                    ]);
-
-                    $remainingQty -= $newQty;
-                }
+                $remainingQty -= $newQty;
             }
         }
 
         $requestedQty = $record->requested_qty;
-
+        
         if ($availableQuantity <= 0) {
             $record->update([
                 'state' => Enums\MoveState::CONFIRMED,
-                'received_qty' => 0,
+                'received_qty' => 0
             ]);
             
             $record->lines()->update([
-                'state' => Enums\MoveState::CONFIRMED,
+                'state' => Enums\MoveState::CONFIRMED
             ]);
         } elseif ($availableQuantity < $requestedQty) {
             $record->update([
                 'state' => Enums\MoveState::PARTIALLY_ASSIGNED,
-                'received_qty' => $availableQuantity,
+                'received_qty' => $availableQuantity
             ]);
             
             $record->lines()->update([
@@ -1250,30 +1238,89 @@ class OperationResource extends Resource
         } else {
             $record->update([
                 'state' => Enums\MoveState::ASSIGNED,
-                'received_qty' => $availableQuantity,
+                'received_qty' => $availableQuantity
             ]);
         }
-
-        return $record;
     }
 
-    private static function updateOperationState(Operation $record)
+    public static function updateOrCreateMoveLinesOLD(Move $record)
     {
-        $record->refresh();
-        
-        if (in_array($record->state, [Enums\OperationState::DONE,Enums\OperationState::CANCELED])) {
+        $lines = $record->lines()->orderBy('created_at')->get();
+
+        $remainingQty = $record->received_qty;
+
+        $updatedLines = collect();
+
+        foreach ($lines as $line) {
+            if ($remainingQty > 0) {
+                $newQty = min($line->qty, $remainingQty);
+
+                $line->update([
+                    'qty' => $newQty,
+                    'uom_qty' => $newQty,
+                    'state'   => Enums\MoveState::ASSIGNED,
+                ]);
+
+                $updatedLines->push($line->source_location_id.'-'.$line->lot_id.'-'.$line->package_id);
+
+                $remainingQty -= $newQty;
+            } else {
+                $line->delete();
+            }
+        }
+
+        if ($remainingQty <= 0) {
             return;
         }
 
-        if ($record->moves->every(fn($move) => $move->state === Enums\MoveState::CONFIRMED)) {
-            $record->update(['state' => Enums\OperationState::CONFIRMED]);
-        } elseif ($record->moves->every(fn($move) => $move->state === Enums\MoveState::DONE)) {
-            $record->update(['state' => Enums\OperationState::DONE]);
-        } elseif ($record->moves->contains(fn($move) => 
-            $move->state === Enums\MoveState::ASSIGNED || 
-            $move->state === Enums\MoveState::PARTIALLY_ASSIGNED
-        )) {
-            $record->update(['state' => Enums\OperationState::ASSIGNED]);
+        $productQuantities = ProductQuantity::with(['location', 'lot', 'package'])
+            ->where('product_id', $record->product_id)
+            ->whereHas('location', function (Builder $query) use ($record) {
+                $query->where('id', $record->source_location_id)
+                    ->orWhere('parent_id', $record->source_location_id);
+            })
+            ->when(
+                $record->sourceLocation->type != Enums\LocationType::SUPPLIER
+                && $record->product->tracking == Enums\ProductTracking::LOT,
+                fn($query) => $query->whereNotNull('lot_id')
+            )
+            ->get();
+
+        $totalAvailableQty = $productQuantities->sum('quantity');
+
+        foreach ($productQuantities as $productQuantity) {
+            if ($remainingQty <= 0)  {
+                break;
+            }
+            
+            if ($updatedLines->contains($productQuantity->location_id.'-'.$productQuantity->lot_id.'-'.$productQuantity->package_id)) {
+                continue;
+            }
+
+            $newQty = min($productQuantity->quantity, $remainingQty);
+
+            $record->lines()->create([
+                'qty'                     => $newQty,
+                'uom_qty'                 => $newQty,
+                'lot_name'                => $productQuantity->lot?->name,
+                'lot_id'                  => $productQuantity->lot_id,
+                'package_id'              => $productQuantity->package_id,
+                'result_package_id'       => $newQty == $productQuantity->quantity ? $productQuantity->package_id : null,
+                'source_location_id'      => $productQuantity->location_id,
+                'state'                   => Enums\MoveState::ASSIGNED,
+                'reference'               => $record->reference,
+                'picking_description'     => $record->description_picking,
+                'is_picked'               => $record->is_picked,
+                'scheduled_at'            => $record->scheduled_at,
+                'operation_id'            => $record->operation_id,
+                'product_id'              => $record->product_id,
+                'uom_id'                  => $record->uom_id,
+                'destination_location_id' => $record->destination_location_id,
+                'company_id'              => $record->company_id,
+                'creator_id'              => Auth::id(),
+            ]);
+
+            $remainingQty -= $newQty;
         }
     }
 }

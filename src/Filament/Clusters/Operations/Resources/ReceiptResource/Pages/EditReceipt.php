@@ -38,6 +38,8 @@ class EditReceipt extends EditRecord
                 ->requiresConfirmation()
                 ->action(function (Operation $record) {
                     OperationResource::markAsTodo($record);
+
+                    $this->fillForm();
                 })
                 ->hidden(fn () => $this->getRecord()->state !== Enums\OperationState::DRAFT),
             Actions\Action::make('validate')
@@ -45,6 +47,8 @@ class EditReceipt extends EditRecord
                 ->color('gray')
                 ->action(function (Operation $record) {
                     OperationResource::validate($record);
+
+                    $this->fillForm();
                 })
                 ->hidden(fn () => $this->getRecord()->state == Enums\OperationState::DONE),
             Actions\Action::make('return')
@@ -60,10 +64,5 @@ class EditReceipt extends EditRecord
                         ->body(__('inventories::filament/clusters/operations/resources/receipt/pages/edit-receipt.header-actions.delete.notification.body')),
                 ),
         ];
-    }
-
-    protected function afterSave(): void
-    {
-        OperationResource::handleUpdate($this->getRecord());
     }
 }

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Webkul\Inventory\Database\Factories\LotFactory;
 use Webkul\Security\Models\User;
 use Webkul\Support\Models\Company;
+use Webkul\Inventory\Enums;
 use Webkul\Support\Models\UOM;
 
 class Lot extends Model
@@ -90,7 +91,12 @@ class Lot extends Model
 
     public function getTotalQuantityAttribute()
     {
-        return $this->quantities->sum('quantity');
+        return $this->quantities()
+            ->whereHas('location', function ($query) {
+                $query->where('type', Enums\LocationType::INTERNAL)
+                    ->where('is_scrap', false);
+            })
+            ->sum('quantity');
     }
 
     protected static function newFactory(): LotFactory

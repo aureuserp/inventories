@@ -358,6 +358,8 @@ class ManageQuantities extends ManageRelatedRecords
             'requested_uom_qty'       => abs($currentQuantity),
             'received_qty'            => abs($currentQuantity),
             'reference'               => 'Product Quantity Updated',
+            'scheduled_at'            => now(),
+            'uom_id'                  => $record->product->uom_id,
             'creator_id'              => Auth::id(),
             'company_id'              => $record->company_id,
         ]);

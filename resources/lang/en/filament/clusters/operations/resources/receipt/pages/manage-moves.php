@@ -1,16 +1,20 @@
 <?php
 
 return [
-    'table' => [
-        'header-actions' => [
-            'create' => [
-                'label' => 'New Move',
+    'title' => 'Moves',
 
-                'notification' => [
-                    'title' => 'Move created',
-                    'body'  => 'The move has been created successfully.',
-                ],
-            ],
+    'table' => [
+        'columns' => [
+            'date'                 => 'Date',
+            'reference'            => 'Reference',
+            'product'              => 'Product',
+            'package'              => 'Package',
+            'lot'                  => 'Lot / Serial Numbers',
+            'source-location'      => 'Source Location',
+            'destination-location' => 'Destination Location',
+            'quantity'             => 'Quantity',
+            'state'                => 'State',
+            'done-by'              => 'Done By',
         ],
 
         'actions' => [

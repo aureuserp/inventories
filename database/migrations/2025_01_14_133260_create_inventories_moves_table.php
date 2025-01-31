@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Webkul\Inventory\Enums\ProcureMethod;
 
 return new class extends Migration
 {
@@ -16,7 +17,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('state')->nullable();
             $table->string('origin')->nullable();
-            $table->string('procure_method');
+            $table->string('procure_method')->default(ProcureMethod::MAKE_TO_STOCK);
             $table->string('reference')->nullable();
             $table->text('description_picking')->nullable();
             $table->string('next_serial')->nullable();

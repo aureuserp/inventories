@@ -34,21 +34,39 @@ class EditDelivery extends EditRecord
             ChatterAction::make()
                 ->setResource(static::$resource),
             Actions\Action::make('todo')
-                ->label(__('inventories::filament/clusters/operations/resources/delivery/pages/edit-delivery.header-actions.todo.label'))
+                ->label(__('inventories::filament/clusters/operations/resources/delivery/pages/edit-internal.header-actions.todo.label'))
                 ->requiresConfirmation()
                 ->action(function (Operation $record) {
                     OperationResource::markAsTodo($record);
+
+                    $this->fillForm();
                 })
                 ->hidden(fn () => $this->getRecord()->state !== Enums\OperationState::DRAFT),
+            Actions\Action::make('check_availability')
+                ->label(__('inventories::filament/clusters/operations/resources/delivery/pages/edit-internal.header-actions.check-availability.label'))
+                ->action(function (Operation $record) {
+                    OperationResource::checkAvailability($record);
+
+                    $this->fillForm();
+                })
+                ->hidden(function() {
+                    if (! in_array($this->getRecord()->state, [Enums\OperationState::CONFIRMED, Enums\OperationState::ASSIGNED])) {
+                        return true;
+                    }
+
+                    return ! $this->getRecord()->moves->contains(fn($move) => in_array($move->state, [Enums\MoveState::CONFIRMED, Enums\MoveState::PARTIALLY_ASSIGNED]));
+                }),
             Actions\Action::make('validate')
-                ->label(__('inventories::filament/clusters/operations/resources/delivery/pages/edit-delivery.header-actions.validate.label'))
+                ->label(__('inventories::filament/clusters/operations/resources/delivery/pages/edit-internal.header-actions.validate.label'))
                 ->color('gray')
                 ->action(function (Operation $record) {
                     OperationResource::validate($record);
+
+                    $this->fillForm();
                 })
                 ->hidden(fn () => $this->getRecord()->state == Enums\OperationState::DONE),
             Actions\Action::make('return')
-                ->label(__('inventories::filament/clusters/operations/resources/delivery/pages/edit-delivery.header-actions.return.label'))
+                ->label(__('inventories::filament/clusters/operations/resources/delivery/pages/edit-internal.header-actions.return.label'))
                 ->color('gray')
                 ->visible(fn () => $this->getRecord()->state == Enums\OperationState::DONE),
             Actions\DeleteAction::make()
@@ -56,14 +74,9 @@ class EditDelivery extends EditRecord
                 ->successNotification(
                     Notification::make()
                         ->success()
-                        ->title(__('inventories::filament/clusters/operations/resources/delivery/pages/edit-delivery.header-actions.delete.notification.title'))
-                        ->body(__('inventories::filament/clusters/operations/resources/delivery/pages/edit-delivery.header-actions.delete.notification.body')),
+                        ->title(__('inventories::filament/clusters/operations/resources/delivery/pages/edit-internal.header-actions.delete.notification.title'))
+                        ->body(__('inventories::filament/clusters/operations/resources/delivery/pages/edit-internal.header-actions.delete.notification.body')),
                 ),
         ];
-    }
-
-    protected function afterSave(): void
-    {
-        OperationResource::handleUpdate($this->getRecord());
     }
 }

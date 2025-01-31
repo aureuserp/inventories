@@ -145,6 +145,7 @@ class PackageResource extends Resource
             Pages\ViewPackage::class,
             Pages\EditPackage::class,
             Pages\ManageProducts::class,
+            Pages\ManageOperations::class,
         ]);
     }
 
@@ -163,6 +164,7 @@ class PackageResource extends Resource
             'edit'       => Pages\EditPackage::route('/{record}/edit'),
             'view'       => Pages\ViewPackage::route('/{record}/view'),
             'products'   => Pages\ManageProducts::route('/{record}/products'),
+            'operations' => Pages\ManageOperations::route('/{record}/operations'),
         ];
     }
 }
