@@ -60,6 +60,7 @@ class Move extends Model
         'restrict_partner_id',
         'warehouse_id',
         'product_packaging_id',
+        'scrap_id',
         'company_id',
         'creator_id',
     ];
@@ -114,6 +115,11 @@ class Move extends Model
     public function operation(): BelongsTo
     {
         return $this->belongsTo(Operation::class);
+    }
+
+    public function scrap(): BelongsTo
+    {
+        return $this->belongsTo(Scrap::class);
     }
 
     public function rule(): BelongsTo

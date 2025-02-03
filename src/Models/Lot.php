@@ -7,9 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Webkul\Inventory\Database\Factories\LotFactory;
+use Webkul\Inventory\Enums;
 use Webkul\Security\Models\User;
 use Webkul\Support\Models\Company;
-use Webkul\Inventory\Enums;
 use Webkul\Support\Models\UOM;
 
 class Lot extends Model

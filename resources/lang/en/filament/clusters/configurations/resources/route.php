@@ -50,6 +50,10 @@ return [
             'updated-at' => 'Updated At',
         ],
 
+        'filters' => [
+            'company'  => 'Company',
+        ],
+
         'actions' => [
             'edit' => [
                 'notification' => [
@@ -105,7 +109,42 @@ return [
     ],
 
     'infolist' => [
-        'name'   => 'Name',
-        'status' => 'Status',
+        'sections' => [
+            'general' => [
+                'title'  => 'General',
+
+                'entries' => [
+                    'route'             => 'Route',
+                    'route-placeholder' => 'eg. Two Step Reception',
+                    'company'           => 'Company',
+                ],
+            ],
+
+            'applicable-on' => [
+                'title'       => 'Applicable On',
+                'description' => 'Select the places where this route can be selected.',
+
+                'entries' => [
+                    'products'                        => 'Products',
+                    'products-hint-tooltip'           => 'When checked, the route will be selectable on the Product.',
+                    'product-categories'              => 'Product Categories',
+                    'product-categories-hint-tooltip' => 'When checked, the route will be selectable on the Product Category.',
+                    'warehouses'                      => 'Warehouses',
+                    'warehouses-hint-tooltip'         => 'When a warehouse is selected for this route, this route should be seen as the default route when products pass through this warehouse.',
+                    'packaging'                       => 'Packaging',
+                    'packaging-hint-tooltip'          => 'When checked, the route will be selectable on the Packaging.',
+                ],
+            ],
+
+            'record-information' => [
+                'title' => 'Record Information',
+
+                'entries' => [
+                    'created-by' => 'Created By',
+                    'created-at' => 'Created At',
+                    'last-updated' => 'Last Updated',
+                ],
+            ],
+        ],
     ],
 ];

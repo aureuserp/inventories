@@ -2,14 +2,14 @@
 
 namespace Webkul\Inventory\Filament\Clusters\Products\Resources\PackageResource\Pages;
 
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRelatedRecords;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Webkul\Inventory\Filament\Clusters\Products\Resources\PackageResource;
-use Webkul\Inventory\Filament\Clusters\Operations\Resources\OperationResource;
-use Webkul\Inventory\Models\Operation;
 use Webkul\Inventory\Enums;
-use Filament\Notifications\Notification;
+use Webkul\Inventory\Filament\Clusters\Operations\Resources\OperationResource;
+use Webkul\Inventory\Filament\Clusters\Products\Resources\PackageResource;
+use Webkul\Inventory\Models\Operation;
 use Webkul\TableViews\Filament\Concerns\HasTableViews;
 
 class ManageOperations extends ManageRelatedRecords
@@ -20,7 +20,7 @@ class ManageOperations extends ManageRelatedRecords
 
     protected static string $relationship = 'operations';
 
-    protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
+    protected static ?string $navigationIcon = 'heroicon-o-arrows-right-left';
 
     public static function getNavigationLabel(): string
     {
@@ -37,9 +37,10 @@ class ManageOperations extends ManageRelatedRecords
         return OperationResource::table($table)
             ->actions([
                 Tables\Actions\ActionGroup::make([
-                    Tables\Actions\ViewAction::make(),
-                        // ->url(fn ($record): string => OperationResource::getUrl('view', ['record' => $record])),
-                    Tables\Actions\EditAction::make(),
+                    Tables\Actions\ViewAction::make()
+                        ->url(fn ($record): string => OperationResource::getUrl('view', ['record' => $record])),
+                    Tables\Actions\EditAction::make()
+                        ->url(fn ($record): string => OperationResource::getUrl('edit', ['record' => $record])),
                     Tables\Actions\DeleteAction::make()
                         ->hidden(fn (Operation $record): bool => $record->state == Enums\OperationState::DONE)
                         ->successNotification(

@@ -13,18 +13,18 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Webkul\Inventory\Enums;
 use Webkul\Inventory\Filament\Clusters\Operations;
-use Webkul\Inventory\Filament\Clusters\Operations\Resources\InternalResource\Pages;
+use Webkul\Inventory\Filament\Clusters\Operations\Resources\DropshipResource\Pages;
 use Webkul\Inventory\Models\Operation;
 
-class InternalResource extends Resource
+class DropshipResource extends Resource
 {
     protected static ?string $model = Operation::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-arrows-right-left';
+    protected static ?string $navigationIcon = 'heroicon-o-truck';
+
+    protected static ?int $navigationSort = 4;
 
     protected static ?string $recordTitleAttribute = 'name';
-
-    protected static ?int $navigationSort = 3;
 
     protected static ?string $cluster = Operations::class;
 
@@ -32,12 +32,12 @@ class InternalResource extends Resource
 
     public static function getNavigationLabel(): string
     {
-        return __('inventories::filament/clusters/operations/resources/internal.navigation.title');
+        return __('inventories::filament/clusters/operations/resources/dropship.navigation.title');
     }
 
     public static function getNavigationGroup(): string
     {
-        return __('inventories::filament/clusters/operations/resources/internal.navigation.group');
+        return __('inventories::filament/clusters/operations/resources/dropship.navigation.group');
     }
 
     public static function form(Form $form): Form
@@ -53,11 +53,12 @@ class InternalResource extends Resource
                     Tables\Actions\ViewAction::make(),
                     Tables\Actions\EditAction::make(),
                     Tables\Actions\DeleteAction::make()
+                        ->hidden(fn (Operation $record): bool => $record->state == Enums\OperationState::DONE)
                         ->successNotification(
                             Notification::make()
                                 ->success()
-                                ->title(__('inventories::filament/clusters/operations/resources/internal.table.actions.delete.notification.title'))
-                                ->body(__('inventories::filament/clusters/operations/resources/internal.table.actions.delete.notification.body')),
+                                ->title(__('inventories::filament/clusters/operations/resources/dropship.table.actions.delete.notification.title'))
+                                ->body(__('inventories::filament/clusters/operations/resources/dropship.table.actions.delete.notification.body')),
                         ),
                 ]),
             ])
@@ -66,13 +67,13 @@ class InternalResource extends Resource
                     ->successNotification(
                         Notification::make()
                             ->success()
-                            ->title(__('inventories::filament/clusters/operations/resources/internal.table.bulk-actions.delete.notification.title'))
-                            ->body(__('inventories::filament/clusters/operations/resources/internal.table.bulk-actions.delete.notification.body')),
+                            ->title(__('inventories::filament/clusters/operations/resources/dropship.table.bulk-actions.delete.notification.title'))
+                            ->body(__('inventories::filament/clusters/operations/resources/dropship.table.bulk-actions.delete.notification.body')),
                     ),
             ])
             ->modifyQueryUsing(function (Builder $query) {
                 return $query->whereHas('operationType', function (Builder $query) {
-                    $query->where('type', Enums\OperationType::INTERNAL);
+                    $query->where('type', Enums\OperationType::DROPSHIP);
                 });
             });
     }
@@ -85,8 +86,8 @@ class InternalResource extends Resource
     public static function getRecordSubNavigation(Page $page): array
     {
         return $page->generateNavigationItems([
-            Pages\ViewInternal::class,
-            Pages\EditInternal::class,
+            Pages\ViewDropship::class,
+            Pages\EditDropship::class,
             Pages\ManageMoves::class,
         ]);
     }
@@ -94,17 +95,16 @@ class InternalResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
         ];
     }
 
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListInternals::route('/'),
-            'create' => Pages\CreateInternal::route('/create'),
-            'view'   => Pages\ViewInternal::route('/{record}/view'),
-            'edit'   => Pages\EditInternal::route('/{record}/edit'),
+            'index'  => Pages\ListDropships::route('/'),
+            'create' => Pages\CreateDropship::route('/create'),
+            'edit'   => Pages\EditDropship::route('/{record}/edit'),
+            'view'   => Pages\ViewDropship::route('/{record}/view'),
             'moves'  => Pages\ManageMoves::route('/{record}/moves'),
         ];
     }

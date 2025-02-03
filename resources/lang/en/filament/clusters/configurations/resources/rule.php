@@ -21,6 +21,22 @@ return [
                     'supply-method-hint-tooltip'  => 'Take From Stock: the products will be taken from the available stock of the source location.<br/>Trigger Another Rule: the system will try to find a stock rule to bring the products in the source location. The available stock will be ignored.<br/>Take From Stock, if Unavailable, Trigger Another Rule: the products will be taken from the available stock of the source location.If there is no stock available, the system will try to find a  rule to bring the products in the source location.',
                     'automatic-move'              => 'Automatic Move',
                     'automatic-move-hint-tooltip' => 'The \'Manual Operation\' value will create a stock move after the current one. With \'Automatic No Step Added\', the location is replaced in the original move.',
+
+                    'action-information' => [
+                        'pull' => 'When products are needed in <b>:sourceLocation</b>,</br><b>:operation</b> are created from <b>:destinationLocation</b> to fulfill the need.',
+                        'push' => 'When products arrive in <b>:sourceLocation</b>,</br><b>:operation</b> are created to send them to <b>:destinationLocation</b>.',
+                    ]
+                ],
+            ],
+            
+            'settings' => [
+                'title'  => 'Settings',
+
+                'fields' => [
+                    'partner-address'              => 'Partner Address',
+                    'partner-address-hint-tooltip' => 'Address where goods should be delivered. Optional.',
+                    'lead-time'                    => 'Lead Time (Days)',
+                    'lead-time-hint-tooltip'       => 'The expected date of the created transfer will be computed based on this lead time.',
                 ],
 
                 'fieldsets' => [
@@ -29,6 +45,7 @@ return [
 
                         'fields' => [
                             'route' => 'Route',
+                            'company' => 'Company',
                         ],
                     ],
 
@@ -44,32 +61,38 @@ return [
                         ],
                     ],
                 ],
-            ],
 
-            'options' => [
-                'title'       => 'Options',
-
-                'fields' => [
-                    'partner-address'              => 'Partner Address',
-                    'partner-address-hint-tooltip' => 'Address where goods should be delivered. Optional.',
-                    'lead-time'                    => 'Lead Time (Days)',
-                    'lead-time-hint-tooltip'       => 'The expected date of the created transfer will be computed based on this lead time.',
-                ],
             ],
         ],
     ],
 
     'table' => [
         'columns' => [
-            'route'      => 'Route',
-            'deleted-at' => 'Deleted At',
-            'created-at' => 'Created At',
-            'updated-at' => 'Updated At',
+            'name'                 => 'Name',
+            'action'               => 'Action',
+            'source-location'      => 'Source Location',
+            'destination-location' => 'Destination Location',
+            'route'                => 'Route',
+            'deleted-at'           => 'Deleted At',
+            'created-at'           => 'Created At',
+            'updated-at'           => 'Updated At',
         ],
 
         'groups' => [
-            'created-at' => 'Created At',
-            'updated-at' => 'Updated At',
+            'action'               => 'Action',
+            'source-location'      => 'Source Location',
+            'destination-location' => 'Destination Location',
+            'route'                => 'Route',
+            'created-at'           => 'Created At',
+            'updated-at'           => 'Updated At',
+        ],
+
+        'filters' => [
+            'action'               => 'Action',
+            'source-location'      => 'Source Location',
+            'destination-location' => 'Destination Location',
+            'route'                => 'Route',
+            'company'              => 'Company',
         ],
 
         'actions' => [
@@ -127,7 +150,38 @@ return [
     ],
 
     'infolist' => [
-        'name'   => 'Name',
-        'status' => 'Status',
+        'sections' => [
+            'general' => [
+                'title' => 'Rule Details',
+
+                'description' => [
+                    'pull' => 'When products are needed in <b>:sourceLocation</b>, <b>:operation</b> are created from <b>:destinationLocation</b> to fulfill the need.',
+                    'push' => 'When products arrive in <b>:sourceLocation</b>, <b>:operation</b> are created to send them to <b>:destinationLocation</b>.',
+                ],             
+
+                'entries' => [
+                    'name' => 'Rule Name',
+                    'action' => 'Action',
+                    'operation-type' => 'Operation Type',
+                    'source-location' => 'Source Location',
+                    'destination-location' => 'Destination Location',
+                    'route' => 'Route',
+                    'company' => 'Company',
+                    'partner-address' => 'Partner Address',
+                    'lead-time' => 'Lead Time',
+                    'action-information' => 'Action Information',
+                ],
+            ],
+
+            'record-information' => [
+                'title' => 'Record Information',
+
+                'entries' => [
+                    'created-by' => 'Created By',
+                    'created-at' => 'Created At',
+                    'last-updated' => 'Last Updated',
+                ],
+            ],
+        ],
     ],
 ];

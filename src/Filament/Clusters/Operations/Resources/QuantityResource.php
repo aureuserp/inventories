@@ -9,6 +9,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\SubNavigationPosition;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Filters\QueryBuilder\Constraints\RelationshipConstraint\Operators\IsRelatedToOperator;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
@@ -23,6 +24,7 @@ use Webkul\Inventory\Models\Product;
 use Webkul\Inventory\Models\ProductQuantity;
 use Webkul\Inventory\Models\Warehouse;
 use Webkul\Inventory\Settings\OperationSettings;
+use Webkul\Inventory\Settings\ProductSettings;
 use Webkul\Inventory\Settings\TraceabilitySettings;
 use Webkul\Inventory\Settings\WarehouseSettings;
 
@@ -144,23 +146,39 @@ class QuantityResource extends Resource
                     ->searchable()
                     ->sortable()
                     ->placeholder('—')
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->visible(fn (WarehouseSettings $warehouseSettings) => $warehouseSettings->enable_locations),
-                Tables\Columns\TextColumn::make('package.name')
-                    ->label(__('inventories::filament/clusters/operations/resources/quantity.table.columns.package'))
+                Tables\Columns\TextColumn::make('product.name')
+                    ->label(__('inventories::filament/clusters/operations/resources/quantity.table.columns.product'))
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('product.category.name')
+                    ->label(__('inventories::filament/clusters/operations/resources/quantity.table.columns.product-category'))
                     ->searchable()
                     ->sortable()
-                    ->placeholder('—')
-                    ->visible(fn (OperationSettings $operationSettings) => $operationSettings->enable_packages),
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('lot.name')
                     ->label(__('inventories::filament/clusters/operations/resources/quantity.table.columns.lot'))
                     ->searchable()
                     ->sortable()
                     ->placeholder('—')
                     ->visible(fn (TraceabilitySettings $traceabilitySettings) => $traceabilitySettings->enable_lots_serial_numbers),
+                Tables\Columns\TextColumn::make('package.name')
+                    ->label(__('inventories::filament/clusters/operations/resources/quantity.table.columns.package'))
+                    ->searchable()
+                    ->sortable()
+                    ->placeholder('—')
+                    ->visible(fn (OperationSettings $operationSettings) => $operationSettings->enable_packages),
+                Tables\Columns\TextColumn::make('available_quantity')
+                    ->label(__('inventories::filament/clusters/operations/resources/quantity.table.columns.available-quantity'))
+                    ->searchable()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('quantity')
                     ->label(__('inventories::filament/clusters/operations/resources/quantity.table.columns.on-hand'))
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: false),
                 Tables\Columns\TextInputColumn::make('counted_quantity')
                     ->label(__('inventories::filament/clusters/operations/resources/quantity.table.columns.counted'))
                     ->sortable()
@@ -185,8 +203,190 @@ class QuantityResource extends Resource
                 Tables\Columns\TextColumn::make('scheduled_at')
                     ->label(__('inventories::filament/clusters/operations/resources/quantity.table.columns.scheduled-at'))
                     ->sortable()
-                    ->date(),
+                    ->date()
+                    ->toggleable(isToggledHiddenByDefault: false),
+                Tables\Columns\TextColumn::make('user.name')
+                    ->label(__('inventories::filament/clusters/operations/resources/quantity.table.columns.user'))
+                    ->searchable()
+                    ->sortable()
+                    ->placeholder('—')
+                    ->toggleable(isToggledHiddenByDefault: false),
+                Tables\Columns\TextColumn::make('company.name')
+                    ->label(__('inventories::filament/clusters/operations/resources/quantity.table.columns.company'))
+                    ->searchable()
+                    ->sortable()
+                    ->placeholder('—')
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->groups(
+                collect([
+                    Tables\Grouping\Group::make('product.name')
+                        ->label(__('inventories::filament/clusters/operations/resources/quantity.table.groups.product')),
+                    Tables\Grouping\Group::make('product.category.full_name')
+                        ->label(__('inventories::filament/clusters/operations/resources/quantity.table.groups.product-category')),
+                    Tables\Grouping\Group::make('location.full_name')
+                        ->label(__('inventories::filament/clusters/operations/resources/quantity.table.groups.location')),
+                    Tables\Grouping\Group::make('storageCategory.name')
+                        ->label(__('inventories::filament/clusters/operations/resources/quantity.table.groups.storage-category')),
+                    Tables\Grouping\Group::make('lot.name')
+                        ->label(__('inventories::filament/clusters/operations/resources/quantity.table.groups.lot')),
+                    Tables\Grouping\Group::make('package.name')
+                        ->label(__('inventories::filament/clusters/operations/resources/quantity.table.groups.package')),
+                    Tables\Grouping\Group::make('company.name')
+                        ->label(__('inventories::filament/clusters/operations/resources/quantity.table.groups.company')),
+                ])->filter(function ($group) {
+                    return match ($group->getId()) {
+                        'location.full_name', 'storageCategory.name' => app(WarehouseSettings::class)->enable_locations,
+                        'lot.name'     => app(TraceabilitySettings::class)->enable_lots_serial_numbers,
+                        'package.name' => app(OperationSettings::class)->enable_packages,
+                        default        => true
+                    };
+                })->all()
+            )
+            ->filters([
+                Tables\Filters\QueryBuilder::make()
+                    ->constraints(collect([
+                        app(WarehouseSettings::class)->enable_locations
+                            ? Tables\Filters\QueryBuilder\Constraints\RelationshipConstraint::make('location')
+                                ->label(__('inventories::filament/clusters/operations/resources/quantity.table.filters.location'))
+                                ->multiple()
+                                ->selectable(
+                                    IsRelatedToOperator::make()
+                                        ->titleAttribute('full_name')
+                                        ->searchable()
+                                        ->multiple()
+                                        ->preload(),
+                                )
+                                ->icon('heroicon-o-map-pin')
+                            : null,
+                        app(WarehouseSettings::class)->enable_locations
+                            ? Tables\Filters\QueryBuilder\Constraints\RelationshipConstraint::make('storageCategory')
+                                ->label(__('inventories::filament/clusters/operations/resources/quantity.table.filters.storage-category'))
+                                ->multiple()
+                                ->selectable(
+                                    IsRelatedToOperator::make()
+                                        ->titleAttribute('full_name')
+                                        ->searchable()
+                                        ->multiple()
+                                        ->preload(),
+                                )
+                                ->icon('heroicon-o-folder')
+                                : null,
+                        Tables\Filters\QueryBuilder\Constraints\RelationshipConstraint::make('product')
+                            ->label(__('inventories::filament/clusters/operations/resources/quantity.table.filters.product'))
+                            ->multiple()
+                            ->selectable(
+                                IsRelatedToOperator::make()
+                                    ->titleAttribute('name')
+                                    ->searchable()
+                                    ->multiple()
+                                    ->preload(),
+                            )
+                            ->icon('heroicon-o-shopping-bag'),
+                        app(ProductSettings::class)->enable_uom
+                            ? Tables\Filters\QueryBuilder\Constraints\RelationshipConstraint::make('uom')
+                                ->label(__('inventories::filament/clusters/operations/resources/quantity.table.filters.uom'))
+                                ->multiple()
+                                ->selectable(
+                                    IsRelatedToOperator::make()
+                                        ->titleAttribute('name')
+                                        ->searchable()
+                                        ->multiple()
+                                        ->preload(),
+                                )
+                                ->icon('heroicon-o-shopping-bag')
+                            : null,
+                        Tables\Filters\QueryBuilder\Constraints\RelationshipConstraint::make('product.category')
+                            ->label(__('inventories::filament/clusters/operations/resources/quantity.table.filters.product-category'))
+                            ->multiple()
+                            ->selectable(
+                                IsRelatedToOperator::make()
+                                    ->titleAttribute('full_name')
+                                    ->searchable()
+                                    ->multiple()
+                                    ->preload(),
+                            )
+                            ->icon('heroicon-o-folder'),
+                        app(TraceabilitySettings::class)->enable_lots_serial_numbers
+                            ? Tables\Filters\QueryBuilder\Constraints\RelationshipConstraint::make('lot')
+                                ->label(__('inventories::filament/clusters/operations/resources/quantity.table.filters.lot'))
+                                ->multiple()
+                                ->selectable(
+                                    IsRelatedToOperator::make()
+                                        ->titleAttribute('name')
+                                        ->searchable()
+                                        ->multiple()
+                                        ->preload(),
+                                )
+                                ->icon('heroicon-o-rectangle-stack')
+                            : null,
+                        app(OperationSettings::class)->enable_packages
+                            ? Tables\Filters\QueryBuilder\Constraints\RelationshipConstraint::make('package')
+                                ->label(__('inventories::filament/clusters/operations/resources/quantity.table.filters.package'))
+                                ->multiple()
+                                ->selectable(
+                                    IsRelatedToOperator::make()
+                                        ->titleAttribute('name')
+                                        ->searchable()
+                                        ->multiple()
+                                        ->preload(),
+                                )
+                                ->icon('heroicon-o-cube')
+                            : null,
+                        Tables\Filters\QueryBuilder\Constraints\NumberConstraint::make('quantity')
+                            ->label(__('inventories::filament/clusters/operations/resources/quantity.table.filters.on-hand-quantity'))
+                            ->icon('heroicon-o-scale'),
+                        Tables\Filters\QueryBuilder\Constraints\NumberConstraint::make('difference')
+                            ->label(__('inventories::filament/clusters/operations/resources/quantity.table.filters.difference-quantity'))
+                            ->icon('heroicon-o-scale'),
+                        Tables\Filters\QueryBuilder\Constraints\RelationshipConstraint::make('user')
+                            ->label(__('inventories::filament/clusters/operations/resources/quantity.table.filters.user'))
+                            ->multiple()
+                            ->selectable(
+                                IsRelatedToOperator::make()
+                                    ->titleAttribute('name')
+                                    ->searchable()
+                                    ->multiple()
+                                    ->preload(),
+                            )
+                            ->icon('heroicon-o-user'),
+                        Tables\Filters\QueryBuilder\Constraints\DateConstraint::make('incoming_at')
+                            ->label(__('inventories::filament/clusters/operations/resources/quantity.table.filters.incoming-at')),
+                        Tables\Filters\QueryBuilder\Constraints\DateConstraint::make('scheduled_at')
+                            ->label(__('inventories::filament/clusters/operations/resources/quantity.table.filters.scheduled-at')),
+                        Tables\Filters\QueryBuilder\Constraints\DateConstraint::make('created_at')
+                            ->label(__('inventories::filament/clusters/operations/resources/quantity.table.filters.created-at')),
+                        Tables\Filters\QueryBuilder\Constraints\DateConstraint::make('updated_at')
+                            ->label(__('inventories::filament/clusters/operations/resources/quantity.table.filters.updated-at')),
+                        Tables\Filters\QueryBuilder\Constraints\RelationshipConstraint::make('company')
+                            ->label(__('inventories::filament/clusters/operations/resources/quantity.table.filters.company'))
+                            ->multiple()
+                            ->selectable(
+                                IsRelatedToOperator::make()
+                                    ->titleAttribute('name')
+                                    ->searchable()
+                                    ->multiple()
+                                    ->preload(),
+                            )
+                            ->icon('heroicon-o-building-office'),
+                        Tables\Filters\QueryBuilder\Constraints\RelationshipConstraint::make('creator')
+                            ->label(__('inventories::filament/clusters/operations/resources/quantity.table.filters.creator'))
+                            ->multiple()
+                            ->selectable(
+                                IsRelatedToOperator::make()
+                                    ->titleAttribute('name')
+                                    ->searchable()
+                                    ->multiple()
+                                    ->preload(),
+                            )
+                            ->icon('heroicon-o-user'),
+                    ])->filter()->values()->all()),
+            ], layout: \Filament\Tables\Enums\FiltersLayout::Modal)
+            ->filtersTriggerAction(
+                fn (Tables\Actions\Action $action) => $action
+                    ->slideOver(),
+            )
+            ->filtersFormColumns(2)
             ->headerActions([
                 Tables\Actions\CreateAction::make()
                     ->label(__('inventories::filament/clusters/operations/resources/quantity.table.header-actions.create.label'))
@@ -306,7 +506,6 @@ class QuantityResource extends Resource
                         ]);
                     }),
             ])
-            ->paginated(false)
             ->modifyQueryUsing(function (Builder $query) {
                 $query->whereHas('location', function (Builder $query) {
                     $query->whereIn('type', [Enums\LocationType::INTERNAL, Enums\LocationType::TRANSIT]);

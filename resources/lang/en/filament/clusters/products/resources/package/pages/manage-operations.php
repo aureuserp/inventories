@@ -2,7 +2,7 @@
 
 return [
     'title' => 'Manage Operations',
-    
+
     'table' => [
         'actions' => [
             'delete' => [
@@ -11,6 +11,6 @@ return [
                     'body'  => 'The internal transfer has been created successfully.',
                 ],
             ],
-        ]
+        ],
     ],
 ];

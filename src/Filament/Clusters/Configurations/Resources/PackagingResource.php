@@ -13,6 +13,9 @@ use Webkul\Inventory\Filament\Clusters\Configurations;
 use Webkul\Inventory\Filament\Clusters\Configurations\Resources\PackagingResource\Pages;
 use Webkul\Inventory\Models\Packaging;
 use Webkul\Inventory\Settings\ProductSettings;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
+use Filament\Support\Enums\FontWeight;
 
 class PackagingResource extends Resource
 {
@@ -95,6 +98,7 @@ class PackagingResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('product.name')
                     ->label(__('inventories::filament/clusters/configurations/resources/packaging.table.columns.product'))
+                    ->searchable()
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('packageType.name')
@@ -123,10 +127,35 @@ class PackagingResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->groups([
+                Tables\Grouping\Group::make('product.name')
+                    ->label(__('inventories::filament/clusters/configurations/resources/packaging.table.groups.product'))
+                    ->collapsible(),
+                Tables\Grouping\Group::make('packageType.name')
+                    ->label(__('inventories::filament/clusters/configurations/resources/packaging.table.groups.package-type'))
+                    ->collapsible(),
+                Tables\Grouping\Group::make('created_at')
+                    ->label(__('inventories::filament/clusters/configurations/resources/packaging.table.groups.created-at'))
+                    ->collapsible(),
+                Tables\Grouping\Group::make('updated_at')
+                    ->label(__('inventories::filament/clusters/configurations/resources/packaging.table.groups.updated-at'))
+                    ->date()
+                    ->collapsible(),
+            ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('product')
+                    ->label(__('inventories::filament/clusters/configurations/resources/packaging.table.filters.product'))
+                    ->relationship('product', 'name')
+                    ->searchable()
+                    ->preload(),
+                Tables\Filters\SelectFilter::make('packageType')
+                    ->label(__('inventories::filament/clusters/configurations/resources/packaging.table.filters.package-type'))
+                    ->relationship('packageType', 'name')
+                    ->searchable()
+                    ->preload(),
             ])
             ->actions([
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make()
                     ->successNotification(
                         Notification::make()
@@ -168,6 +197,84 @@ class PackagingResource extends Resource
                             ->title(__('inventories::filament/clusters/configurations/resources/packaging.table.empty-state-actions.create.notification.title'))
                             ->body(__('inventories::filament/clusters/configurations/resources/packaging.table.empty-state-actions.create.notification.body')),
                     ),
+            ]);
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Infolists\Components\Section::make(__('inventories::filament/clusters/configurations/resources/packaging.infolist.sections.general.title'))
+                    ->schema([
+                        Infolists\Components\TextEntry::make('name')
+                            ->label(__('inventories::filament/clusters/configurations/resources/packaging.infolist.sections.general.entries.name'))
+                            ->weight(FontWeight::Bold)
+                            ->size(Infolists\Components\TextEntry\TextEntrySize::Large)
+                            ->columnSpan(2)
+                            ->icon('heroicon-o-gift'),
+
+                        Infolists\Components\TextEntry::make('barcode')
+                            ->label(__('inventories::filament/clusters/configurations/resources/packaging.infolist.sections.general.entries.barcode'))
+                            ->icon('heroicon-o-bars-4')
+                            ->placeholder('—'),
+
+                        Infolists\Components\TextEntry::make('product.name')
+                            ->label(__('inventories::filament/clusters/configurations/resources/packaging.infolist.sections.general.entries.product'))
+                            ->icon('heroicon-o-cube')
+                            ->placeholder('—'),
+
+                        Infolists\Components\TextEntry::make('qty')
+                            ->label(__('inventories::filament/clusters/configurations/resources/packaging.infolist.sections.general.entries.qty'))
+                            ->icon('heroicon-o-scale')
+                            ->placeholder('—'),
+
+                        Infolists\Components\TextEntry::make('packageType.name')
+                            ->label(__('inventories::filament/clusters/configurations/resources/packaging.infolist.sections.general.entries.package_type'))
+                            ->icon('heroicon-o-archive-box')
+                            ->placeholder('—'),
+                    ])
+                    ->columns(2),
+
+                Infolists\Components\Section::make(__('inventories::filament/clusters/configurations/resources/packaging.infolist.sections.routing.title'))
+                    ->schema([
+                        Infolists\Components\RepeatableEntry::make('routes')
+                            ->label(__('inventories::filament/clusters/configurations/resources/packaging.infolist.sections.routing.entries.routes'))
+                            ->schema([
+                                Infolists\Components\TextEntry::make('name')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/packaging.infolist.sections.routing.entries.route_name'))
+                                    ->icon('heroicon-o-truck'),
+                            ])
+                            ->placeholder('—')
+                            ->columns(1),
+                    ])
+                    ->collapsible(),
+
+                Infolists\Components\Section::make(__('inventories::filament/clusters/configurations/resources/packaging.infolist.sections.organization.title'))
+                    ->schema([
+                        Infolists\Components\TextEntry::make('company.name')
+                            ->label(__('inventories::filament/clusters/configurations/resources/packaging.infolist.sections.organization.entries.company'))
+                            ->icon('heroicon-o-building-office')
+                            ->placeholder('—'),
+
+                        Infolists\Components\TextEntry::make('creator.name')
+                            ->label(__('inventories::filament/clusters/configurations/resources/packaging.infolist.sections.organization.entries.creator'))
+                            ->icon('heroicon-o-user')
+                            ->placeholder('—'),
+
+                        Infolists\Components\TextEntry::make('created_at')
+                            ->label(__('inventories::filament/clusters/configurations/resources/packaging.infolist.sections.organization.entries.created_at'))
+                            ->dateTime()
+                            ->icon('heroicon-o-calendar')
+                            ->placeholder('—'),
+
+                        Infolists\Components\TextEntry::make('updated_at')
+                            ->label(__('inventories::filament/clusters/configurations/resources/packaging.infolist.sections.organization.entries.updated_at'))
+                            ->dateTime()
+                            ->icon('heroicon-o-clock')
+                            ->placeholder('—'),
+                    ])
+                    ->collapsible()
+                    ->columns(2),
             ]);
     }
 

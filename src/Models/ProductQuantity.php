@@ -102,6 +102,11 @@ class ProductQuantity extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function getAvailableQuantityAttribute(): float
+    {
+        return $this->quantity - $this->reserved_quantity;
+    }
+
     protected static function newFactory(): ProductQuantityFactory
     {
         return ProductQuantityFactory::new();

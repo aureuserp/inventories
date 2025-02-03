@@ -58,7 +58,28 @@ return [
     ],
 
     'infolist' => [
-        'name'   => 'Name',
-        'status' => 'Status',
+        'sections' => [
+            'general' => [
+                'title'  => 'General',
+
+                'entries' => [
+                    'name'               => 'Name',
+                    'allow-new-products' => 'Allow New Products',
+                    'max-weight'         => 'Max Weight',
+                    'company'            => 'Company',
+                ],
+            ],
+
+
+            'record-information' => [
+                'title' => 'Record Information',
+
+                'entries' => [
+                    'created-by' => 'Created By',
+                    'created-at' => 'Created At',
+                    'last-updated' => 'Last Updated',
+                ],
+            ],
+        ],
     ],
 ];

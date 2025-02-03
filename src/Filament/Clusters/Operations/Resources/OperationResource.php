@@ -10,15 +10,15 @@ use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Filters\QueryBuilder\Constraints\RelationshipConstraint\Operators\IsRelatedToOperator;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Filament\Tables\Filters\QueryBuilder\Constraints\RelationshipConstraint\Operators\IsRelatedToOperator;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\Rules\Enum;
 use Webkul\Field\Filament\Forms\Components\ProgressStepper;
 use Webkul\Field\Filament\Traits\HasCustomFields;
 use Webkul\Inventory\Enums;
+use Webkul\Inventory\Filament\Clusters\Operations\Resources;
 use Webkul\Inventory\Filament\Clusters\Products\Resources\LotResource;
 use Webkul\Inventory\Filament\Clusters\Products\Resources\PackageResource;
 use Webkul\Inventory\Models\Move;
@@ -85,6 +85,10 @@ class OperationResource extends Resource
                             ->required()
                             ->live()
                             ->getOptionLabelFromRecordUsing(function (OperationType $record) {
+                                if (! $record->warehouse) {
+                                    return $record->name;
+                                }
+
                                 return $record->warehouse->name.': '.$record->name;
                             })
                             ->afterStateUpdated(function (Forms\Set $set, Forms\Get $get) {
@@ -293,28 +297,32 @@ class OperationResource extends Resource
                                     ->preload(),
                             )
                             ->icon('heroicon-o-user'),
-                        Tables\Filters\QueryBuilder\Constraints\RelationshipConstraint::make('sourceLocation')
-                            ->label(__('inventories::filament/clusters/operations/resources/operation.table.filters.source-location'))
-                            ->multiple()
-                            ->selectable(
-                                IsRelatedToOperator::make()
-                                    ->titleAttribute('full_name')
-                                    ->searchable()
-                                    ->multiple()
-                                    ->preload(),
-                            )
-                            ->icon('heroicon-o-map-pin'),
-                        Tables\Filters\QueryBuilder\Constraints\RelationshipConstraint::make('destinationLocation')
-                            ->label(__('inventories::filament/clusters/operations/resources/operation.table.filters.destination-location'))
-                            ->multiple()
-                            ->selectable(
-                                IsRelatedToOperator::make()
-                                    ->titleAttribute('full_name')
-                                    ->searchable()
-                                    ->multiple()
-                                    ->preload(),
-                            )
-                            ->icon('heroicon-o-map-pin'),
+                        app(WarehouseSettings::class)->enable_locations
+                            ? Tables\Filters\QueryBuilder\Constraints\RelationshipConstraint::make('sourceLocation')
+                                ->label(__('inventories::filament/clusters/operations/resources/operation.table.filters.source-location'))
+                                ->multiple()
+                                ->selectable(
+                                    IsRelatedToOperator::make()
+                                        ->titleAttribute('full_name')
+                                        ->searchable()
+                                        ->multiple()
+                                        ->preload(),
+                                )
+                                ->icon('heroicon-o-map-pin')
+                            : null,
+                        app(WarehouseSettings::class)->enable_locations
+                            ? Tables\Filters\QueryBuilder\Constraints\RelationshipConstraint::make('destinationLocation')
+                                ->label(__('inventories::filament/clusters/operations/resources/operation.table.filters.destination-location'))
+                                ->multiple()
+                                ->selectable(
+                                    IsRelatedToOperator::make()
+                                        ->titleAttribute('full_name')
+                                        ->searchable()
+                                        ->multiple()
+                                        ->preload(),
+                                )
+                                ->icon('heroicon-o-map-pin')
+                            : null,
                         Tables\Filters\QueryBuilder\Constraints\DateConstraint::make('deadline')
                             ->label(__('inventories::filament/clusters/operations/resources/operation.table.filters.deadline'))
                             ->icon('heroicon-o-calendar'),
@@ -504,6 +512,19 @@ class OperationResource extends Resource
             ->columns(1);
     }
 
+    /**
+     * @param  array<mixed>  $parameters
+     */
+    public static function getUrl(string $name = 'index', array $parameters = [], bool $isAbsolute = true, ?string $panel = null, ?Model $tenant = null): string
+    {
+        return match ($parameters['record']?->operationType->type) {
+            Enums\OperationType::INCOMING => Resources\ReceiptResource::getUrl('view', $parameters, $isAbsolute, $panel, $tenant),
+            Enums\OperationType::INTERNAL => Resources\InternalResource::getUrl('view', $parameters, $isAbsolute, $panel, $tenant),
+            Enums\OperationType::OUTGOING => Resources\DeliveryResource::getUrl('view', $parameters, $isAbsolute, $panel, $tenant),
+            default                       => parent::getUrl('view', $parameters, $isAbsolute, $panel, $tenant),
+        };
+    }
+
     public static function getMovesRepeater(): Forms\Components\Repeater
     {
         return Forms\Components\Repeater::make('moves')
@@ -636,7 +657,7 @@ class OperationResource extends Resource
         ) {
             $columns++;
         }
-        
+
         if ($move->sourceLocation->type == Enums\LocationType::INTERNAL) {
             $columns++;
         }
@@ -679,8 +700,7 @@ class OperationResource extends Resource
                                         return $data;
                                     });
                             })
-                            ->visible(fn (TraceabilitySettings $traceabilitySettings): bool =>
-                                $traceabilitySettings->enable_lots_serial_numbers
+                            ->visible(fn (TraceabilitySettings $traceabilitySettings): bool => $traceabilitySettings->enable_lots_serial_numbers
                                 && $move->product->tracking == Enums\ProductTracking::LOT
                                 && $move->sourceLocation->type == Enums\LocationType::SUPPLIER
                             ),
@@ -701,7 +721,7 @@ class OperationResource extends Resource
 
                                 return ProductQuantity::with(['location', 'lot', 'package'])
                                     ->where('product_id', $move->product_id)
-                                    ->whereHas('location', function (Builder $query) use($move) {
+                                    ->whereHas('location', function (Builder $query) use ($move) {
                                         $query->where('id', $move->source_location_id)
                                             ->orWhere('parent_id', $move->source_location_id);
                                     })
@@ -734,7 +754,7 @@ class OperationResource extends Resource
                                     ->where('lot_id', $record?->lot_id ?? null)
                                     ->where('package_id', $record?->package_id ?? null)
                                     ->first();
-                                
+
                                 $component->state($productQuantity?->id);
                             })
                             ->afterStateUpdated(function (Forms\Set $set, Forms\Get $get) {
@@ -755,7 +775,7 @@ class OperationResource extends Resource
                                 titleAttribute: 'full_name',
                                 modifyQueryUsing: fn (Builder $query) => $query
                                     ->where('type', '<>', Enums\LocationType::VIEW)
-                                    ->where(function ($query) use($move) {
+                                    ->where(function ($query) use ($move) {
                                         $query->where('id', $move->destination_location_id)
                                             ->orWhere('parent_id', $move->destination_location_id);
                                     }),
@@ -965,7 +985,7 @@ class OperationResource extends Resource
                 if (! $line->result_package_id) {
                     continue;
                 }
-                
+
                 if ($line->package_id != $line->result_package_id) {
                     continue;
                 }
@@ -1006,7 +1026,7 @@ class OperationResource extends Resource
 
         foreach ($record->moves as $move) {
             $move->update([
-                'state' => Enums\MoveState::DONE,
+                'state'     => Enums\MoveState::DONE,
                 'is_picked' => true,
             ]);
 
@@ -1014,7 +1034,7 @@ class OperationResource extends Resource
                 $moveLine->update([
                     'state' => Enums\MoveState::DONE,
                 ]);
-                
+
                 $sourceQuantity = ProductQuantity::where('product_id', $moveLine->product_id)
                     ->where('location_id', $moveLine->source_location_id)
                     ->where('lot_id', $moveLine->lot_id ?? null)
@@ -1118,14 +1138,14 @@ class OperationResource extends Resource
                 ->when(
                     $record->sourceLocation->type != Enums\LocationType::SUPPLIER
                     && $record->product->tracking == Enums\ProductTracking::LOT,
-                    fn($query) => $query->whereNotNull('lot_id')
+                    fn ($query) => $query->whereNotNull('lot_id')
                 )
                 ->get();
         }
 
         foreach ($lines as $line) {
             $currentLocationQty = null;
-            
+
             if (! $isSupplierSource) {
                 $currentLocationQty = $productQuantities
                     ->where('location_id', $line->source_location_id)
@@ -1141,15 +1161,15 @@ class OperationResource extends Resource
             }
 
             if ($remainingQty > 0) {
-                $newQty = $isSupplierSource 
+                $newQty = $isSupplierSource
                     ? $newQty = min($line->qty, $remainingQty)
                     : min($line->qty, $currentLocationQty, $remainingQty);
-                
+
                 if ($newQty != $line->qty) {
                     $line->update([
-                        'qty' => $newQty,
+                        'qty'     => $newQty,
                         'uom_qty' => $newQty,
-                        'state' => Enums\MoveState::ASSIGNED
+                        'state'   => Enums\MoveState::ASSIGNED,
                     ]);
                 }
 
@@ -1166,29 +1186,29 @@ class OperationResource extends Resource
         if ($remainingQty > 0) {
             if ($isSupplierSource) {
                 $record->lines()->create([
-                    'qty' => $remainingQty,
-                    'uom_qty' => $remainingQty,
-                    'source_location_id' => $record->source_location_id,
-                    'state' => Enums\MoveState::ASSIGNED,
-                    'reference' => $record->reference,
-                    'picking_description' => $record->description_picking,
-                    'is_picked' => $record->is_picked,
-                    'scheduled_at' => $record->scheduled_at,
-                    'operation_id' => $record->operation_id,
-                    'product_id' => $record->product_id,
-                    'uom_id' => $record->uom_id,
+                    'qty'                     => $remainingQty,
+                    'uom_qty'                 => $remainingQty,
+                    'source_location_id'      => $record->source_location_id,
+                    'state'                   => Enums\MoveState::ASSIGNED,
+                    'reference'               => $record->reference,
+                    'picking_description'     => $record->description_picking,
+                    'is_picked'               => $record->is_picked,
+                    'scheduled_at'            => $record->scheduled_at,
+                    'operation_id'            => $record->operation_id,
+                    'product_id'              => $record->product_id,
+                    'uom_id'                  => $record->uom_id,
                     'destination_location_id' => $record->destination_location_id,
-                    'company_id' => $record->company_id,
-                    'creator_id' => Auth::id(),
+                    'company_id'              => $record->company_id,
+                    'creator_id'              => Auth::id(),
                 ]);
-                
+
                 $availableQuantity += $remainingQty;
             } else {
                 foreach ($productQuantities as $productQuantity) {
                     if ($remainingQty <= 0) {
                         break;
                     }
-                    
+
                     if ($updatedLines->contains($productQuantity->location_id.'-'.$productQuantity->lot_id.'-'.$productQuantity->package_id)) {
                         continue;
                     }
@@ -1202,24 +1222,24 @@ class OperationResource extends Resource
                     $availableQuantity += $newQty;
 
                     $record->lines()->create([
-                        'qty' => $newQty,
-                        'uom_qty' => $newQty,
-                        'lot_name' => $productQuantity->lot?->name,
-                        'lot_id' => $productQuantity->lot_id,
-                        'package_id' => $productQuantity->package_id,
-                        'result_package_id' => $newQty == $productQuantity->quantity ? $productQuantity->package_id : null,
-                        'source_location_id' => $productQuantity->location_id,
-                        'state' => Enums\MoveState::ASSIGNED,
-                        'reference' => $record->reference,
-                        'picking_description' => $record->description_picking,
-                        'is_picked' => $record->is_picked,
-                        'scheduled_at' => $record->scheduled_at,
-                        'operation_id' => $record->operation_id,
-                        'product_id' => $record->product_id,
-                        'uom_id' => $record->uom_id,
+                        'qty'                     => $newQty,
+                        'uom_qty'                 => $newQty,
+                        'lot_name'                => $productQuantity->lot?->name,
+                        'lot_id'                  => $productQuantity->lot_id,
+                        'package_id'              => $productQuantity->package_id,
+                        'result_package_id'       => $newQty == $productQuantity->quantity ? $productQuantity->package_id : null,
+                        'source_location_id'      => $productQuantity->location_id,
+                        'state'                   => Enums\MoveState::ASSIGNED,
+                        'reference'               => $record->reference,
+                        'picking_description'     => $record->description_picking,
+                        'is_picked'               => $record->is_picked,
+                        'scheduled_at'            => $record->scheduled_at,
+                        'operation_id'            => $record->operation_id,
+                        'product_id'              => $record->product_id,
+                        'uom_id'                  => $record->uom_id,
                         'destination_location_id' => $record->destination_location_id,
-                        'company_id' => $record->company_id,
-                        'creator_id' => Auth::id(),
+                        'company_id'              => $record->company_id,
+                        'creator_id'              => Auth::id(),
                     ]);
 
                     $remainingQty -= $newQty;
@@ -1231,25 +1251,25 @@ class OperationResource extends Resource
 
         if ($availableQuantity <= 0) {
             $record->update([
-                'state' => Enums\MoveState::CONFIRMED,
+                'state'        => Enums\MoveState::CONFIRMED,
                 'received_qty' => 0,
             ]);
-            
+
             $record->lines()->update([
                 'state' => Enums\MoveState::CONFIRMED,
             ]);
         } elseif ($availableQuantity < $requestedQty) {
             $record->update([
-                'state' => Enums\MoveState::PARTIALLY_ASSIGNED,
+                'state'        => Enums\MoveState::PARTIALLY_ASSIGNED,
                 'received_qty' => $availableQuantity,
             ]);
-            
+
             $record->lines()->update([
-                'state' => Enums\MoveState::PARTIALLY_ASSIGNED
+                'state' => Enums\MoveState::PARTIALLY_ASSIGNED,
             ]);
         } else {
             $record->update([
-                'state' => Enums\MoveState::ASSIGNED,
+                'state'        => Enums\MoveState::ASSIGNED,
                 'received_qty' => $availableQuantity,
             ]);
         }
@@ -1260,17 +1280,16 @@ class OperationResource extends Resource
     private static function updateOperationState(Operation $record)
     {
         $record->refresh();
-        
-        if (in_array($record->state, [Enums\OperationState::DONE,Enums\OperationState::CANCELED])) {
+
+        if (in_array($record->state, [Enums\OperationState::DONE, Enums\OperationState::CANCELED])) {
             return;
         }
 
-        if ($record->moves->every(fn($move) => $move->state === Enums\MoveState::CONFIRMED)) {
+        if ($record->moves->every(fn ($move) => $move->state === Enums\MoveState::CONFIRMED)) {
             $record->update(['state' => Enums\OperationState::CONFIRMED]);
-        } elseif ($record->moves->every(fn($move) => $move->state === Enums\MoveState::DONE)) {
+        } elseif ($record->moves->every(fn ($move) => $move->state === Enums\MoveState::DONE)) {
             $record->update(['state' => Enums\OperationState::DONE]);
-        } elseif ($record->moves->contains(fn($move) => 
-            $move->state === Enums\MoveState::ASSIGNED || 
+        } elseif ($record->moves->contains(fn ($move) => $move->state === Enums\MoveState::ASSIGNED ||
             $move->state === Enums\MoveState::PARTIALLY_ASSIGNED
         )) {
             $record->update(['state' => Enums\OperationState::ASSIGNED]);

@@ -17,6 +17,9 @@ use Webkul\Inventory\Filament\Clusters\Configurations\Resources\RouteResource\Re
 use Webkul\Inventory\Filament\Clusters\Configurations\Resources\WarehouseResource\Pages\ManageRoutes;
 use Webkul\Inventory\Models\Route;
 use Webkul\Inventory\Settings\WarehouseSettings;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
+use Filament\Support\Enums\FontWeight;
 
 class RouteResource extends Resource
 {
@@ -135,6 +138,13 @@ class RouteResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->filters([
+                Tables\Filters\SelectFilter::make('company_id')
+                    ->label(__('inventories::filament/clusters/configurations/resources/route.table.filters.company'))
+                    ->relationship('company', 'name')
+                    ->searchable()
+                    ->preload(),
+            ])
             ->reorderable('sort')
             ->defaultSort('sort', 'desc')
             ->actions([
@@ -199,6 +209,86 @@ class RouteResource extends Resource
                 Tables\Actions\CreateAction::make()
                     ->icon('heroicon-o-plus-circle'),
             ]);
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Infolists\Components\Group::make()
+                    ->schema([
+                        Infolists\Components\Section::make(__('inventories::filament/clusters/configurations/resources/route.infolist.sections.general.title'))
+                            ->schema([
+                                Infolists\Components\TextEntry::make('name')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/route.infolist.sections.general.entries.route'))
+                                    ->icon('heroicon-o-arrow-path')
+                                    ->size(Infolists\Components\TextEntry\TextEntrySize::Large)
+                                    ->weight(FontWeight::Bold),
+                                Infolists\Components\TextEntry::make('company.name')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/route.infolist.sections.general.entries.company'))
+                                    ->icon('heroicon-o-building-office'),
+                            ]),
+
+                        Infolists\Components\Section::make(__('inventories::filament/clusters/configurations/resources/route.infolist.sections.applicable-on.title'))
+                            ->description(__('inventories::filament/clusters/configurations/resources/route.infolist.sections.applicable-on.description'))
+                            ->schema([
+                                Infolists\Components\Grid::make()
+                                    ->schema([
+                                        Infolists\Components\IconEntry::make('product_category_selectable')
+                                            ->label(__('inventories::filament/clusters/configurations/resources/route.infolist.sections.applicable-on.entries.product-categories'))
+                                            ->boolean()
+                                            ->icon(fn (bool $state): string => $state ? 'heroicon-o-check-circle' : 'heroicon-o-x-circle'),
+                                        Infolists\Components\IconEntry::make('product_selectable')
+                                            ->label(__('inventories::filament/clusters/configurations/resources/route.infolist.sections.applicable-on.entries.products'))
+                                            ->boolean()
+                                            ->icon(fn (bool $state): string => $state ? 'heroicon-o-check-circle' : 'heroicon-o-x-circle'),
+                                        Infolists\Components\IconEntry::make('packaging_selectable')
+                                            ->label(__('inventories::filament/clusters/configurations/resources/route.infolist.sections.applicable-on.entries.packaging'))
+                                            ->boolean()
+                                            ->icon(fn (bool $state): string => $state ? 'heroicon-o-check-circle' : 'heroicon-o-x-circle'),
+                                    ])
+                                    ->columns(3),
+
+                                Infolists\Components\Grid::make()
+                                    ->schema([
+                                        Infolists\Components\IconEntry::make('warehouse_selectable')
+                                            ->label(__('inventories::filament/clusters/configurations/resources/route.infolist.sections.applicable-on.entries.warehouses'))
+                                            ->boolean()
+                                            ->icon(fn (bool $state): string => $state ? 'heroicon-o-check-circle' : 'heroicon-o-x-circle'),
+                                        Infolists\Components\TextEntry::make('warehouses.name')
+                                            ->label(__('inventories::filament/clusters/configurations/resources/route.infolist.sections.applicable-on.entries.warehouses'))
+                                            ->listWithLineBreaks()
+                                            ->visible(fn ($record) => $record->warehouse_selectable)
+                                            ->icon('heroicon-o-building-office'),
+                                    ])
+                                    ->columns(2),
+                            ])
+                            ->columns(2)
+                    ])
+                    ->columnSpan(['lg' => 2]),
+
+                Infolists\Components\Group::make()
+                    ->schema([
+                        Infolists\Components\Section::make(__('inventories::filament/clusters/configurations/resources/route.infolist.sections.record-information.title'))
+                            ->schema([
+                                Infolists\Components\TextEntry::make('created_at')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/route.infolist.sections.record-information.entries.created-at'))
+                                    ->dateTime()
+                                    ->icon('heroicon-m-calendar'),
+
+                                Infolists\Components\TextEntry::make('creator.name')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/route.infolist.sections.record-information.entries.created-by'))
+                                    ->icon('heroicon-m-user'),
+
+                                Infolists\Components\TextEntry::make('updated_at')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/route.infolist.sections.record-information.entries.last-updated'))
+                                    ->dateTime()
+                                    ->icon('heroicon-m-calendar-days'),
+                            ]),
+                    ])
+                    ->columnSpan(['lg' => 1]),
+            ])
+            ->columns(3);
     }
 
     public static function getSubNavigationPosition(): SubNavigationPosition

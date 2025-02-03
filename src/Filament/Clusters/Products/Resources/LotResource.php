@@ -20,6 +20,9 @@ use Webkul\Inventory\Filament\Clusters\Products\Resources\LotResource\Pages;
 use Webkul\Inventory\Filament\Clusters\Products\Resources\ProductResource\Pages\ManageQuantities;
 use Webkul\Inventory\Models\Lot;
 use Webkul\Inventory\Settings\TraceabilitySettings;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
+use Filament\Support\Enums\FontWeight;
 
 class LotResource extends Resource
 {
@@ -105,10 +108,8 @@ class LotResource extends Resource
                     ->placeholder('—')
                     ->searchable()
                     ->sortable(),
-                // On hand quantity
                 Tables\Columns\TextColumn::make('total_quantity')
                     ->label(__('inventories::filament/clusters/products/resources/lot.table.columns.on-hand-qty'))
-                    ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label(__('inventories::filament/clusters/products/resources/lot.table.columns.created-at'))
@@ -121,8 +122,37 @@ class LotResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->groups([
+                Tables\Grouping\Group::make('product.name')
+                    ->label(__('inventories::filament/clusters/products/resources/lot.table.groups.product')),
+                Tables\Grouping\Group::make('location.full_name')
+                    ->label(__('inventories::filament/clusters/products/resources/lot.table.groups.location')),
+                Tables\Grouping\Group::make('created_at')
+                    ->label(__('inventories::filament/clusters/products/resources/lot.table.groups.created-at'))
+                    ->date(),
+            ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('product_id')
+                    ->label(__('inventories::filament/clusters/products/resources/lot.table.filters.product'))
+                    ->relationship('product', 'name')
+                    ->searchable()
+                    ->preload(),
+                Tables\Filters\SelectFilter::make('location_id')
+                    ->label(__('inventories::filament/clusters/products/resources/lot.table.filters.location'))
+                    ->relationship('location', 'full_name')
+                    ->searchable()
+                    ->multiple()
+                    ->preload(),
+                Tables\Filters\SelectFilter::make('creator_id')
+                    ->label(__('inventories::filament/clusters/products/resources/lot.table.filters.creator'))
+                    ->relationship('creator', 'name')
+                    ->searchable()
+                    ->preload(),
+                Tables\Filters\SelectFilter::make('company_id')
+                    ->label(__('inventories::filament/clusters/products/resources/lot.table.filters.company'))
+                    ->relationship('company', 'name')
+                    ->searchable()
+                    ->preload(),
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
@@ -146,6 +176,74 @@ class LotResource extends Resource
                             ->body(__('inventories::filament/clusters/products/resources/lot.table.bulk-actions.delete.notification.body')),
                     ),
             ]);
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Infolists\Components\Group::make()
+                    ->schema([
+                        Infolists\Components\Section::make(__('inventories::filament/clusters/products/resources/lot.infolist.sections.general.title'))
+                            ->schema([
+                                Infolists\Components\TextEntry::make('name')
+                                    ->label(__('inventories::filament/clusters/products/resources/lot.infolist.sections.general.entries.name'))
+                                    ->icon('heroicon-o-rectangle-stack')
+                                    ->size(Infolists\Components\TextEntry\TextEntrySize::Large)
+                                    ->weight(FontWeight::Bold),
+
+                                Infolists\Components\Grid::make(2)
+                                    ->schema([
+                                        Infolists\Components\TextEntry::make('product.name')
+                                            ->label(__('inventories::filament/clusters/products/resources/lot.infolist.sections.general.entries.product'))
+                                            ->icon('heroicon-o-cube'),
+
+                                        Infolists\Components\TextEntry::make('reference')
+                                            ->label(__('inventories::filament/clusters/products/resources/lot.infolist.sections.general.entries.reference'))
+                                            ->icon('heroicon-o-document-text')
+                                            ->placeholder('—'),
+                                    ]),
+
+                                Infolists\Components\TextEntry::make('description')
+                                    ->label(__('inventories::filament/clusters/products/resources/lot.infolist.sections.general.entries.description')),
+
+                                Infolists\Components\Grid::make(2)
+                                    ->schema([
+                                        Infolists\Components\TextEntry::make('total_quantity')
+                                            ->label(__('inventories::filament/clusters/products/resources/lot.infolist.sections.general.entries.on-hand-qty'))
+                                            ->icon('heroicon-o-calculator')
+                                            ->badge(),
+
+                                        Infolists\Components\TextEntry::make('company.name')
+                                            ->label(__('inventories::filament/clusters/products/resources/lot.infolist.sections.general.entries.company'))
+                                            ->icon('heroicon-o-building-office'),
+                                    ]),
+                            ]),
+                    ])
+                    ->columnSpan(['lg' => 2]),
+
+                Infolists\Components\Group::make()
+                    ->schema([
+                        Infolists\Components\Section::make(__('inventories::filament/clusters/products/resources/lot.infolist.sections.record-information.title'))
+                            ->schema([
+                                Infolists\Components\TextEntry::make('created_at')
+                                    ->label(__('inventories::filament/clusters/products/resources/lot.infolist.sections.record-information.entries.created-at'))
+                                    ->dateTime()
+                                    ->icon('heroicon-m-calendar'),
+
+                                Infolists\Components\TextEntry::make('creator.name')
+                                    ->label(__('inventories::filament/clusters/products/resources/lot.infolist.sections.record-information.entries.created-by'))
+                                    ->icon('heroicon-m-user'),
+
+                                Infolists\Components\TextEntry::make('updated_at')
+                                    ->label(__('inventories::filament/clusters/products/resources/lot.infolist.sections.record-information.entries.last-updated'))
+                                    ->dateTime()
+                                    ->icon('heroicon-m-calendar-days'),
+                            ]),
+                    ])
+                    ->columnSpan(['lg' => 1]),
+            ])
+            ->columns(3);
     }
 
     public static function getRecordSubNavigation(Page $page): array

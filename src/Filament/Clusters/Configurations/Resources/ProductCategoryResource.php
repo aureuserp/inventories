@@ -13,6 +13,9 @@ use Filament\Tables\Table;
 use Webkul\Inventory\Filament\Clusters\Configurations;
 use Webkul\Inventory\Filament\Clusters\Configurations\Resources\ProductCategoryResource\Pages;
 use Webkul\Inventory\Models\Category;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
+use Filament\Support\Enums\FontWeight;
 
 class ProductCategoryResource extends Resource
 {
@@ -91,31 +94,54 @@ class ProductCategoryResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')
+                    ->label(__('inventories::filament/clusters/configurations/resources/product-category.table.columns.name'))
                     ->searchable(),
                 Tables\Columns\TextColumn::make('full_name')
+                    ->label(__('inventories::filament/clusters/configurations/resources/product-category.table.columns.full-name'))
                     ->searchable(),
                 Tables\Columns\TextColumn::make('parent_path')
+                    ->label(__('inventories::filament/clusters/configurations/resources/product-category.table.columns.parent-path'))
                     ->placeholder('—')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('parent.name')
+                    ->label(__('inventories::filament/clusters/configurations/resources/product-category.table.columns.parent'))
                     ->placeholder('—')
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('creator.name')
+                    ->label(__('inventories::filament/clusters/configurations/resources/product-category.table.columns.creator'))
                     ->placeholder('—')
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
+                    ->label(__('inventories::filament/clusters/configurations/resources/product-category.table.columns.created-at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
+                    ->label(__('inventories::filament/clusters/configurations/resources/product-category.table.columns.updated-at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->groups([
+                Tables\Grouping\Group::make('parent.full_name')
+                    ->label(__('inventories::filament/clusters/configurations/resources/product-category.table.groups.parent'))
+                    ->collapsible(),
+                Tables\Grouping\Group::make('created_at')
+                    ->label(__('inventories::filament/clusters/configurations/resources/product-category.table.groups.created-at'))
+                    ->collapsible(),
+                Tables\Grouping\Group::make('updated_at')
+                    ->label(__('inventories::filament/clusters/configurations/resources/product-category.table.groups.updated-at'))
+                    ->date()
+                    ->collapsible(),
+            ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('parent_id')
+                    ->label(__('inventories::filament/clusters/configurations/resources/product-category.table.filters.parent'))
+                    ->relationship('parent', 'full_name')
+                    ->searchable()
+                    ->preload(),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
@@ -141,6 +167,84 @@ class ProductCategoryResource extends Resource
                 Tables\Actions\CreateAction::make()
                     ->icon('heroicon-o-plus-circle'),
             ]);
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Infolists\Components\Group::make()
+                    ->schema([
+                        Infolists\Components\Section::make(__('inventories::filament/clusters/configurations/resources/product-category.infolist.sections.general.title'))
+                            ->schema([
+                                Infolists\Components\TextEntry::make('name')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/product-category.infolist.sections.general.entries.name'))
+                                    ->weight(FontWeight::Bold)
+                                    ->size(Infolists\Components\TextEntry\TextEntrySize::Large)
+                                    ->icon('heroicon-o-document-text'),
+
+                                Infolists\Components\TextEntry::make('parent.name')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/product-category.infolist.sections.general.entries.parent'))
+                                    ->icon('heroicon-o-folder')
+                                    ->placeholder('—'),
+
+                                Infolists\Components\TextEntry::make('full_name')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/product-category.infolist.sections.general.entries.full_name'))
+                                    ->icon('heroicon-o-folder-open')
+                                    ->placeholder('—'),
+
+                                Infolists\Components\TextEntry::make('parent_path')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/product-category.infolist.sections.general.entries.parent_path'))
+                                    ->icon('heroicon-o-arrows-right-left')
+                                    ->placeholder('—'),
+                            ]),
+
+                        Infolists\Components\Section::make(__('inventories::filament/clusters/configurations/resources/product-category.infolist.sections.settings.title'))
+                            ->schema([
+                                Infolists\Components\Section::make(__('inventories::filament/clusters/configurations/resources/product-category.infolist.sections.settings.subsections.logistics.title'))
+                                    ->schema([
+                                        Infolists\Components\RepeatableEntry::make('routes')
+                                            ->label(__('inventories::filament/clusters/configurations/resources/product-category.infolist.sections.settings.subsections.logistics.entries.routes'))
+                                            ->schema([
+                                                Infolists\Components\TextEntry::make('name')
+                                                    ->label(__('inventories::filament/clusters/configurations/resources/product-category.infolist.sections.settings.subsections.logistics.entries.route_name'))
+                                                    ->icon('heroicon-o-truck'),
+                                            ])
+                                            ->columns(1),
+                                    ])
+                                    ->icon('heroicon-o-cog-6-tooth')
+                                    ->collapsible(),
+                            ]),
+                    ])
+                    ->columnSpan(['lg' => 2]),
+
+                Infolists\Components\Group::make()
+                    ->schema([
+                        Infolists\Components\Section::make(__('inventories::filament/clusters/configurations/resources/product-category.infolist.sections.record-information.title'))
+                            ->schema([
+                                Infolists\Components\TextEntry::make('creator.name')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/product-category.infolist.sections.record-information.entries.creator'))
+                                    ->icon('heroicon-o-user')
+                                    ->placeholder('—'),
+
+                                Infolists\Components\TextEntry::make('created_at')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/product-category.infolist.sections.record-information.entries.created_at'))
+                                    ->dateTime()
+                                    ->icon('heroicon-o-calendar')
+                                    ->placeholder('—'),
+
+                                Infolists\Components\TextEntry::make('updated_at')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/product-category.infolist.sections.record-information.entries.updated_at'))
+                                    ->dateTime()
+                                    ->icon('heroicon-o-clock')
+                                    ->placeholder('—'),
+                            ])
+                            ->icon('heroicon-o-information-circle')
+                            ->collapsible(),
+                    ])
+                    ->columnSpan(['lg' => 1]),
+            ])
+            ->columns(3);
     }
 
     public static function getSubNavigationPosition(): SubNavigationPosition

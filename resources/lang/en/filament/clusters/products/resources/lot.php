@@ -35,12 +35,16 @@ return [
         ],
 
         'groups' => [
-            'package-type'   => 'Package Type',
+            'product'        => 'Product',
             'location'       => 'Location',
             'created-at'     => 'Created At',
         ],
 
         'filters' => [
+            'product'  => 'Product',
+            'location' => 'Location',
+            'creator'  => 'Creator',
+            'company'  => 'Company',
         ],
 
         'actions' => [
@@ -57,6 +61,35 @@ return [
                 'notification' => [
                     'title' => 'Lots deleted',
                     'body'  => 'The lots has been deleted successfully.',
+                ],
+            ],
+        ],
+    ],
+
+    'infolist' => [
+        'sections' => [
+            'general' => [
+                'title' => 'Lot Details',
+
+                'entries' => [
+                    'name' => 'Lot Name',
+                    'product' => 'Product',
+                    'reference' => 'Reference',
+                    'description' => 'Description',
+                    'on-hand-qty' => 'On-Hand Quantity',
+                    'company' => 'Company',
+                    'created-at' => 'Created At',
+                    'updated-at' => 'Last Updated',
+                ],
+            ],
+
+            'record-information' => [
+                'title' => 'Record Information',
+
+                'entries' => [
+                    'created-by' => 'Created By',
+                    'created-at' => 'Created At',
+                    'last-updated' => 'Last Updated',
                 ],
             ],
         ],

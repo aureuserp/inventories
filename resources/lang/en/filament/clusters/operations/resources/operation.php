@@ -43,12 +43,12 @@ return [
                         'add-line'      => 'Add Line',
 
                         'fields' => [
-                            'lot'      => 'Lot/Serial Number',
+                            'lot'       => 'Lot/Serial Number',
                             'pick-from' => 'Pick From',
-                            'location' => 'Store To',
-                            'package'  => 'Destination Package',
-                            'quantity' => 'Quantity',
-                            'uom'      => 'Unit of Measure',
+                            'location'  => 'Store To',
+                            'package'   => 'Destination Package',
+                            'quantity'  => 'Quantity',
+                            'uom'       => 'Unit of Measure',
                         ],
                     ],
                 ],
@@ -98,28 +98,28 @@ return [
         ],
 
         'groups' => [
-            'state' => 'State',
+            'state'           => 'State',
             'source-document' => 'Source Document',
             'operation-type'  => 'Operation Type',
-            'schedule-at' => 'Schedule At',
-            'created-at' => 'Created At',
+            'schedule-at'     => 'Schedule At',
+            'created-at'      => 'Created At',
         ],
 
         'filters' => [
-            'name' => 'Name',
-            'state' => 'State',
-            'partner' => 'Partner',
-            'responsible' => 'Responsible',
-            'owner' => 'Owner', 
-            'source-location' => 'Source Location',
+            'name'                 => 'Name',
+            'state'                => 'State',
+            'partner'              => 'Partner',
+            'responsible'          => 'Responsible',
+            'owner'                => 'Owner',
+            'source-location'      => 'Source Location',
             'destination-location' => 'Destination Location',
-            'deadline' => 'Deadline',
-            'scheduled-at' => 'Scheduled At',
-            'closed-at' => 'Closed At',
-            'created-at' => 'Created At',
-            'updated-at' => 'Updated At',
-            'company' => 'Company',
-            'creator' => 'Creator',
+            'deadline'             => 'Deadline',
+            'scheduled-at'         => 'Scheduled At',
+            'closed-at'            => 'Closed At',
+            'created-at'           => 'Created At',
+            'updated-at'           => 'Updated At',
+            'company'              => 'Company',
+            'creator'              => 'Creator',
         ],
 
         'actions' => [
@@ -246,12 +246,12 @@ return [
                         'title' => 'No quantities are reserved',
                         'body'  => 'No quantities are reserved for the transfer.',
                     ],
-                    
+
                     'lot-missing' => [
                         'title' => 'Supply Lot/Serial Number',
                         'body'  => 'You need to supply a Lot/Serial Number for products',
                     ],
-                    
+
                     'partial-package' => [
                         'title' => 'Can not move same package content',
                         'body'  => 'You cannot move the same package content more than once in the same transfer or split the same package into two location.',

@@ -2,18 +2,15 @@
 
 namespace Webkul\Inventory\Filament\Clusters\Operations\Resources\InternalResource\Pages;
 
-use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRelatedRecords;
 use Filament\Tables;
+use Filament\Tables\Table;
+use Webkul\Inventory\Enums;
+use Webkul\Inventory\Filament\Clusters\Operations\Resources\InternalResource;
 use Webkul\Inventory\Settings\OperationSettings;
 use Webkul\Inventory\Settings\TraceabilitySettings;
 use Webkul\Inventory\Settings\WarehouseSettings;
-use Filament\Tables\Table;
-use Illuminate\Support\Facades\Auth;
-use Webkul\Inventory\Enums;
-use Webkul\Inventory\Filament\Clusters\Operations\Resources\InternalResource;
-use Webkul\Inventory\Models\Product;
 
 class ManageMoves extends ManageRelatedRecords
 {

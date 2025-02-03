@@ -13,6 +13,9 @@ use Webkul\Inventory\Filament\Clusters\Configurations\Resources\ProductAttribute
 use Webkul\Inventory\Settings\ProductSettings;
 use Webkul\Product\Enums\AttributeType;
 use Webkul\Product\Models\Attribute;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
+use Filament\Support\Enums\FontWeight;
 
 class ProductAttributeResource extends Resource
 {
@@ -97,7 +100,7 @@ class ProductAttributeResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('type')
                     ->label(__('inventories::filament/clusters/configurations/resources/product-attribute.table.columns.type'))
-                    ->searchable(),
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label(__('inventories::filament/clusters/configurations/resources/product-attribute.table.columns.created-at'))
                     ->dateTime()
@@ -109,8 +112,24 @@ class ProductAttributeResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->groups([
+                Tables\Grouping\Group::make('type')
+                    ->label(__('inventories::filament/clusters/configurations/resources/product-attribute.table.groups.type'))
+                    ->collapsible(),
+                Tables\Grouping\Group::make('created_at')
+                    ->label(__('inventories::filament/clusters/configurations/resources/product-attribute.table.groups.created-at'))
+                    ->collapsible(),
+                Tables\Grouping\Group::make('updated_at')
+                    ->label(__('inventories::filament/clusters/configurations/resources/product-attribute.table.groups.updated-at'))
+                    ->date()
+                    ->collapsible(),
+            ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('type')
+                    ->label(__('inventories::filament/clusters/configurations/resources/product-attribute.table.filters.type'))
+                    ->options(AttributeType::class)
+                    ->searchable()
+                    ->preload(),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make()
@@ -168,6 +187,57 @@ class ProductAttributeResource extends Resource
                 Tables\Actions\CreateAction::make()
                     ->icon('heroicon-o-plus-circle'),
             ]);
+    }
+
+
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Infolists\Components\Group::make()
+                    ->schema([
+                        Infolists\Components\Section::make(__('inventories::filament/clusters/configurations/resources/product-attribute.infolist.sections.general.title'))
+                            ->schema([
+                                Infolists\Components\TextEntry::make('name')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/product-attribute.infolist.sections.general.entries.name'))
+                                    ->size(Infolists\Components\TextEntry\TextEntrySize::Large)
+                                    ->weight(FontWeight::Bold),
+
+                                Infolists\Components\TextEntry::make('type')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/product-attribute.infolist.sections.general.entries.type'))
+                                    ->placeholder('—'),
+                            ]),
+                    ])
+                    ->columnSpan(['lg' => 2]),
+
+                Infolists\Components\Group::make()
+                    ->schema([
+                        Infolists\Components\Section::make(__('inventories::filament/clusters/configurations/resources/product-attribute.infolist.sections.record-information.title'))
+                            ->schema([
+                                Infolists\Components\TextEntry::make('creator.name')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/product-attribute.infolist.sections.record-information.entries.creator'))
+                                    ->icon('heroicon-o-user')
+                                    ->placeholder('—'),
+
+                                Infolists\Components\TextEntry::make('created_at')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/product-attribute.infolist.sections.record-information.entries.created_at'))
+                                    ->dateTime()
+                                    ->icon('heroicon-o-calendar')
+                                    ->placeholder('—'),
+
+                                Infolists\Components\TextEntry::make('updated_at')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/product-attribute.infolist.sections.record-information.entries.updated_at'))
+                                    ->dateTime()
+                                    ->icon('heroicon-o-clock')
+                                    ->placeholder('—'),
+                            ])
+                            ->icon('heroicon-o-information-circle')
+                            ->collapsible(),
+                    ])
+                    ->columnSpan(['lg' => 1]),
+            ])
+            ->columns(3);
     }
 
     public static function getPages(): array

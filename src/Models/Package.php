@@ -6,8 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Webkul\Inventory\Database\Factories\PackageFactory;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Webkul\Inventory\Database\Factories\PackageFactory;
 use Webkul\Inventory\Enums\PackageUse;
 use Webkul\Security\Models\User;
 use Webkul\Support\Models\Company;
@@ -68,7 +68,7 @@ class Package extends Model
         return $this->hasManyThrough(
             Operation::class,
             MoveLine::class,
-            'package_id', 
+            'package_id',
             'id',
             'id',
             'operation_id'
@@ -80,7 +80,7 @@ class Package extends Model
         return $this->hasManyThrough(
             Move::class,
             MoveLine::class,
-            'package_id', 
+            'package_id',
             'id',
             'id',
             'move_id'

@@ -72,7 +72,39 @@ return [
     ],
 
     'infolist' => [
-        'name'   => 'Name',
-        'status' => 'Status',
+        'sections' => [
+            'general' => [
+                'title' => 'General Information',
+                'entries' => [
+                    'name' => 'Name',
+                    'fieldsets' => [
+                        'size' => [
+                            'title' => 'Package Dimensions',
+                            'entries' => [
+                                'length' => 'Length',
+                                'width' => 'Width',
+                                'height' => 'Height',
+                            ],
+                        ],
+                    ],
+                    'weight' => 'Base Weight',
+                    'max-weight' => 'Maximum Weight',
+                    'barcode' => 'Barcode',
+                    'company' => 'Company',
+                    'created-at' => 'Created At',
+                    'updated-at' => 'Last Updated',
+                ],
+            ],
+
+            'record-information' => [
+                'title' => 'Record Information',
+
+                'entries' => [
+                    'created-by' => 'Created By',
+                    'created-at' => 'Created At',
+                    'last-updated' => 'Last Updated',
+                ],
+            ],
+        ],
     ],
 ];

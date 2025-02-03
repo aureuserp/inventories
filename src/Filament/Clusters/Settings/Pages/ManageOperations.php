@@ -50,9 +50,9 @@ class ManageOperations extends SettingsPage
                 Forms\Components\Toggle::make('enable_warnings')
                     ->label(__('inventories::filament/clusters/settings/pages/manage-operations.form.enable-warnings'))
                     ->helperText(__('inventories::filament/clusters/settings/pages/manage-operations.form.enable-warnings-helper-text')),
-                Forms\Components\Toggle::make('enable_reception_report')
-                    ->label(__('inventories::filament/clusters/settings/pages/manage-operations.form.enable-reception-report'))
-                    ->helperText(__('inventories::filament/clusters/settings/pages/manage-operations.form.enable-reception-report-helper-text')),
+                // Forms\Components\Toggle::make('enable_reception_report')
+                //     ->label(__('inventories::filament/clusters/settings/pages/manage-operations.form.enable-reception-report'))
+                //     ->helperText(__('inventories::filament/clusters/settings/pages/manage-operations.form.enable-reception-report-helper-text')),
                 Forms\Components\TextInput::make('annual_inventory_day')
                     ->label(__('inventories::filament/clusters/settings/pages/manage-operations.form.annual-inventory-day'))
                     ->helperText(__('inventories::filament/clusters/settings/pages/manage-operations.form.annual-inventory-day-helper-text'))

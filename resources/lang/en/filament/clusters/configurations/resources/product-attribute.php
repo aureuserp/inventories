@@ -39,8 +39,13 @@ return [
         ],
 
         'groups' => [
+            'type'       => 'Type',
             'created-at' => 'Created At',
             'updated-at' => 'Updated At',
+        ],
+
+        'filters' => [
+            'type' => 'Type',
         ],
 
         'actions' => [
@@ -91,7 +96,25 @@ return [
     ],
 
     'infolist' => [
-        'name'   => 'Name',
-        'status' => 'Status',
+        'sections' => [
+            'general' => [
+                'title' => 'General Information',
+
+                'entries' => [
+                    'name' => 'Name',
+                    'type' => 'Type',
+                ],
+            ],
+
+            'record-information' => [
+                'title' => 'Record Information',
+
+                'entries' => [
+                    'creator' => 'Created By',
+                    'created_at' => 'Created At',
+                    'updated_at' => 'Last Updated At',
+                ],
+            ],
+        ],
     ],
 ];

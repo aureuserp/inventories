@@ -16,6 +16,9 @@ use Webkul\Inventory\Filament\Clusters\Products\Resources\PackageResource\Pages;
 use Webkul\Inventory\Filament\Clusters\Products\Resources\PackageResource\RelationManagers;
 use Webkul\Inventory\Models\Package;
 use Webkul\Inventory\Settings\OperationSettings;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
+use Filament\Support\Enums\FontWeight;
 
 class PackageResource extends Resource
 {
@@ -91,16 +94,13 @@ class PackageResource extends Resource
                 Tables\Columns\TextColumn::make('packageType.name')
                     ->label(__('inventories::filament/clusters/products/resources/package.table.columns.package-type'))
                     ->placeholder('—')
-                    ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('location.full_name')
                     ->label(__('inventories::filament/clusters/products/resources/package.table.columns.location'))
                     ->placeholder('—')
-                    ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('company.name')
                     ->label(__('inventories::filament/clusters/products/resources/package.table.columns.company'))
-                    ->searchable()
                     ->sortable(),
             ])
             ->groups([
@@ -113,7 +113,27 @@ class PackageResource extends Resource
                     ->date(),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('package_type_id')
+                    ->label(__('inventories::filament/clusters/products/resources/package.table.filters.package-type'))
+                    ->relationship('packageType', 'name')
+                    ->searchable()
+                    ->preload(),
+                Tables\Filters\SelectFilter::make('location_id')
+                    ->label(__('inventories::filament/clusters/products/resources/package.table.filters.location'))
+                    ->relationship('location', 'full_name')
+                    ->searchable()
+                    ->multiple()
+                    ->preload(),
+                Tables\Filters\SelectFilter::make('creator_id')
+                    ->label(__('inventories::filament/clusters/products/resources/package.table.filters.creator'))
+                    ->relationship('creator', 'name')
+                    ->searchable()
+                    ->preload(),
+                Tables\Filters\SelectFilter::make('company_id')
+                    ->label(__('inventories::filament/clusters/products/resources/package.table.filters.company'))
+                    ->relationship('company', 'name')
+                    ->searchable()
+                    ->preload(),
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
@@ -138,6 +158,73 @@ class PackageResource extends Resource
                     ),
             ]);
     }
+    
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Infolists\Components\Group::make()
+                    ->schema([
+                        Infolists\Components\Section::make(__('inventories::filament/clusters/products/resources/package.infolist.sections.general.title'))
+                            ->schema([
+                                Infolists\Components\TextEntry::make('name')
+                                    ->label(__('inventories::filament/clusters/products/resources/package.infolist.sections.general.entries.name'))
+                                    ->icon('heroicon-o-cube')
+                                    ->size(Infolists\Components\TextEntry\TextEntrySize::Large)
+                                    ->weight(FontWeight::Bold),
+
+                                Infolists\Components\Grid::make(2)
+                                    ->schema([
+                                        Infolists\Components\TextEntry::make('packageType.name')
+                                            ->label(__('inventories::filament/clusters/products/resources/package.infolist.sections.general.entries.package-type'))
+                                            ->icon('heroicon-o-rectangle-stack')
+                                            ->placeholder('—'),
+
+                                        Infolists\Components\TextEntry::make('pack_date')
+                                            ->label(__('inventories::filament/clusters/products/resources/package.infolist.sections.general.entries.pack-date'))
+                                            ->icon('heroicon-o-calendar')
+                                            ->date(),
+                                    ]),
+
+                                Infolists\Components\Grid::make(2)
+                                    ->schema([
+                                        Infolists\Components\TextEntry::make('location.full_name')
+                                            ->label(__('inventories::filament/clusters/products/resources/package.infolist.sections.general.entries.location'))
+                                            ->icon('heroicon-o-map-pin')
+                                            ->placeholder('—'),
+
+                                        Infolists\Components\TextEntry::make('company.name')
+                                            ->label(__('inventories::filament/clusters/products/resources/package.infolist.sections.general.entries.company'))
+                                            ->icon('heroicon-o-building-office'),
+                                    ]),
+                            ]),
+                    ])
+                    ->columnSpan(['lg' => 2]),
+
+                Infolists\Components\Group::make()
+                    ->schema([
+                        Infolists\Components\Section::make(__('inventories::filament/clusters/products/resources/package.infolist.sections.record-information.title'))
+                            ->schema([
+                                Infolists\Components\TextEntry::make('created_at')
+                                    ->label(__('inventories::filament/clusters/products/resources/package.infolist.sections.record-information.entries.created-at'))
+                                    ->dateTime()
+                                    ->icon('heroicon-m-calendar'),
+
+                                Infolists\Components\TextEntry::make('creator.name')
+                                    ->label(__('inventories::filament/clusters/products/resources/package.infolist.sections.record-information.entries.created-by'))
+                                    ->icon('heroicon-m-user'),
+
+                                Infolists\Components\TextEntry::make('updated_at')
+                                    ->label(__('inventories::filament/clusters/products/resources/package.infolist.sections.record-information.entries.last-updated'))
+                                    ->dateTime()
+                                    ->icon('heroicon-m-calendar-days'),
+                            ]),
+                    ])
+                    ->columnSpan(['lg' => 1]),
+            ])
+            ->columns(3);
+    }
+
 
     public static function getRecordSubNavigation(Page $page): array
     {

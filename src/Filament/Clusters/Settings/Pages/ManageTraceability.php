@@ -61,9 +61,9 @@ class ManageTraceability extends SettingsPage
                     ->label(__('inventories::filament/clusters/settings/pages/manage-traceability.form.display-expiration-dates-on-delivery-slips'))
                     ->helperText(__('inventories::filament/clusters/settings/pages/manage-traceability.form.display-expiration-dates-on-delivery-slips-helper-text'))
                     ->visible(fn (Forms\Get $get) => $get('enable_lots_serial_numbers') && $get('display_on_delivery_slips')),
-                Forms\Components\Toggle::make('enable_consignments')
-                    ->label(__('inventories::filament/clusters/settings/pages/manage-traceability.form.enable-consignments'))
-                    ->helperText(__('inventories::filament/clusters/settings/pages/manage-traceability.form.enable-consignments-helper-text')),
+                // Forms\Components\Toggle::make('enable_consignments')
+                //     ->label(__('inventories::filament/clusters/settings/pages/manage-traceability.form.enable-consignments'))
+                //     ->helperText(__('inventories::filament/clusters/settings/pages/manage-traceability.form.enable-consignments-helper-text')),
             ]);
     }
 }

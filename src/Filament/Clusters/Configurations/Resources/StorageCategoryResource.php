@@ -18,6 +18,8 @@ use Webkul\Inventory\Filament\Clusters\Configurations\Resources\StorageCategoryR
 use Webkul\Inventory\Filament\Clusters\Configurations\Resources\StorageCategoryResource\RelationManagers;
 use Webkul\Inventory\Models\StorageCategory;
 use Webkul\Inventory\Settings\WarehouseSettings;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
 
 class StorageCategoryResource extends Resource
 {
@@ -89,7 +91,7 @@ class StorageCategoryResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('allow_new_products')
                     ->label(__('inventories::filament/clusters/configurations/resources/storage-category.table.columns.allow-new-products'))
-                    ->searchable(),
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('max_weight')
                     ->label(__('inventories::filament/clusters/configurations/resources/storage-category.table.columns.max-weight'))
                     ->numeric()
@@ -121,9 +123,6 @@ class StorageCategoryResource extends Resource
                     ->date()
                     ->collapsible(),
             ])
-            ->filters([
-                //
-            ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
@@ -148,6 +147,56 @@ class StorageCategoryResource extends Resource
                 Tables\Actions\CreateAction::make()
                     ->icon('heroicon-o-plus-circle'),
             ]);
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Infolists\Components\Group::make()
+                    ->schema([
+                        Infolists\Components\Section::make(__('inventories::filament/clusters/configurations/resources/storage-category.infolist.sections.general.title'))
+                            ->schema([
+                                Infolists\Components\TextEntry::make('name')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/storage-category.infolist.sections.general.entries.name'))
+                                    ->icon('heroicon-o-tag'), // Example icon for name
+                                Infolists\Components\TextEntry::make('max_weight')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/storage-category.infolist.sections.general.entries.max-weight'))
+                                    ->numeric()
+                                    ->icon('heroicon-o-scale'), // Example icon for max weight
+                                Infolists\Components\TextEntry::make('allow_new_products')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/storage-category.infolist.sections.general.entries.allow-new-products'))
+                                    ->icon('heroicon-o-plus-circle'), // Example icon for allow new products
+                                Infolists\Components\TextEntry::make('company.name')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/storage-category.infolist.sections.general.entries.company'))
+                                    ->icon('heroicon-o-building-office'), // Example icon for company
+                            ])
+                            ->columns(2),
+                    ])
+                    ->columnSpan(['lg' => 2]),
+
+                Infolists\Components\Group::make()
+                    ->schema([
+                        Infolists\Components\Section::make(__('inventories::filament/clusters/configurations/resources/storage-category.infolist.sections.record-information.title'))
+                            ->schema([
+                                Infolists\Components\TextEntry::make('created_at')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/storage-category.infolist.sections.record-information.entries.created-at'))
+                                    ->dateTime()
+                                    ->icon('heroicon-m-calendar'),
+
+                                Infolists\Components\TextEntry::make('creator.name')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/storage-category.infolist.sections.record-information.entries.created-by'))
+                                    ->icon('heroicon-m-user'),
+
+                                Infolists\Components\TextEntry::make('updated_at')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/storage-category.infolist.sections.record-information.entries.last-updated'))
+                                    ->dateTime()
+                                    ->icon('heroicon-m-calendar-days'),
+                            ]),
+                    ])
+                    ->columnSpan(['lg' => 1]),
+            ])
+            ->columns(3);
     }
 
     public static function getSubNavigationPosition(): SubNavigationPosition

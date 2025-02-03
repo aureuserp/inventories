@@ -9,11 +9,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
-use Webkul\Inventory\Enums\CreateBackorder;
-use Webkul\Inventory\Enums\LocationType;
-use Webkul\Inventory\Enums\MoveType;
-use Webkul\Inventory\Enums\OperationType as OperationTypeEnum;
-use Webkul\Inventory\Enums\ReservationMethod;
+use Webkul\Inventory\Enums;
 use Webkul\Inventory\Filament\Clusters\Configurations;
 use Webkul\Inventory\Filament\Clusters\Configurations\Resources\OperationTypeResource\Pages;
 use Webkul\Inventory\Models\Location;
@@ -22,6 +18,9 @@ use Webkul\Inventory\Models\Warehouse;
 use Webkul\Inventory\Settings\OperationSettings;
 use Webkul\Inventory\Settings\TraceabilitySettings;
 use Webkul\Inventory\Settings\WarehouseSettings;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
+use Filament\Support\Enums\FontWeight;
 
 class OperationTypeResource extends Resource
 {
@@ -72,8 +71,8 @@ class OperationTypeResource extends Resource
                                                 Forms\Components\Select::make('type')
                                                     ->label(__('inventories::filament/clusters/configurations/resources/operation-type.form.tabs.general.fields.operator-type'))
                                                     ->required()
-                                                    ->options(OperationTypeEnum::class)
-                                                    ->default(OperationTypeEnum::INCOMING->value)
+                                                    ->options(Enums\OperationType::class)
+                                                    ->default(Enums\OperationType::INCOMING->value)
                                                     ->native(true)
                                                     ->live()
                                                     ->selectablePlaceholder(false)
@@ -87,11 +86,11 @@ class OperationTypeResource extends Resource
 
                                                         // Set new source location
                                                         $sourceLocationId = match ($type) {
-                                                            OperationTypeEnum::INCOMING => Location::where('type', LocationType::SUPPLIER->value)->first()?->id,
-                                                            OperationTypeEnum::OUTGOING => Location::where('is_replenish', 1)
+                                                            Enums\OperationType::INCOMING => Location::where('type', Enums\LocationType::SUPPLIER->value)->first()?->id,
+                                                            Enums\OperationType::OUTGOING => Location::where('is_replenish', 1)
                                                                 ->when($warehouseId, fn ($query) => $query->where('warehouse_id', $warehouseId))
                                                                 ->first()?->id,
-                                                            OperationTypeEnum::INTERNAL => Location::where('is_replenish', 1)
+                                                            Enums\OperationType::INTERNAL => Location::where('is_replenish', 1)
                                                                 ->when($warehouseId, fn ($query) => $query->where('warehouse_id', $warehouseId))
                                                                 ->first()?->id,
                                                             default => null,
@@ -99,11 +98,11 @@ class OperationTypeResource extends Resource
 
                                                         // Set new destination location
                                                         $destinationLocationId = match ($type) {
-                                                            OperationTypeEnum::INCOMING => Location::where('is_replenish', 1)
+                                                            Enums\OperationType::INCOMING => Location::where('is_replenish', 1)
                                                                 ->when($warehouseId, fn ($query) => $query->where('warehouse_id', $warehouseId))
                                                                 ->first()?->id,
-                                                            OperationTypeEnum::OUTGOING => Location::where('type', LocationType::CUSTOMER->value)->first()?->id,
-                                                            OperationTypeEnum::INTERNAL => Location::where('is_replenish', 1)
+                                                            Enums\OperationType::OUTGOING => Location::where('type', Enums\LocationType::CUSTOMER->value)->first()?->id,
+                                                            Enums\OperationType::INTERNAL => Location::where('is_replenish', 1)
                                                                 ->when($warehouseId, fn ($query) => $query->where('warehouse_id', $warehouseId))
                                                                 ->first()?->id,
                                                             default => null,
@@ -120,7 +119,7 @@ class OperationTypeResource extends Resource
                                                 Forms\Components\Toggle::make('print_label')
                                                     ->label(__('inventories::filament/clusters/configurations/resources/operation-type.form.tabs.general.fields.generate-shipping-labels'))
                                                     ->inline(false)
-                                                    ->visible(fn (Forms\Get $get): bool => in_array($get('type'), [OperationTypeEnum::OUTGOING->value, OperationTypeEnum::INTERNAL->value])),
+                                                    ->visible(fn (Forms\Get $get): bool => in_array($get('type'), [Enums\OperationType::OUTGOING->value, Enums\OperationType::INTERNAL->value])),
                                                 Forms\Components\Select::make('warehouse_id')
                                                     ->label(__('inventories::filament/clusters/configurations/resources/operation-type.form.tabs.general.fields.warehouse'))
                                                     ->relationship('warehouse', 'name')
@@ -132,14 +131,14 @@ class OperationTypeResource extends Resource
                                                     }),
                                                 Forms\Components\Radio::make('reservation_method')
                                                     ->required()
-                                                    ->options(ReservationMethod::class)
-                                                    ->default(ReservationMethod::AT_CONFIRM->value)
-                                                    ->visible(fn (Forms\Get $get): bool => $get('type') != OperationTypeEnum::INCOMING->value),
+                                                    ->options(Enums\ReservationMethod::class)
+                                                    ->default(Enums\ReservationMethod::AT_CONFIRM->value)
+                                                    ->visible(fn (Forms\Get $get): bool => $get('type') != Enums\OperationType::INCOMING->value),
                                                 Forms\Components\Toggle::make('auto_show_reception_report')
                                                     ->label(__('inventories::filament/clusters/configurations/resources/operation-type.form.tabs.general.fields.show-reception-report'))
                                                     ->inline(false)
                                                     ->hintIcon('heroicon-m-question-mark-circle', tooltip: __('inventories::filament/clusters/configurations/resources/operation-type.form.tabs.general.fields.show-reception-report-hint-tooltip'))
-                                                    ->visible(fn (OperationSettings $operationSettings, Forms\Get $get): bool => $operationSettings->enable_reception_report && in_array($get('type'), [OperationTypeEnum::INCOMING->value, OperationTypeEnum::INTERNAL->value])),
+                                                    ->visible(fn (OperationSettings $operationSettings, Forms\Get $get): bool => $operationSettings->enable_reception_report && in_array($get('type'), [Enums\OperationType::INCOMING->value, Enums\OperationType::INTERNAL->value])),
                                             ]),
 
                                         Forms\Components\Group::make()
@@ -155,17 +154,17 @@ class OperationTypeResource extends Resource
                                                     ->relationship('returnOperationType', 'name')
                                                     ->searchable()
                                                     ->preload()
-                                                    ->visible(fn (Forms\Get $get): bool => $get('type') != OperationTypeEnum::DROPSHIP->value),
+                                                    ->visible(fn (Forms\Get $get): bool => $get('type') != Enums\OperationType::DROPSHIP->value),
                                                 Forms\Components\Select::make('create_backorder')
                                                     ->label(__('inventories::filament/clusters/configurations/resources/operation-type.form.tabs.general.fields.create-backorder'))
                                                     ->required()
-                                                    ->options(CreateBackorder::class)
-                                                    ->default(CreateBackorder::ASK->value),
+                                                    ->options(Enums\CreateBackorder::class)
+                                                    ->default(Enums\CreateBackorder::ASK->value),
                                                 Forms\Components\Select::make('move_type')
                                                     ->label(__('inventories::filament/clusters/configurations/resources/operation-type.form.tabs.general.fields.move-type'))
                                                     ->hintIcon('heroicon-m-question-mark-circle', tooltip: __('inventories::filament/clusters/configurations/resources/operation-type.form.tabs.general.fields.move-type-hint-tooltip'))
-                                                    ->options(MoveType::class)
-                                                    ->visible(fn (Forms\Get $get): bool => $get('type') == OperationTypeEnum::INTERNAL->value),
+                                                    ->options(Enums\MoveType::class)
+                                                    ->visible(fn (Forms\Get $get): bool => $get('type') == Enums\OperationType::INTERNAL->value),
                                             ]),
                                     ])
                                     ->columns(2),
@@ -180,7 +179,7 @@ class OperationTypeResource extends Resource
                                             ->hintIcon('heroicon-m-question-mark-circle', tooltip: __('inventories::filament/clusters/configurations/resources/operation-type.form.tabs.general.fieldsets.lots.fields.use-existing-hint-tooltip'))
                                             ->inline(false),
                                     ])
-                                    ->visible(fn (TraceabilitySettings $traceabilitySettings, Forms\Get $get): bool => $traceabilitySettings->enable_lots_serial_numbers && $get('type') != OperationTypeEnum::DROPSHIP->value),
+                                    ->visible(fn (TraceabilitySettings $traceabilitySettings, Forms\Get $get): bool => $traceabilitySettings->enable_lots_serial_numbers && $get('type') != Enums\OperationType::DROPSHIP->value),
                                 Forms\Components\Fieldset::make(__('inventories::filament/clusters/configurations/resources/operation-type.form.tabs.general.fieldsets.locations.title'))
                                     ->schema([
                                         Forms\Components\Select::make('source_location_id')
@@ -197,11 +196,11 @@ class OperationTypeResource extends Resource
                                                 $warehouseId = $get('warehouse_id');
 
                                                 return match ($type) {
-                                                    OperationTypeEnum::INCOMING => Location::where('type', LocationType::SUPPLIER->value)->first()?->id,
-                                                    OperationTypeEnum::OUTGOING => Location::where('is_replenish', 1)
+                                                    Enums\OperationType::INCOMING => Location::where('type', Enums\LocationType::SUPPLIER->value)->first()?->id,
+                                                    Enums\OperationType::OUTGOING => Location::where('is_replenish', 1)
                                                         ->when($warehouseId, fn ($query) => $query->where('warehouse_id', $warehouseId))
                                                         ->first()?->id,
-                                                    OperationTypeEnum::INTERNAL => Location::where('is_replenish', 1)
+                                                    Enums\OperationType::INTERNAL => Location::where('is_replenish', 1)
                                                         ->when($warehouseId, fn ($query) => $query->where('warehouse_id', $warehouseId))
                                                         ->first()?->id,
                                                     default => null,
@@ -220,11 +219,11 @@ class OperationTypeResource extends Resource
                                                 $warehouseId = $get('warehouse_id');
 
                                                 return match ($type) {
-                                                    OperationTypeEnum::INCOMING => Location::where('is_replenish', 1)
+                                                    Enums\OperationType::INCOMING => Location::where('is_replenish', 1)
                                                         ->when($warehouseId, fn ($query) => $query->where('warehouse_id', $warehouseId))
                                                         ->first()?->id,
-                                                    OperationTypeEnum::OUTGOING => Location::where('type', LocationType::CUSTOMER->value)->first()?->id,
-                                                    OperationTypeEnum::INTERNAL => Location::where(function ($query) use ($warehouseId) {
+                                                    Enums\OperationType::OUTGOING => Location::where('type', Enums\LocationType::CUSTOMER->value)->first()?->id,
+                                                    Enums\OperationType::INTERNAL => Location::where(function ($query) use ($warehouseId) {
                                                         $query->whereNull('warehouse_id')
                                                             ->when($warehouseId, fn ($q) => $q->orWhere('warehouse_id', $warehouseId));
                                                     })->first()?->id,
@@ -233,14 +232,14 @@ class OperationTypeResource extends Resource
                                             }),
                                     ])
                                     ->visible(fn (WarehouseSettings $warehouseSettings): bool => $warehouseSettings->enable_locations),
-                                Forms\Components\Fieldset::make(__('inventories::filament/clusters/configurations/resources/operation-type.form.tabs.general.fieldsets.packages.title'))
-                                    ->schema([
-                                        Forms\Components\Toggle::make('show_entire_packs')
-                                            ->label(__('inventories::filament/clusters/configurations/resources/operation-type.form.tabs.general.fieldsets.packages.fields.show-entire-package'))
-                                            ->hintIcon('heroicon-m-question-mark-circle', tooltip: __('inventories::filament/clusters/configurations/resources/operation-type.form.tabs.general.fieldsets.packages.fields.show-entire-package-hint-tooltip'))
-                                            ->inline(false),
-                                    ])
-                                    ->visible(fn (OperationSettings $operationSettings, Forms\Get $get): bool => $operationSettings->enable_packages && $get('type') != OperationTypeEnum::DROPSHIP->value),
+                                // Forms\Components\Fieldset::make(__('inventories::filament/clusters/configurations/resources/operation-type.form.tabs.general.fieldsets.packages.title'))
+                                //     ->schema([
+                                //         Forms\Components\Toggle::make('show_entire_packs')
+                                //             ->label(__('inventories::filament/clusters/configurations/resources/operation-type.form.tabs.general.fieldsets.packages.fields.show-entire-package'))
+                                //             ->hintIcon('heroicon-m-question-mark-circle', tooltip: __('inventories::filament/clusters/configurations/resources/operation-type.form.tabs.general.fieldsets.packages.fields.show-entire-package-hint-tooltip'))
+                                //             ->inline(false),
+                                //     ])
+                                //     ->visible(fn (OperationSettings $operationSettings, Forms\Get $get): bool => $operationSettings->enable_packages && $get('type') != Enums\OperationType::DROPSHIP->value),
                             ]),
                         Forms\Components\Tabs\Tab::make(__('inventories::filament/clusters/configurations/resources/operation-type.form.tabs.hardware.title'))
                             ->icon('heroicon-o-computer-desktop')
@@ -291,7 +290,7 @@ class OperationTypeResource extends Resource
                                     ])
                                     ->visible(fn (OperationSettings $operationSettings): bool => $operationSettings->enable_packages),
                             ])
-                            ->visible(fn (Forms\Get $get): bool => $get('type') != OperationTypeEnum::DROPSHIP->value),
+                            ->visible(fn (Forms\Get $get): bool => $get('type') != Enums\OperationType::DROPSHIP->value),
                     ])
                     ->columnSpan('full'),
             ]);
@@ -335,6 +334,24 @@ class OperationTypeResource extends Resource
                     ->label(__('inventories::filament/clusters/configurations/resources/operation-type.table.groups.updated-at'))
                     ->date()
                     ->collapsible(),
+            ])
+            ->filters([
+                Tables\Filters\SelectFilter::make('type')
+                    ->label(__('inventories::filament/clusters/configurations/resources/operation-type.table.filters.type'))
+                    ->options(Enums\OperationType::class)
+                    ->searchable()
+                    ->multiple()
+                    ->preload(),
+                Tables\Filters\SelectFilter::make('warehouse_id')
+                    ->label(__('inventories::filament/clusters/configurations/resources/operation-type.table.filters.warehouse'))
+                    ->relationship('warehouse', 'name')
+                    ->searchable()
+                    ->preload(),
+                Tables\Filters\SelectFilter::make('company_id')
+                    ->label(__('inventories::filament/clusters/configurations/resources/operation-type.table.filters.company'))
+                    ->relationship('company', 'name')
+                    ->searchable()
+                    ->preload(),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make()
@@ -393,6 +410,165 @@ class OperationTypeResource extends Resource
                     ->label(__('inventories::filament/clusters/configurations/resources/operation-type.table.empty-actions.create.label'))
                     ->icon('heroicon-o-plus-circle'),
             ]);
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Infolists\Components\Group::make()
+                    ->schema([
+                        Infolists\Components\Section::make(__('inventories::filament/clusters/configurations/resources/operation-type.infolist.sections.general.title'))
+                            ->schema([
+                                Infolists\Components\TextEntry::make('name')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/operation-type.infolist.sections.general.entries.name'))
+                                    ->icon('heroicon-o-queue-list')
+                                    ->size(Infolists\Components\TextEntry\TextEntrySize::Large)
+                                    ->weight(FontWeight::Bold)
+                                    ->columnSpan(2),
+                            ]),
+
+                        Infolists\Components\Tabs::make()
+                            ->tabs([
+                                Infolists\Components\Tabs\Tab::make(__('inventories::filament/clusters/configurations/resources/operation-type.infolist.tabs.general.title'))
+                                    ->icon('heroicon-o-cog')
+                                    ->schema([
+                                        Infolists\Components\Group::make()
+                                            ->schema([
+                                                Infolists\Components\TextEntry::make('type')
+                                                    ->label(__('inventories::filament/clusters/configurations/resources/operation-type.infolist.tabs.general.entries.type'))
+                                                    ->icon('heroicon-o-cog'),
+                                                Infolists\Components\TextEntry::make('sequence_code')
+                                                    ->label(__('inventories::filament/clusters/configurations/resources/operation-type.infolist.tabs.general.entries.sequence_code'))
+                                                    ->icon('heroicon-o-tag'),
+                                                Infolists\Components\IconEntry::make('print_label')
+                                                    ->label(__('inventories::filament/clusters/configurations/resources/operation-type.infolist.tabs.general.entries.print_label'))
+                                                    ->boolean()
+                                                    ->icon('heroicon-o-printer'),
+                                                Infolists\Components\TextEntry::make('warehouse.name')
+                                                    ->label(__('inventories::filament/clusters/configurations/resources/operation-type.infolist.tabs.general.entries.warehouse'))
+                                                    ->icon('heroicon-o-building-office'),
+                                                Infolists\Components\TextEntry::make('reservation_method')
+                                                    ->label(__('inventories::filament/clusters/configurations/resources/operation-type.infolist.tabs.general.entries.reservation_method'))
+                                                    ->icon('heroicon-o-clock'),
+                                                Infolists\Components\IconEntry::make('auto_show_reception_report')
+                                                    ->label(__('inventories::filament/clusters/configurations/resources/operation-type.infolist.tabs.general.entries.auto_show_reception_report'))
+                                                    ->boolean()
+                                                    ->icon('heroicon-o-document-text'),
+                                            ])
+                                            ->columns(2),
+
+                                        Infolists\Components\Group::make()
+                                            ->schema([
+                                                Infolists\Components\TextEntry::make('company.name')
+                                                    ->label(__('inventories::filament/clusters/configurations/resources/operation-type.infolist.tabs.general.entries.company'))
+                                                    ->icon('heroicon-o-building-office'),
+                                                Infolists\Components\TextEntry::make('returnOperationType.name')
+                                                    ->label(__('inventories::filament/clusters/configurations/resources/operation-type.infolist.tabs.general.entries.return_operation_type'))
+                                                    ->icon('heroicon-o-arrow-uturn-left'),
+                                                Infolists\Components\TextEntry::make('create_backorder')
+                                                    ->label(__('inventories::filament/clusters/configurations/resources/operation-type.infolist.tabs.general.entries.create_backorder'))
+                                                    ->icon('heroicon-o-archive-box'),
+                                                Infolists\Components\TextEntry::make('move_type')
+                                                    ->label(__('inventories::filament/clusters/configurations/resources/operation-type.infolist.tabs.general.entries.move_type'))
+                                                    ->icon('heroicon-o-arrows-right-left'),
+                                            ])
+                                            ->columns(2),
+
+                                        Infolists\Components\Fieldset::make(__('inventories::filament/clusters/configurations/resources/operation-type.infolist.tabs.general.fieldsets.lots.title'))
+                                            ->schema([
+                                                Infolists\Components\IconEntry::make('use_create_lots')
+                                                    ->label(__('inventories::filament/clusters/configurations/resources/operation-type.infolist.tabs.general.fieldsets.lots.entries.use_create_lots'))
+                                                    ->boolean()
+                                                    ->icon('heroicon-o-plus-circle'),
+                                                Infolists\Components\IconEntry::make('use_existing_lots')
+                                                    ->label(__('inventories::filament/clusters/configurations/resources/operation-type.infolist.tabs.general.fieldsets.lots.entries.use_existing_lots'))
+                                                    ->boolean()
+                                                    ->icon('heroicon-o-archive-box'),
+                                            ]),
+
+                                        Infolists\Components\Fieldset::make(__('inventories::filament/clusters/configurations/resources/operation-type.infolist.tabs.general.fieldsets.locations.title'))
+                                            ->schema([
+                                                Infolists\Components\TextEntry::make('sourceLocation.full_name')
+                                                    ->label(__('inventories::filament/clusters/configurations/resources/operation-type.infolist.tabs.general.fieldsets.locations.entries.source_location'))
+                                                    ->icon('heroicon-o-map-pin'),
+                                                Infolists\Components\TextEntry::make('destinationLocation.full_name')
+                                                    ->label(__('inventories::filament/clusters/configurations/resources/operation-type.infolist.tabs.general.fieldsets.locations.entries.destination_location'))
+                                                    ->icon('heroicon-o-map-pin'),
+                                            ]),
+                                    ]),
+
+                                Infolists\Components\Tabs\Tab::make(__('inventories::filament/clusters/configurations/resources/operation-type.infolist.tabs.hardware.title'))
+                                    ->icon('heroicon-o-computer-desktop')
+                                    ->schema([
+                                        Infolists\Components\Fieldset::make(__('inventories::filament/clusters/configurations/resources/operation-type.infolist.tabs.hardware.fieldsets.print_on_validation.title'))
+                                            ->schema([
+                                                Infolists\Components\IconEntry::make('auto_print_delivery_slip')
+                                                    ->label(__('inventories::filament/clusters/configurations/resources/operation-type.infolist.tabs.hardware.fieldsets.print_on_validation.entries.auto_print_delivery_slip'))
+                                                    ->boolean()
+                                                    ->icon('heroicon-o-printer'),
+                                                Infolists\Components\IconEntry::make('auto_print_return_slip')
+                                                    ->label(__('inventories::filament/clusters/configurations/resources/operation-type.infolist.tabs.hardware.fieldsets.print_on_validation.entries.auto_print_return_slip'))
+                                                    ->boolean()
+                                                    ->icon('heroicon-o-printer'),
+                                                Infolists\Components\IconEntry::make('auto_print_product_labels')
+                                                    ->label(__('inventories::filament/clusters/configurations/resources/operation-type.infolist.tabs.hardware.fieldsets.print_on_validation.entries.auto_print_product_labels'))
+                                                    ->boolean()
+                                                    ->icon('heroicon-o-printer'),
+                                                Infolists\Components\IconEntry::make('auto_print_lot_labels')
+                                                    ->label(__('inventories::filament/clusters/configurations/resources/operation-type.infolist.tabs.hardware.fieldsets.print_on_validation.entries.auto_print_lot_labels'))
+                                                    ->boolean()
+                                                    ->icon('heroicon-o-printer'),
+                                                Infolists\Components\IconEntry::make('auto_print_reception_report')
+                                                    ->label(__('inventories::filament/clusters/configurations/resources/operation-type.infolist.tabs.hardware.fieldsets.print_on_validation.entries.auto_print_reception_report'))
+                                                    ->boolean()
+                                                    ->icon('heroicon-o-printer'),
+                                                Infolists\Components\IconEntry::make('auto_print_reception_report_labels')
+                                                    ->label(__('inventories::filament/clusters/configurations/resources/operation-type.infolist.tabs.hardware.fieldsets.print_on_validation.entries.auto_print_reception_report_labels'))
+                                                    ->boolean()
+                                                    ->icon('heroicon-o-printer'),
+                                                Infolists\Components\IconEntry::make('auto_print_packages')
+                                                    ->label(__('inventories::filament/clusters/configurations/resources/operation-type.infolist.tabs.hardware.fieldsets.print_on_validation.entries.auto_print_packages'))
+                                                    ->boolean()
+                                                    ->icon('heroicon-o-printer'),
+                                            ])
+                                            ->columns(2),
+
+                                        Infolists\Components\Fieldset::make(__('inventories::filament/clusters/configurations/resources/operation-type.infolist.tabs.hardware.fieldsets.print_on_pack.title'))
+                                            ->schema([
+                                                Infolists\Components\IconEntry::make('auto_print_package_label')
+                                                    ->label(__('inventories::filament/clusters/configurations/resources/operation-type.infolist.tabs.hardware.fieldsets.print_on_pack.entries.auto_print_package_label'))
+                                                    ->boolean()
+                                                    ->icon('heroicon-o-printer'),
+                                            ]),
+                                    ]),
+                            ])
+                            ->columnSpan('full'),
+                    ])
+                    ->columnSpan(['lg' => 2]),
+
+                Infolists\Components\Group::make()
+                    ->schema([
+                        Infolists\Components\Section::make(__('inventories::filament/clusters/configurations/resources/operation-type.infolist.sections.record-information.title'))
+                            ->schema([
+                                Infolists\Components\TextEntry::make('created_at')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/operation-type.infolist.sections.record-information.entries.created-at'))
+                                    ->dateTime()
+                                    ->icon('heroicon-m-calendar'),
+
+                                Infolists\Components\TextEntry::make('creator.name')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/operation-type.infolist.sections.record-information.entries.created-by'))
+                                    ->icon('heroicon-m-user'),
+
+                                Infolists\Components\TextEntry::make('updated_at')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/operation-type.infolist.sections.record-information.entries.last-updated'))
+                                    ->dateTime()
+                                    ->icon('heroicon-m-calendar-days'),
+                            ]),
+                    ])
+                    ->columnSpan(['lg' => 1]),
+            ])
+            ->columns(3);
     }
 
     public static function getRelations(): array

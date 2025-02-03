@@ -40,13 +40,24 @@ return [
 
     'table' => [
         'columns' => [
+            'name'        => 'Name',
+            'full-name'   => 'Full Name',
+            'parent-path' => 'Parent Path',
+            'parent'      => 'Parent',
+            'creator'     => 'Creator',
+            'created-at'  => 'Created At',
+            'created-at'  => 'Created At',
+            'updated-at'  => 'Updated At',
+        ],
+
+        'groups' => [
+            'parent'     => 'Parent',
             'created-at' => 'Created At',
             'updated-at' => 'Updated At',
         ],
 
-        'groups' => [
-            'created-at' => 'Created At',
-            'updated-at' => 'Updated At',
+        'filters' => [
+            'parent' => 'Parent',
         ],
 
         'actions' => [
@@ -69,7 +80,42 @@ return [
     ],
 
     'infolist' => [
-        'name'   => 'Name',
-        'status' => 'Status',
+        'sections' => [
+            'general' => [
+                'title' => 'General Information',
+
+                'entries' => [
+                    'name' => 'Name',
+                    'parent' => 'Parent Category',
+                    'full_name' => 'Full Category Name',
+                    'parent_path' => 'Category Path',
+                ],
+            ],
+
+            'settings' => [
+                'title' => 'Settings',
+
+                'subsections' => [
+                    'logistics' => [
+                        'title' => 'Logistics',
+                        
+                        'entries' => [
+                            'routes' => 'Warehouse Routes',
+                            'route_name' => 'Route Name',
+                        ],
+                    ],
+                ],
+            ],
+
+            'record-information' => [
+                'title' => 'Record Information',
+
+                'entries' => [
+                    'creator' => 'Created By',
+                    'created_at' => 'Created At',
+                    'updated_at' => 'Last Updated At',
+                ],
+            ],
+        ],
     ],
 ];

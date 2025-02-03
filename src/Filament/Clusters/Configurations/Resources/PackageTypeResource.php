@@ -12,6 +12,9 @@ use Webkul\Inventory\Filament\Clusters\Configurations;
 use Webkul\Inventory\Filament\Clusters\Configurations\Resources\PackageTypeResource\Pages;
 use Webkul\Inventory\Models\PackageType;
 use Webkul\Inventory\Settings\OperationSettings;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
+use Filament\Support\Enums\FontWeight;
 
 class PackageTypeResource extends Resource
 {
@@ -109,17 +112,17 @@ class PackageTypeResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('height')
                     ->label(__('inventories::filament/clusters/configurations/resources/package-type.table.columns.height'))
-                    ->searchable(),
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('width')
                     ->label(__('inventories::filament/clusters/configurations/resources/package-type.table.columns.width'))
-                    ->searchable(),
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('length')
                     ->label(__('inventories::filament/clusters/configurations/resources/package-type.table.columns.length'))
-                    ->searchable(),
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('barcode')
                     ->label(__('inventories::filament/clusters/configurations/resources/package-type.table.columns.barcode'))
                     ->placeholder('—')
-                    ->searchable()
+                    ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label(__('inventories::filament/clusters/configurations/resources/package-type.table.columns.created-at'))
@@ -131,9 +134,6 @@ class PackageTypeResource extends Resource
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-            ])
-            ->filters([
-                //
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
@@ -159,6 +159,98 @@ class PackageTypeResource extends Resource
                 Tables\Actions\CreateAction::make()
                     ->icon('heroicon-o-plus-circle'),
             ]);
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Infolists\Components\Group::make()
+                    ->schema([
+                        Infolists\Components\Section::make(__('inventories::filament/clusters/configurations/resources/package-type.infolist.sections.general.title'))
+                            ->schema([
+                                Infolists\Components\TextEntry::make('name')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/package-type.infolist.sections.general.entries.name'))
+                                    ->icon('heroicon-o-tag')
+                                    ->weight(FontWeight::Bold)
+                                    ->size(Infolists\Components\TextEntry\TextEntrySize::Large),
+
+                                Infolists\Components\Group::make([
+                                    Infolists\Components\Section::make(__('inventories::filament/clusters/configurations/resources/package-type.infolist.sections.general.entries.fieldsets.size.title'))
+                                        ->schema([
+                                            Infolists\Components\Grid::make(3)
+                                                ->schema([
+                                                    Infolists\Components\TextEntry::make('length')
+                                                        ->label(__('inventories::filament/clusters/configurations/resources/package-type.infolist.sections.general.entries.fieldsets.size.entries.length'))
+                                                        ->icon('heroicon-o-arrows-right-left')
+                                                        ->numeric()
+                                                        ->suffix(' cm'),
+
+                                                    Infolists\Components\TextEntry::make('width')
+                                                        ->label(__('inventories::filament/clusters/configurations/resources/package-type.infolist.sections.general.entries.fieldsets.size.entries.width'))
+                                                        ->icon('heroicon-o-arrows-up-down')
+                                                        ->numeric()
+                                                        ->suffix(' cm'),
+
+                                                    Infolists\Components\TextEntry::make('height')
+                                                        ->label(__('inventories::filament/clusters/configurations/resources/package-type.infolist.sections.general.entries.fieldsets.size.entries.height'))
+                                                        ->icon('heroicon-o-arrows-up-down')
+                                                        ->numeric()
+                                                        ->suffix(' cm'),
+                                                ]),
+                                        ])
+                                        ->icon('heroicon-o-cube'),
+                                ]),
+
+                                Infolists\Components\Grid::make(2)
+                                    ->schema([
+                                        Infolists\Components\TextEntry::make('base_weight')
+                                            ->label(__('inventories::filament/clusters/configurations/resources/package-type.infolist.sections.general.entries.weight'))
+                                            ->icon('heroicon-o-scale')
+                                            ->numeric()
+                                            ->suffix(' kg'),
+
+                                        Infolists\Components\TextEntry::make('max_weight')
+                                            ->label(__('inventories::filament/clusters/configurations/resources/package-type.infolist.sections.general.entries.max-weight'))
+                                            ->icon('heroicon-o-scale')
+                                            ->numeric()
+                                            ->suffix(' kg'),
+                                    ]),
+
+                                Infolists\Components\TextEntry::make('barcode')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/package-type.infolist.sections.general.entries.barcode'))
+                                    ->icon('heroicon-o-bars-4')
+                                    ->placeholder('—'),
+
+                                Infolists\Components\TextEntry::make('company.name')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/package-type.infolist.sections.general.entries.company'))
+                                    ->icon('heroicon-o-building-office'),
+                            ]),
+                    ])
+                    ->columnSpan(['lg' => 2]),
+
+                Infolists\Components\Group::make()
+                    ->schema([
+                        Infolists\Components\Section::make(__('inventories::filament/clusters/configurations/resources/package-type.infolist.sections.record-information.title'))
+                            ->schema([
+                                Infolists\Components\TextEntry::make('created_at')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/package-type.infolist.sections.record-information.entries.created-at'))
+                                    ->dateTime()
+                                    ->icon('heroicon-m-calendar'),
+
+                                Infolists\Components\TextEntry::make('creator.name')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/package-type.infolist.sections.record-information.entries.created-by'))
+                                    ->icon('heroicon-m-user'),
+
+                                Infolists\Components\TextEntry::make('updated_at')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/package-type.infolist.sections.record-information.entries.last-updated'))
+                                    ->dateTime()
+                                    ->icon('heroicon-m-calendar-days'),
+                            ]),
+                    ])
+                    ->columnSpan(['lg' => 1]),
+            ])
+            ->columns(3);
     }
 
     public static function getRelations(): array

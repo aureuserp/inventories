@@ -49,12 +49,12 @@ class EditInternal extends EditRecord
 
                     $this->fillForm();
                 })
-                ->hidden(function() {
+                ->hidden(function () {
                     if (! in_array($this->getRecord()->state, [Enums\OperationState::CONFIRMED, Enums\OperationState::ASSIGNED])) {
                         return true;
                     }
 
-                    return ! $this->getRecord()->moves->contains(fn($move) => in_array($move->state, [Enums\MoveState::CONFIRMED, Enums\MoveState::PARTIALLY_ASSIGNED]));
+                    return ! $this->getRecord()->moves->contains(fn ($move) => in_array($move->state, [Enums\MoveState::CONFIRMED, Enums\MoveState::PARTIALLY_ASSIGNED]));
                 }),
             Actions\Action::make('validate')
                 ->label(__('inventories::filament/clusters/operations/resources/internal/pages/edit-internal.header-actions.validate.label'))

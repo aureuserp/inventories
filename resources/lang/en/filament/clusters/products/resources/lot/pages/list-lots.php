@@ -8,7 +8,7 @@ return [
 
     'header-actions' => [
         'create' => [
-            'label' => 'New Package',
+            'label' => 'New Lot / Serial Number',
 
             'notification' => [
                 'title' => 'Package created',

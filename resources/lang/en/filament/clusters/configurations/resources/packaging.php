@@ -29,6 +29,18 @@ return [
             'updated-at'   => 'Updated At',
         ],
 
+        'groups' => [
+            'product'      => 'Product',
+            'package-type' => 'Package Type',
+            'created-at'   => 'Created At',
+            'updated-at'   => 'Updated At',
+        ],
+
+        'filters' => [
+            'product'      => 'Product',
+            'package-type' => 'Package Type',
+        ],
+
         'actions' => [
             'edit' => [
                 'notification' => [
@@ -61,6 +73,42 @@ return [
                 'notification' => [
                     'title' => 'Packaging created',
                     'body'  => 'The packaging has been created successfully.',
+                ],
+            ],
+        ],
+    ],
+
+    'infolist' => [
+        'sections' => [
+            'general' => [
+                'title' => 'General Information',
+
+                'entries' => [
+                    'name' => 'Package Name',
+                    'barcode' => 'Barcode',
+                    'product' => 'Product',
+                    'qty' => 'Quantity',
+                    'package_type' => 'Package Type',
+                ],
+            ],
+
+            'routing' => [
+                'title' => 'Routing Information',
+
+                'entries' => [
+                    'routes' => 'Warehouse Routes',
+                    'route_name' => 'Route Name',
+                ],
+            ],
+
+            'organization' => [
+                'title' => 'Organization Details',
+                
+                'entries' => [
+                    'company' => 'Company',
+                    'creator' => 'Created By',
+                    'created_at' => 'Created At',
+                    'updated_at' => 'Last Updated At',
                 ],
             ],
         ],

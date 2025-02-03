@@ -20,7 +20,7 @@ return new class extends Migration
             $table->integer('delay')->nullable()->default(0);
             $table->string('group_propagation_option')->nullable();
             $table->string('action')->index();
-            $table->string('procure_method');
+            $table->string('procure_method')->default(Enums\ProcureMethod::MAKE_TO_STOCK);
             $table->string('auto')->default(Enums\RuleAuto::MANUAL);
             $table->string('push_domain')->nullable();
             $table->boolean('location_dest_from_rule')->nullable()->default(0);

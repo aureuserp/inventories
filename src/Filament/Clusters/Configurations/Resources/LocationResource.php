@@ -17,7 +17,9 @@ use Webkul\Inventory\Filament\Clusters\Configurations\Resources\LocationResource
 use Webkul\Inventory\Filament\Clusters\Configurations\Resources\StorageCategoryResource\Pages\ManageLocations;
 use Webkul\Inventory\Models\Location;
 use Webkul\Inventory\Settings\WarehouseSettings;
-use Webkul\Product\Enums\ProductRemoval;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
+use Filament\Support\Enums\FontWeight;
 
 class LocationResource extends Resource
 {
@@ -131,15 +133,15 @@ class LocationResource extends Resource
                                     ->hintIcon('heroicon-m-question-mark-circle', tooltip: __('inventories::filament/clusters/configurations/resources/location.form.sections.settings.fields.is-replenish-hint-tooltip'))
                                     ->visible(fn (Forms\Get $get): bool => $get('type') === LocationType::INTERNAL->value),
 
-                                Forms\Components\Fieldset::make(__('inventories::filament/clusters/configurations/resources/location.form.sections.settings.fields.logistics'))
-                                    ->schema([
-                                        Forms\Components\Radio::make('removal_strategy')
-                                            ->label(__('inventories::filament/clusters/configurations/resources/location.form.sections.settings.fields.removal-strategy'))
-                                            ->options(ProductRemoval::class)
-                                            ->hintIcon('heroicon-m-question-mark-circle', tooltip: __('inventories::filament/clusters/configurations/resources/location.form.sections.settings.fields.removal-strategy-hint-tooltip')),
-                                    ])
-                                    ->columns(1)
-                                    ->visible(fn (Forms\Get $get): bool => in_array($get('type'), [LocationType::VIEW->value, LocationType::INTERNAL->value, LocationType::TRANSIT->value]) && ! $get('is_scrap')),
+                                // Forms\Components\Fieldset::make(__('inventories::filament/clusters/configurations/resources/location.form.sections.settings.fields.logistics'))
+                                //     ->schema([
+                                //         Forms\Components\Radio::make('removal_strategy')
+                                //             ->label(__('inventories::filament/clusters/configurations/resources/location.form.sections.settings.fields.removal-strategy'))
+                                //             ->options(ProductRemoval::class)
+                                //             ->hintIcon('heroicon-m-question-mark-circle', tooltip: __('inventories::filament/clusters/configurations/resources/location.form.sections.settings.fields.removal-strategy-hint-tooltip')),
+                                //     ])
+                                //     ->columns(1)
+                                //     ->visible(fn (Forms\Get $get): bool => in_array($get('type'), [LocationType::VIEW->value, LocationType::INTERNAL->value, LocationType::TRANSIT->value]) && ! $get('is_scrap')),
 
                                 Forms\Components\Fieldset::make(__('inventories::filament/clusters/configurations/resources/location.form.sections.settings.fields.cyclic-counting'))
                                     ->schema([
@@ -217,6 +219,24 @@ class LocationResource extends Resource
                     ->date()
                     ->collapsible(),
             ])
+            ->filters([
+                Tables\Filters\SelectFilter::make('type')
+                    ->label(__('inventories::filament/clusters/configurations/resources/location.table.filters.type'))
+                    ->options(LocationType::class)
+                    ->searchable()
+                    ->multiple()
+                    ->preload(),
+                Tables\Filters\SelectFilter::make('storage_category_id')
+                    ->label(__('inventories::filament/clusters/configurations/resources/location.table.filters.location'))
+                    ->relationship('storageCategory', 'name')
+                    ->searchable()
+                    ->preload(),
+                Tables\Filters\SelectFilter::make('company_id')
+                    ->label(__('inventories::filament/clusters/configurations/resources/location.table.filters.company'))
+                    ->relationship('company', 'name')
+                    ->searchable()
+                    ->preload(),
+            ])
             ->actions([
                 Tables\Actions\ViewAction::make()
                     ->hidden(fn ($record) => $record->trashed())
@@ -281,6 +301,93 @@ class LocationResource extends Resource
                 Tables\Actions\CreateAction::make()
                     ->icon('heroicon-o-plus-circle'),
             ]);
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Infolists\Components\Group::make()
+                    ->schema([
+                        Infolists\Components\Section::make(__('inventories::filament/clusters/configurations/resources/location.infolist.sections.general.title'))
+                            ->schema([
+                                Infolists\Components\TextEntry::make('name')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/location.infolist.sections.general.entries.location'))
+                                    ->icon('heroicon-o-map-pin')
+                                    ->size(Infolists\Components\TextEntry\TextEntrySize::Large)
+                                    ->weight(FontWeight::Bold)
+                                    ->columnSpan(2),
+                                Infolists\Components\TextEntry::make('parent.full_name')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/location.infolist.sections.general.entries.parent-location'))
+                                    ->icon('heroicon-o-building-office-2'),
+                                Infolists\Components\TextEntry::make('description')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/location.infolist.sections.general.entries.external-notes'))
+                                    ->markdown()
+                                    ->placeholder('—'),
+                                Infolists\Components\TextEntry::make('type')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/location.infolist.sections.settings.entries.location-type'))
+                                    ->icon('heroicon-o-tag'),
+                                Infolists\Components\TextEntry::make('company.name')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/location.infolist.sections.settings.entries.company'))
+                                    ->icon('heroicon-o-building-office'),
+                                Infolists\Components\TextEntry::make('storageCategory.name')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/location.infolist.sections.settings.entries.storage-category'))
+                                    ->icon('heroicon-o-archive-box')
+                                    ->placeholder('—'),
+                            ])
+                            ->columns(2),
+
+                        Infolists\Components\Section::make(__('inventories::filament/clusters/configurations/resources/location.infolist.sections.settings.title'))
+                            ->schema([
+                                Infolists\Components\IconEntry::make('is_scrap')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/location.infolist.sections.settings.entries.is-scrap')),
+                                Infolists\Components\IconEntry::make('is_dock')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/location.infolist.sections.settings.entries.is-dock')),
+                                Infolists\Components\IconEntry::make('is_replenish')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/location.infolist.sections.settings.entries.is-replenish')),
+
+                                Infolists\Components\Fieldset::make(__('inventories::filament/clusters/configurations/resources/location.infolist.sections.settings.entries.cyclic-counting'))
+                                    ->schema([
+                                        Infolists\Components\TextEntry::make('cyclic_inventory_frequency')
+                                            ->label(__('inventories::filament/clusters/configurations/resources/location.infolist.sections.settings.entries.inventory-frequency'))
+                                            ->icon('heroicon-o-clock')
+                                            ->placeholder('—'),
+                                        Infolists\Components\TextEntry::make('cyclic_inventory_last')
+                                            ->label(__('inventories::filament/clusters/configurations/resources/location.infolist.sections.settings.entries.last-inventory'))
+                                            ->icon('heroicon-o-calendar')
+                                            ->placeholder('—'),
+                                        Infolists\Components\TextEntry::make('cyclic_inventory_next_expected')
+                                            ->label(__('inventories::filament/clusters/configurations/resources/location.infolist.sections.settings.entries.next-expected'))
+                                            ->icon('heroicon-o-calendar-days')
+                                            ->placeholder('—'),
+                                    ]),
+                            ])
+                            ->columns(2),
+                    ])
+                    ->columnSpan(['lg' => 2]),
+
+                Infolists\Components\Group::make()
+                    ->schema([
+                        Infolists\Components\Section::make(__('inventories::filament/clusters/configurations/resources/location.infolist.sections.record-information.title'))
+                            ->schema([
+                                Infolists\Components\TextEntry::make('created_at')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/location.infolist.sections.record-information.entries.created-at'))
+                                    ->dateTime()
+                                    ->icon('heroicon-m-calendar'),
+
+                                Infolists\Components\TextEntry::make('creator.name')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/location.infolist.sections.record-information.entries.created-by'))
+                                    ->icon('heroicon-m-user'),
+
+                                Infolists\Components\TextEntry::make('updated_at')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/location.infolist.sections.record-information.entries.last-updated'))
+                                    ->dateTime()
+                                    ->icon('heroicon-m-calendar-days'),
+                            ]),
+                    ])
+                    ->columnSpan(['lg' => 1]),
+            ])
+            ->columns(3);
     }
 
     public static function getSubNavigationPosition(): SubNavigationPosition

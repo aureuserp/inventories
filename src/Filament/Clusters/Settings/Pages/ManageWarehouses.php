@@ -69,7 +69,7 @@ class ManageWarehouses extends SettingsPage
 
     protected function afterSave(): void
     {
-        foreach (Warehouse::all() as $key => $warehouse) {
+        foreach (Warehouse::all() as $warehouse) {
             OperationType::withTrashed()->whereIn('id', [$warehouse->internal_type_id])->update(['deleted_at' => $this->data['enable_locations'] ? null : now()]);
         }
     }

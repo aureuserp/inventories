@@ -20,15 +20,21 @@ return [
 
     'table' => [
         'columns' => [
-            'location'         => 'Location',
-            'lot'              => 'Lot / Serial Numbers',
-            'storage-category' => 'Storage Category',
-            'quantity'         => 'Quantity',
-            'package'          => 'Package',
-            'on-hand'          => 'On Hand Quantity',
-            'counted'          => 'Counted Quantity',
-            'difference'       => 'Difference',
-            'scheduled-at'     => 'Scheduled At',
+            'location'           => 'Location',
+            'product'            => 'Product',
+            'product-category'   => 'Product Category',
+            'lot'                => 'Lot / Serial Numbers',
+            'storage-category'   => 'Storage Category',
+            'available-quantity' => 'Available Quantity',
+            'quantity'           => 'Quantity',
+            'package'            => 'Package',
+            'last-counted-at'    => 'Last Counted At',
+            'on-hand'            => 'On Hand Quantity',
+            'counted'            => 'Counted Quantity',
+            'difference'         => 'Difference',
+            'scheduled-at'       => 'Scheduled At',
+            'user'               => 'User',
+            'company'            => 'Company',
 
             'on-hand-before-state-updated' => [
                 'notification' => [
@@ -36,6 +42,36 @@ return [
                     'body'  => 'The quantity has been updated successfully.',
                 ],
             ],
+        ],
+
+        'groups' => [
+            'product'          => 'Product',
+            'product-category' => 'Product Category',
+            'location'         => 'Location',
+            'storage-category' => 'Storage Category',
+            'lot'              => 'Lot / Serial Numbers',
+            'company'          => 'Company',
+            'package'          => 'Package',
+        ],
+
+        'filters' => [
+            'product'             => 'Product',
+            'uom'                 => 'Unit of Measure',
+            'product-category'    => 'Product Category',
+            'location'            => 'Location',
+            'storage-category'    => 'Storage Category',
+            'lot'                 => 'Lot / Serial Numbers',
+            'company'             => 'Company',
+            'package'             => 'Package',
+            'on-hand-quantity'    => 'On Hand Quantity',
+            'difference-quantity' => 'Difference Quantity',
+            'incoming-at'         => 'Incoming At',
+            'scheduled-at'        => 'Scheduled At',
+            'user'                => 'User',
+            'created-at'          => 'Created At',
+            'updated-at'          => 'Updated At',
+            'company'             => 'Company',
+            'creator'             => 'Creator',
         ],
 
         'header-actions' => [

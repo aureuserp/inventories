@@ -14,7 +14,7 @@ enum PackageUse: string implements HasLabel
     {
         return match ($this) {
             self::DISPOSABLE => __('inventories::enums/package-use.disposable'),
-            self::REUSABLE => __('inventories::enums/package-use.reusable'),
+            self::REUSABLE   => __('inventories::enums/package-use.reusable'),
         };
     }
 }

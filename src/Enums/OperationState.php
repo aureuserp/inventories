@@ -31,11 +31,11 @@ enum OperationState: string implements HasColor, HasLabel
     public function getLabel(): string
     {
         return match ($this) {
-            self::DRAFT     => __('inventories::enums/operation-state.draft'),
-            self::CONFIRMED => __('inventories::enums/operation-state.confirmed'),
+            self::DRAFT        => __('inventories::enums/operation-state.draft'),
+            self::CONFIRMED    => __('inventories::enums/operation-state.confirmed'),
             self::ASSIGNED     => __('inventories::enums/operation-state.assigned'),
-            self::DONE      => __('inventories::enums/operation-state.done'),
-            self::CANCELED  => __('inventories::enums/operation-state.canceled'),
+            self::DONE         => __('inventories::enums/operation-state.done'),
+            self::CANCELED     => __('inventories::enums/operation-state.canceled'),
         };
     }
 

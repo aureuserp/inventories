@@ -47,9 +47,9 @@ class ManageProducts extends SettingsPage
                 Forms\Components\Toggle::make('enable_variants')
                     ->label(__('inventories::filament/clusters/settings/pages/manage-products.form.enable-variants'))
                     ->helperText(__('inventories::filament/clusters/settings/pages/manage-products.form.enable-variants-helper-text')),
-                Forms\Components\Toggle::make('enable_uom')
-                    ->label(__('inventories::filament/clusters/settings/pages/manage-products.form.enable-uom'))
-                    ->helperText(__('inventories::filament/clusters/settings/pages/manage-products.form.enable-uom-helper-text')),
+                // Forms\Components\Toggle::make('enable_uom')
+                //     ->label(__('inventories::filament/clusters/settings/pages/manage-products.form.enable-uom'))
+                //     ->helperText(__('inventories::filament/clusters/settings/pages/manage-products.form.enable-uom-helper-text')),
                 Forms\Components\Toggle::make('enable_packagings')
                     ->label(__('inventories::filament/clusters/settings/pages/manage-products.form.enable-packagings'))
                     ->helperText(__('inventories::filament/clusters/settings/pages/manage-products.form.enable-packagings-helper-text')),

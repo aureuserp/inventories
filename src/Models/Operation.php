@@ -163,7 +163,11 @@ class Operation extends Model
      */
     public function updateName()
     {
-        $this->name = $this->operationType->warehouse->code.'/'.$this->operationType->sequence_code.'/'.$this->id;
+        if (! $this->operationType->warehouse) {
+            $this->name = $this->operationType->sequence_code.'/'.$this->id;
+        } else {
+            $this->name = $this->operationType->warehouse->code.'/'.$this->operationType->sequence_code.'/'.$this->id;
+        }
     }
 
     public function updateChildrenNames(): void

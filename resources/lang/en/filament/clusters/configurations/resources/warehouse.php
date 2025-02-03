@@ -60,6 +60,10 @@ return [
             'updated-at'    => 'Updated At',
         ],
 
+        'filters' => [
+            'company' => 'Company',
+        ],
+
         'actions' => [
             'restore' => [
                 'notification' => [
@@ -106,9 +110,41 @@ return [
             ],
         ],
     ],
-
+    
     'infolist' => [
-        'name'   => 'Name',
-        'status' => 'Status',
+        'sections' => [
+            'general' => [
+                'title' => 'General Information',
+                
+                'entries' => [
+                    'name' => 'Warehouse Name',
+                    'code' => 'Warehouse Code',
+                    'company' => 'Company',
+                    'address' => 'Address',
+                ],
+            ],
+
+            'settings' => [
+                'title' => 'Settings',
+
+                'entries' => [
+                    'shipment-management' => 'Shipment Management',
+                    'incoming-shipments' => 'Incoming Shipments',
+                    'outgoing-shipments' => 'Outgoing Shipments',
+                    'resupply-management' => 'Resupply Management',
+                    'resupply-from' => 'Resupply From',
+                ],
+            ],
+
+            'record-information' => [
+                'title' => 'Record Information',
+
+                'entries' => [
+                    'created-by' => 'Created By',
+                    'created-at' => 'Created At',
+                    'last-updated' => 'Last Updated',
+                ],
+            ],
+        ],
     ],
 ];

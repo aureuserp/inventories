@@ -18,6 +18,9 @@ use Webkul\Inventory\Filament\Clusters\Configurations;
 use Webkul\Inventory\Filament\Clusters\Configurations\Resources\WarehouseResource\Pages;
 use Webkul\Inventory\Models\Warehouse;
 use Webkul\Inventory\Settings\WarehouseSettings;
+use Filament\Infolists;
+use Filament\Support\Enums\FontWeight;
+use Filament\Infolists\Infolist;
 
 class WarehouseResource extends Resource
 {
@@ -159,6 +162,13 @@ class WarehouseResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->filters([
+                Tables\Filters\SelectFilter::make('company_id')
+                    ->label(__('inventories::filament/clusters/configurations/resources/warehouse.table.filters.company'))
+                    ->relationship('company', 'name')
+                    ->searchable()
+                    ->preload(),
+            ])
             ->groups([
                 Tables\Grouping\Group::make('company.name')
                     ->label(__('inventories::filament/clusters/configurations/resources/warehouse.table.groups.company'))
@@ -227,6 +237,84 @@ class WarehouseResource extends Resource
                 Tables\Actions\CreateAction::make()
                     ->icon('heroicon-o-plus-circle'),
             ]);
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Infolists\Components\Group::make()
+                    ->schema([
+                        Infolists\Components\Section::make(__('inventories::filament/clusters/configurations/resources/warehouse.infolist.sections.general.title'))
+                            ->schema([
+                                Infolists\Components\TextEntry::make('name')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/warehouse.infolist.sections.general.entries.name'))
+                                    ->icon('heroicon-o-building-storefront')
+                                    ->size(Infolists\Components\TextEntry\TextEntrySize::Large)
+                                    ->weight(FontWeight::Bold),
+
+                                Infolists\Components\TextEntry::make('code')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/warehouse.infolist.sections.general.entries.code'))
+                                    ->icon('heroicon-m-hashtag'),
+
+                                Infolists\Components\Group::make()
+                                    ->schema([
+                                        Infolists\Components\TextEntry::make('company.name')
+                                            ->label(__('inventories::filament/clusters/configurations/resources/warehouse.infolist.sections.general.entries.company'))
+                                            ->icon('heroicon-o-building-office'),
+                                        Infolists\Components\TextEntry::make('partnerAddress.name')
+                                            ->label(__('inventories::filament/clusters/configurations/resources/warehouse.infolist.sections.general.entries.address'))
+                                            ->icon('heroicon-o-map'),
+                                    ])
+                                    ->columns(2),
+                            ]),
+                            
+                        Infolists\Components\Section::make(__('inventories::filament/clusters/configurations/resources/warehouse.infolist.sections.settings.title'))
+                            ->schema([
+                                Infolists\Components\Fieldset::make(__('inventories::filament/clusters/configurations/resources/warehouse.infolist.sections.settings.entries.shipment-management'))
+                                    ->schema([
+                                        Infolists\Components\TextEntry::make('reception_steps')
+                                            ->label(__('inventories::filament/clusters/configurations/resources/warehouse.infolist.sections.settings.entries.incoming-shipments'))
+                                            ->icon('heroicon-o-truck'),
+
+                                        Infolists\Components\TextEntry::make('delivery_steps')
+                                            ->label(__('inventories::filament/clusters/configurations/resources/warehouse.infolist.sections.settings.entries.outgoing-shipments'))
+                                            ->icon('heroicon-o-paper-airplane'),
+                                    ]),
+
+                                Infolists\Components\Fieldset::make(__('inventories::filament/clusters/configurations/resources/warehouse.infolist.sections.settings.entries.resupply-management'))
+                                    ->schema([
+                                        Infolists\Components\TextEntry::make('supplierWarehouses.name')
+                                            ->label(__('inventories::filament/clusters/configurations/resources/warehouse.infolist.sections.settings.entries.resupply-from'))
+                                            ->icon('heroicon-o-refresh')
+                                            ->placeholder('—'),
+                                    ]),
+                            ]),
+                    ])
+                    ->columnSpan(['lg' => 2]),
+
+                Infolists\Components\Group::make()
+                    ->schema([
+                        Infolists\Components\Section::make(__('inventories::filament/clusters/configurations/resources/warehouse.infolist.sections.record-information.title'))
+                            ->schema([
+                                Infolists\Components\TextEntry::make('created_at')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/warehouse.infolist.sections.record-information.entries.created-at'))
+                                    ->dateTime()
+                                    ->icon('heroicon-m-calendar'),
+
+                                Infolists\Components\TextEntry::make('creator.name')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/warehouse.infolist.sections.record-information.entries.created-by'))
+                                    ->icon('heroicon-m-user'),
+
+                                Infolists\Components\TextEntry::make('updated_at')
+                                    ->label(__('inventories::filament/clusters/configurations/resources/warehouse.infolist.sections.record-information.entries.last-updated'))
+                                    ->dateTime()
+                                    ->icon('heroicon-m-calendar-days'),
+                            ]),
+                    ])
+                    ->columnSpan(['lg' => 1]),
+            ])
+            ->columns(3);
     }
 
     public static function getSubNavigationPosition(): SubNavigationPosition

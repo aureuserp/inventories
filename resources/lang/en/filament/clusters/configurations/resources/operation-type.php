@@ -137,6 +137,12 @@ return [
             'updated-at' => 'Updated At',
         ],
 
+        'filters' => [
+            'type'      => 'Type',
+            'warehouse' => 'Warehouse',
+            'company'   => 'Company',
+        ],
+
         'actions' => [
             'restore' => [
                 'notification' => [
@@ -191,7 +197,90 @@ return [
     ],
 
     'infolist' => [
-        'name'   => 'Name',
-        'status' => 'Status',
+        'sections' => [
+            'general' => [
+                'title' => 'General Information',
+
+                'entries' => [
+                    'name' => 'Name',
+                ],
+            ],
+
+            'record-information' => [
+                'title' => 'Record Information',
+
+                'entries' => [
+                    'created-by' => 'Created By',
+                    'created-at' => 'Created At',
+                    'last-updated' => 'Last Updated',
+                ],
+            ],
+        ],
+        
+        'tabs' => [
+            'general' => [
+                'title' => 'General',
+
+                'entries' => [
+                    'type' => 'Operation Type',
+                    'sequence_code' => 'Sequence Code',
+                    'print_label' => 'Print Label',
+                    'warehouse' => 'Warehouse',
+                    'reservation_method' => 'Reservation Method',
+                    'auto_show_reception_report' => 'Auto Show Reception Report',
+                    'company' => 'Company',
+                    'return_operation_type' => 'Return Operation Type',
+                    'create_backorder' => 'Create Backorder',
+                    'move_type' => 'Move Type',
+                ],
+
+                'fieldsets' => [
+                    'lots' => [
+                        'title' => 'Lots',
+
+                        'entries' => [
+                            'use_create_lots' => 'Use Create Lots',
+                            'use_existing_lots' => 'Use Existing Lots',
+                        ],
+                    ],
+
+                    'locations' => [
+                        'title' => 'Locations',
+
+                        'entries' => [
+                            'source_location' => 'Source Location',
+                            'destination_location' => 'Destination Location',
+                        ],
+                    ],
+                ],
+            ],
+            'hardware' => [
+                'title' => 'Hardware',
+
+                'fieldsets' => [
+                    'print_on_validation' => [
+                        'title' => 'Print on Validation',
+
+                        'entries' => [
+                            'auto_print_delivery_slip' => 'Auto Print Delivery Slip',
+                            'auto_print_return_slip' => 'Auto Print Return Slip',
+                            'auto_print_product_labels' => 'Auto Print Product Labels',
+                            'auto_print_lot_labels' => 'Auto Print Lot Labels',
+                            'auto_print_reception_report' => 'Auto Print Reception Report',
+                            'auto_print_reception_report_labels' => 'Auto Print Reception Report Labels',
+                            'auto_print_packages' => 'Auto Print Packages',
+                        ],
+                    ],
+
+                    'print_on_pack' => [
+                        'title' => 'Print on Pack',
+
+                        'entries' => [
+                            'auto_print_package_label' => 'Auto Print Package Label',
+                        ],
+                    ],
+                ],
+            ],
+        ],
     ],
 ];

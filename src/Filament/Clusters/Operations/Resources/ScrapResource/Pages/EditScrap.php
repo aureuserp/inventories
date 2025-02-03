@@ -45,7 +45,7 @@ class EditScrap extends EditRecord
                         ->where('lot_id', $record->lot_id ?? null)
                         ->first();
 
-                    if ($locationQuantity->quantity < $record->qty) {
+                    if (! $locationQuantity || $locationQuantity->quantity < $record->qty) {
                         Notification::make()
                             ->success()
                             ->title(__('inventories::filament/clusters/operations/resources/scrap/pages/edit-scrap.header-actions.validate.notification.warning.title'))
@@ -60,23 +60,32 @@ class EditScrap extends EditRecord
                         'quantity' => $locationQuantity->quantity - $record->qty,
                     ]);
 
-                    ProductQuantity::updateOrCreate(
-                        [
-                            'location_id' => $record->destination_location_id,
-                            'product_id'  => $record->product_id,
-                            'lot_id'      => $record->lot_id,
-                            'package_id'  => $record->package_id,
-                        ], [
+                    $destinationQuantity = ProductQuantity::where('product_id', $record->product_id)
+                        ->where('location_id', $record->destination_location_id)
+                        ->first();
+
+                    if ($destinationQuantity) {
+                        $destinationQuantity->update([
+                            'quantity'                => $destinationQuantity->quantity + $record->qty,
+                            'reserved_quantity'       => $destinationQuantity->reserved_quantity + $record->qty,
+                            'inventory_diff_quantity' => $destinationQuantity->inventory_diff_quantity - $record->qty,
+                        ]);
+                    } else {
+                        ProductQuantity::create([
+                            'product_id'              => $record->product_id,
+                            'location_id'             => $record->destination_location_id,
                             'quantity'                => $record->qty,
+                            'reserved_quantity'       => $record->qty,
                             'inventory_diff_quantity' => -$record->qty,
-                            'company_id'              => $record->company_id,
-                            'creator_id'              => Auth::id(),
                             'incoming_at'             => now(),
-                        ]
-                    );
+                            'creator_id'              => Auth::id(),
+                            'company_id'              => $record->destinationLocation->company_id,
+                        ]);
+                    }
 
                     $record->update([
-                        'state' => Enums\ScrapState::DONE,
+                        'state'     => Enums\ScrapState::DONE,
+                        'closed_at' => now(),
                     ]);
 
                     $this->createMove($record, $record->qty, $record->source_location_id, $record->destination_location_id);
@@ -91,6 +100,7 @@ class EditScrap extends EditRecord
             'name'                    => $record->name,
             'state'                   => Enums\MoveState::DONE,
             'product_id'              => $record->product_id,
+            'uom_id'                  => $record->uom_id,
             'source_location_id'      => $sourceLocationId,
             'destination_location_id' => $destinationLocationId,
             'requested_qty'           => abs($quantity),
@@ -99,7 +109,9 @@ class EditScrap extends EditRecord
             'reference'               => $record->name,
             'creator_id'              => Auth::id(),
             'company_id'              => $record->company_id,
-            'scrap_id'                => $record->id,
+            'scrap_id'                => $this->getRecord()->id,
+            'scheduled_at'            => now(),
+            'is_picked'               => true,
         ]);
 
         $move->lines()->create([
@@ -115,6 +127,7 @@ class EditScrap extends EditRecord
             'source_location_id'      => $sourceLocationId,
             'destination_location_id' => $destinationLocationId,
             'reference'               => $move->reference,
+            'is_picked'               => true,
             'company_id'              => $record->company_id,
             'creator_id'              => Auth::id(),
         ]);
