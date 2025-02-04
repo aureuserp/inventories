@@ -84,10 +84,10 @@ return [
                 'title' => 'General Information',
 
                 'entries' => [
-                    'name' => 'Package Name',
-                    'barcode' => 'Barcode',
-                    'product' => 'Product',
-                    'qty' => 'Quantity',
+                    'name'         => 'Package Name',
+                    'barcode'      => 'Barcode',
+                    'product'      => 'Product',
+                    'qty'          => 'Quantity',
                     'package_type' => 'Package Type',
                 ],
             ],
@@ -96,17 +96,17 @@ return [
                 'title' => 'Routing Information',
 
                 'entries' => [
-                    'routes' => 'Warehouse Routes',
+                    'routes'     => 'Warehouse Routes',
                     'route_name' => 'Route Name',
                 ],
             ],
 
             'organization' => [
                 'title' => 'Organization Details',
-                
+
                 'entries' => [
-                    'company' => 'Company',
-                    'creator' => 'Created By',
+                    'company'    => 'Company',
+                    'creator'    => 'Created By',
                     'created_at' => 'Created At',
                     'updated_at' => 'Last Updated At',
                 ],

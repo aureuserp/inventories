@@ -25,10 +25,10 @@ return [
                     'action-information' => [
                         'pull' => 'When products are needed in <b>:sourceLocation</b>,</br><b>:operation</b> are created from <b>:destinationLocation</b> to fulfill the need.',
                         'push' => 'When products arrive in <b>:sourceLocation</b>,</br><b>:operation</b> are created to send them to <b>:destinationLocation</b>.',
-                    ]
+                    ],
                 ],
             ],
-            
+
             'settings' => [
                 'title'  => 'Settings',
 
@@ -44,7 +44,7 @@ return [
                         'title'  => 'Applicability',
 
                         'fields' => [
-                            'route' => 'Route',
+                            'route'   => 'Route',
                             'company' => 'Company',
                         ],
                     ],
@@ -157,19 +157,19 @@ return [
                 'description' => [
                     'pull' => 'When products are needed in <b>:sourceLocation</b>, <b>:operation</b> are created from <b>:destinationLocation</b> to fulfill the need.',
                     'push' => 'When products arrive in <b>:sourceLocation</b>, <b>:operation</b> are created to send them to <b>:destinationLocation</b>.',
-                ],             
+                ],
 
                 'entries' => [
-                    'name' => 'Rule Name',
-                    'action' => 'Action',
-                    'operation-type' => 'Operation Type',
-                    'source-location' => 'Source Location',
+                    'name'                 => 'Rule Name',
+                    'action'               => 'Action',
+                    'operation-type'       => 'Operation Type',
+                    'source-location'      => 'Source Location',
                     'destination-location' => 'Destination Location',
-                    'route' => 'Route',
-                    'company' => 'Company',
-                    'partner-address' => 'Partner Address',
-                    'lead-time' => 'Lead Time',
-                    'action-information' => 'Action Information',
+                    'route'                => 'Route',
+                    'company'              => 'Company',
+                    'partner-address'      => 'Partner Address',
+                    'lead-time'            => 'Lead Time',
+                    'action-information'   => 'Action Information',
                 ],
             ],
 
@@ -177,8 +177,8 @@ return [
                 'title' => 'Record Information',
 
                 'entries' => [
-                    'created-by' => 'Created By',
-                    'created-at' => 'Created At',
+                    'created-by'   => 'Created By',
+                    'created-at'   => 'Created At',
                     'last-updated' => 'Last Updated',
                 ],
             ],

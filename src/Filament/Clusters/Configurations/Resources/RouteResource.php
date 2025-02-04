@@ -4,10 +4,13 @@ namespace Webkul\Inventory\Filament\Clusters\Configurations\Resources;
 
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Pages\SubNavigationPosition;
 use Filament\Resources\Pages\Page;
 use Filament\Resources\Resource;
+use Filament\Support\Enums\FontWeight;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
@@ -17,9 +20,7 @@ use Webkul\Inventory\Filament\Clusters\Configurations\Resources\RouteResource\Re
 use Webkul\Inventory\Filament\Clusters\Configurations\Resources\WarehouseResource\Pages\ManageRoutes;
 use Webkul\Inventory\Models\Route;
 use Webkul\Inventory\Settings\WarehouseSettings;
-use Filament\Infolists;
-use Filament\Infolists\Infolist;
-use Filament\Support\Enums\FontWeight;
+use Webkul\Inventory\Settings\ProductSettings;
 
 class RouteResource extends Resource
 {
@@ -89,7 +90,8 @@ class RouteResource extends Resource
                                 Forms\Components\Toggle::make('packaging_selectable')
                                     ->label(__('inventories::filament/clusters/configurations/resources/route.form.sections.applicable-on.fields.packaging'))
                                     ->inline(false)
-                                    ->hintIcon('heroicon-m-question-mark-circle', tooltip: __('inventories::filament/clusters/configurations/resources/route.form.sections.applicable-on.fields.packaging-hint-tooltip')),
+                                    ->hintIcon('heroicon-m-question-mark-circle', tooltip: __('inventories::filament/clusters/configurations/resources/route.form.sections.applicable-on.fields.packaging-hint-tooltip'))
+                                    ->visible(fn (ProductSettings $settings): bool => $settings->enable_packagings),
                             ]),
                         Forms\Components\Group::make()
                             ->schema([
@@ -263,7 +265,7 @@ class RouteResource extends Resource
                                     ])
                                     ->columns(2),
                             ])
-                            ->columns(2)
+                            ->columns(2),
                     ])
                     ->columnSpan(['lg' => 2]),
 

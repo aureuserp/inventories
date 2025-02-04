@@ -110,7 +110,7 @@ return [
                 'title' => 'Record Information',
 
                 'entries' => [
-                    'creator' => 'Created By',
+                    'creator'    => 'Created By',
                     'created_at' => 'Created At',
                     'updated_at' => 'Last Updated At',
                 ],

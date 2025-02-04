@@ -72,14 +72,14 @@ return [
                 'title' => 'Lot Details',
 
                 'entries' => [
-                    'name' => 'Lot Name',
-                    'product' => 'Product',
-                    'reference' => 'Reference',
+                    'name'        => 'Lot Name',
+                    'product'     => 'Product',
+                    'reference'   => 'Reference',
                     'description' => 'Description',
                     'on-hand-qty' => 'On-Hand Quantity',
-                    'company' => 'Company',
-                    'created-at' => 'Created At',
-                    'updated-at' => 'Last Updated',
+                    'company'     => 'Company',
+                    'created-at'  => 'Created At',
+                    'updated-at'  => 'Last Updated',
                 ],
             ],
 
@@ -87,8 +87,8 @@ return [
                 'title' => 'Record Information',
 
                 'entries' => [
-                    'created-by' => 'Created By',
-                    'created-at' => 'Created At',
+                    'created-by'   => 'Created By',
+                    'created-at'   => 'Created At',
                     'last-updated' => 'Last Updated',
                 ],
             ],

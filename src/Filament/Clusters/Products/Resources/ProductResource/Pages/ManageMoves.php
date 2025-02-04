@@ -90,18 +90,18 @@ class ManageMoves extends ManageRelatedRecords
                     ->label(__('inventories::filament/clusters/products/resources/product/pages/manage-moves.table.columns.lot'))
                     ->sortable()
                     ->placeholder('—')
-                    ->visible(fn (TraceabilitySettings $traceabilitySettings) => $traceabilitySettings->enable_lots_serial_numbers && $this->getOwnerRecord()->tracking != Enums\ProductTracking::QTY),
+                    ->visible(fn (TraceabilitySettings $settings) => $settings->enable_lots_serial_numbers && $this->getOwnerRecord()->tracking != Enums\ProductTracking::QTY),
                 Tables\Columns\TextColumn::make('resultPackage.name')
                     ->label(__('inventories::filament/clusters/products/resources/product/pages/manage-moves.table.columns.package'))
                     ->sortable()
                     ->placeholder('—')
-                    ->visible(fn (OperationSettings $operationSettings) => $operationSettings->enable_packages),
+                    ->visible(fn (OperationSettings $settings) => $settings->enable_packages),
                 Tables\Columns\TextColumn::make('sourceLocation.full_name')
                     ->label(__('inventories::filament/clusters/products/resources/product/pages/manage-moves.table.columns.source-location'))
-                    ->visible(fn (WarehouseSettings $warehouseSettings) => $warehouseSettings->enable_locations),
+                    ->visible(fn (WarehouseSettings $settings) => $settings->enable_locations),
                 Tables\Columns\TextColumn::make('destinationLocation.full_name')
                     ->label(__('inventories::filament/clusters/products/resources/product/pages/manage-moves.table.columns.destination-location'))
-                    ->visible(fn (WarehouseSettings $warehouseSettings) => $warehouseSettings->enable_locations),
+                    ->visible(fn (WarehouseSettings $settings) => $settings->enable_locations),
                 Tables\Columns\TextColumn::make('qty')
                     ->label(__('inventories::filament/clusters/products/resources/product/pages/manage-moves.table.columns.quantity'))
                     ->sortable()

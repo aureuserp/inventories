@@ -4,10 +4,13 @@ namespace Webkul\Inventory\Filament\Clusters\Configurations\Resources;
 
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Pages\SubNavigationPosition;
 use Filament\Resources\Pages\Page;
 use Filament\Resources\Resource;
+use Filament\Support\Enums\FontWeight;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
@@ -18,9 +21,7 @@ use Webkul\Inventory\Filament\Clusters\Configurations;
 use Webkul\Inventory\Filament\Clusters\Configurations\Resources\WarehouseResource\Pages;
 use Webkul\Inventory\Models\Warehouse;
 use Webkul\Inventory\Settings\WarehouseSettings;
-use Filament\Infolists;
-use Filament\Support\Enums\FontWeight;
-use Filament\Infolists\Infolist;
+use Webkul\Inventory\Filament\Resources\PartnerAddressResource;
 
 class WarehouseResource extends Resource
 {
@@ -81,7 +82,10 @@ class WarehouseResource extends Resource
                                             ->default(Auth::user()->default_company_id),
                                         Forms\Components\Select::make('partner_address_id')
                                             ->label(__('inventories::filament/clusters/configurations/resources/warehouse.form.sections.general.fields.address'))
-                                            ->relationship('partnerAddress', 'name'),
+                                            ->relationship('partnerAddress', 'name')
+                                            ->searchable()
+                                            ->preload()
+                                            ->createOptionForm(fn (Form $form): Form => PartnerAddressResource::form($form)),
                                     ])
                                     ->columns(2),
                             ]),
@@ -111,7 +115,7 @@ class WarehouseResource extends Resource
                                             ->hintIcon('heroicon-m-question-mark-circle', tooltip: __('inventories::filament/clusters/configurations/resources/warehouse.form.sections.settings.fields.outgoing-shipments-hint-tooltip')),
                                     ])
                                     ->columns(1)
-                                    ->visible(fn (WarehouseSettings $warehouseSettings): bool => $warehouseSettings->enable_multi_steps_routes),
+                                    ->visible(fn (WarehouseSettings $settings): bool => $settings->enable_multi_steps_routes),
 
                                 Forms\Components\Fieldset::make(__('inventories::filament/clusters/configurations/resources/warehouse.form.sections.settings.fields.resupply-management'))
                                     ->schema([
@@ -123,7 +127,7 @@ class WarehouseResource extends Resource
                             ]),
                     ])
                     ->columnSpan(['lg' => 1])
-                    ->visible(fn (WarehouseSettings $warehouseSettings): bool => $warehouseSettings->enable_multi_steps_routes),
+                    ->visible(fn (WarehouseSettings $settings): bool => $settings->enable_multi_steps_routes),
             ])
             ->columns(3);
     }
@@ -268,7 +272,7 @@ class WarehouseResource extends Resource
                                     ])
                                     ->columns(2),
                             ]),
-                            
+
                         Infolists\Components\Section::make(__('inventories::filament/clusters/configurations/resources/warehouse.infolist.sections.settings.title'))
                             ->schema([
                                 Infolists\Components\Fieldset::make(__('inventories::filament/clusters/configurations/resources/warehouse.infolist.sections.settings.entries.shipment-management'))

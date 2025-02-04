@@ -4,18 +4,18 @@ namespace Webkul\Inventory\Filament\Clusters\Configurations\Resources;
 
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Pages\SubNavigationPosition;
 use Filament\Resources\Pages\Page;
 use Filament\Resources\Resource;
+use Filament\Support\Enums\FontWeight;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Webkul\Inventory\Filament\Clusters\Configurations;
 use Webkul\Inventory\Filament\Clusters\Configurations\Resources\ProductCategoryResource\Pages;
 use Webkul\Inventory\Models\Category;
-use Filament\Infolists;
-use Filament\Infolists\Infolist;
-use Filament\Support\Enums\FontWeight;
 
 class ProductCategoryResource extends Resource
 {

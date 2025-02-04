@@ -15,6 +15,7 @@ use Webkul\Inventory\Enums;
 use Webkul\Inventory\Filament\Clusters\Operations;
 use Webkul\Inventory\Filament\Clusters\Operations\Resources\DropshipResource\Pages;
 use Webkul\Inventory\Models\Operation;
+use Webkul\Inventory\Settings\LogisticSettings;
 
 class DropshipResource extends Resource
 {
@@ -29,6 +30,15 @@ class DropshipResource extends Resource
     protected static ?string $cluster = Operations::class;
 
     protected static SubNavigationPosition $subNavigationPosition = SubNavigationPosition::Top;
+
+    public static function isDiscovered(): bool
+    {
+        if (app()->runningInConsole()) {
+            return true;
+        }
+
+        return app(LogisticSettings::class)->enable_dropshipping;
+    }
 
     public static function getNavigationLabel(): string
     {

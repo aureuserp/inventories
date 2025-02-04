@@ -4,8 +4,11 @@ namespace Webkul\Inventory\Filament\Clusters\Configurations\Resources;
 
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Support\Enums\FontWeight;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Webkul\Inventory\Filament\Clusters\Configurations;
@@ -13,9 +16,6 @@ use Webkul\Inventory\Filament\Clusters\Configurations\Resources\ProductAttribute
 use Webkul\Inventory\Settings\ProductSettings;
 use Webkul\Product\Enums\AttributeType;
 use Webkul\Product\Models\Attribute;
-use Filament\Infolists;
-use Filament\Infolists\Infolist;
-use Filament\Support\Enums\FontWeight;
 
 class ProductAttributeResource extends Resource
 {
@@ -188,8 +188,6 @@ class ProductAttributeResource extends Resource
                     ->icon('heroicon-o-plus-circle'),
             ]);
     }
-
-
 
     public static function infolist(Infolist $infolist): Infolist
     {

@@ -57,14 +57,14 @@ class ManageQuantities extends ManageRelatedRecords
                     ->searchable(),
                 Tables\Columns\TextColumn::make('location.full_name')
                     ->label(__('inventories::filament/clusters/products/resources/lot/pages/manage-quantities.table.columns.location'))
-                    ->visible(fn (WarehouseSettings $warehouseSettings) => $warehouseSettings->enable_locations),
+                    ->visible(fn (WarehouseSettings $settings) => $settings->enable_locations),
                 Tables\Columns\TextColumn::make('storageCategory.name')
                     ->label(__('inventories::filament/clusters/products/resources/lot/pages/manage-quantities.table.columns.storage-category'))
                     ->placeholder('—'),
                 Tables\Columns\TextColumn::make('package.name')
                     ->label(__('inventories::filament/clusters/products/resources/lot/pages/manage-quantities.table.columns.package'))
                     ->placeholder('—')
-                    ->visible(fn (OperationSettings $operationSettings) => $operationSettings->enable_packages),
+                    ->visible(fn (OperationSettings $settings) => $settings->enable_packages),
                 Tables\Columns\TextInputColumn::make('quantity')
                     ->label(__('inventories::filament/clusters/products/resources/lot/pages/manage-quantities.table.columns.on-hand'))
                     ->searchable()

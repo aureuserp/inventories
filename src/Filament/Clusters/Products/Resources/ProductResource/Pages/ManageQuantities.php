@@ -120,7 +120,7 @@ class ManageQuantities extends ManageRelatedRecords
                     ->afterStateUpdated(function (Forms\Set $set, Forms\Get $get) {
                         $set('package_id', null);
                     })
-                    ->visible(fn (WarehouseSettings $warehouseSettings) => $warehouseSettings->enable_locations),
+                    ->visible(fn (WarehouseSettings $settings) => $settings->enable_locations),
                 Forms\Components\Select::make('lot_id')
                     ->label(__('inventories::filament/clusters/products/resources/product/pages/manage-quantities.form.fields.lot'))
                     ->relationship(
@@ -140,7 +140,7 @@ class ManageQuantities extends ManageRelatedRecords
                                 return $data;
                             });
                     })
-                    ->visible(fn (TraceabilitySettings $traceabilitySettings) => $traceabilitySettings->enable_lots_serial_numbers && $this->getOwnerRecord()->tracking != Enums\ProductTracking::QTY),
+                    ->visible(fn (TraceabilitySettings $settings) => $settings->enable_lots_serial_numbers && $this->getOwnerRecord()->tracking != Enums\ProductTracking::QTY),
                 Forms\Components\Select::make('package_id')
                     ->label(__('inventories::filament/clusters/products/resources/product/pages/manage-quantities.form.fields.package'))
                     ->relationship(
@@ -160,7 +160,7 @@ class ManageQuantities extends ManageRelatedRecords
                             return $data;
                         });
                     })
-                    ->visible(fn (OperationSettings $operationSettings) => $operationSettings->enable_packages),
+                    ->visible(fn (OperationSettings $settings) => $settings->enable_packages),
                 Forms\Components\TextInput::make('quantity')
                     ->label(__('inventories::filament/clusters/products/resources/product/pages/manage-quantities.form.fields.on-hand-qty'))
                     ->numeric()
@@ -180,24 +180,24 @@ class ManageQuantities extends ManageRelatedRecords
                     ->label(__('inventories::filament/clusters/products/resources/product/pages/manage-quantities.table.columns.location'))
                     ->searchable()
                     ->sortable()
-                    ->visible(fn (WarehouseSettings $warehouseSettings) => $warehouseSettings->enable_locations),
+                    ->visible(fn (WarehouseSettings $settings) => $settings->enable_locations),
                 Tables\Columns\TextColumn::make('storageCategory.name')
                     ->label(__('inventories::filament/clusters/products/resources/product/pages/manage-quantities.table.columns.storage-category'))
                     ->searchable()
                     ->sortable()
                     ->placeholder('—')
-                    ->visible(fn (WarehouseSettings $warehouseSettings) => $warehouseSettings->enable_locations),
+                    ->visible(fn (WarehouseSettings $settings) => $settings->enable_locations),
                 Tables\Columns\TextColumn::make('package.name')
                     ->label(__('inventories::filament/clusters/products/resources/product/pages/manage-quantities.table.columns.package'))
                     ->searchable()
                     ->sortable()
                     ->placeholder('—')
-                    ->visible(fn (OperationSettings $operationSettings) => $operationSettings->enable_packages),
+                    ->visible(fn (OperationSettings $settings) => $settings->enable_packages),
                 Tables\Columns\TextColumn::make('lot.name')
                     ->label(__('inventories::filament/clusters/products/resources/product/pages/manage-quantities.table.columns.lot'))
                     ->searchable()
                     ->placeholder('—')
-                    ->visible(fn (TraceabilitySettings $traceabilitySettings) => $traceabilitySettings->enable_lots_serial_numbers && $this->getOwnerRecord()->tracking != Enums\ProductTracking::QTY),
+                    ->visible(fn (TraceabilitySettings $settings) => $settings->enable_lots_serial_numbers && $this->getOwnerRecord()->tracking != Enums\ProductTracking::QTY),
                 Tables\Columns\TextInputColumn::make('quantity')
                     ->label(__('inventories::filament/clusters/products/resources/product/pages/manage-quantities.table.columns.on-hand'))
                     ->sortable()
@@ -224,7 +224,7 @@ class ManageQuantities extends ManageRelatedRecords
                             $destinationLocationId = $record->location_id;
                         }
 
-                        $this->createMove($record, $currentQuantity, $sourceLocationId, $destinationLocationId);
+                        ProductResource::createMove($record, $currentQuantity, $sourceLocationId, $destinationLocationId);
                     })
                     ->afterStateUpdated(function ($record, $state) {
                         $adjustmentLocation = Location::where('type', Enums\LocationType::INVENTORY)
@@ -255,6 +255,10 @@ class ManageQuantities extends ManageRelatedRecords
                             ->send();
                     })
                     ->summarize(Sum::make()),
+                Tables\Columns\TextColumn::make('reserved_quantity')
+                    ->label(__('inventories::filament/clusters/products/resources/product/pages/manage-quantities.table.columns.reserved-quantity'))
+                    ->sortable()
+                    ->summarize(Sum::make()),
             ])
             ->headerActions([
                 Tables\Actions\CreateAction::make()
@@ -272,8 +276,6 @@ class ManageQuantities extends ManageRelatedRecords
                         $data['counted_quantity'] = 0;
 
                         $data['incoming_at'] = now();
-
-                        $data['scheduled_at'] = now()->setDay(app(OperationSettings::class)->annual_inventory_day)->setMonth(app(OperationSettings::class)->annual_inventory_month);
 
                         return $data;
                     })
@@ -325,7 +327,7 @@ class ManageQuantities extends ManageRelatedRecords
                             ]);
                         }
 
-                        $this->createMove($record, $record->quantity, $adjustmentLocation->id, $record->location_id);
+                        ProductResource::createMove($record, $record->quantity, $adjustmentLocation->id, $record->location_id);
                     })
                     ->successNotification(
                         Notification::make()
@@ -344,42 +346,5 @@ class ManageQuantities extends ManageRelatedRecords
                     ),
             ])
             ->paginated(false);
-    }
-
-    private function createMove($record, $currentQuantity, $sourceLocationId, $destinationLocationId)
-    {
-        $move = Move::create([
-            'name'                    => 'Product Quantity Updated',
-            'state'                   => Enums\MoveState::DONE,
-            'product_id'              => $record->product_id,
-            'source_location_id'      => $sourceLocationId,
-            'destination_location_id' => $destinationLocationId,
-            'requested_qty'           => abs($currentQuantity),
-            'requested_uom_qty'       => abs($currentQuantity),
-            'received_qty'            => abs($currentQuantity),
-            'reference'               => 'Product Quantity Updated',
-            'scheduled_at'            => now(),
-            'uom_id'                  => $record->product->uom_id,
-            'creator_id'              => Auth::id(),
-            'company_id'              => $record->company_id,
-        ]);
-
-        $move->lines()->create([
-            'state'                   => Enums\MoveState::DONE,
-            'qty'                     => abs($currentQuantity),
-            'uom_qty'                 => abs($currentQuantity),
-            'is_picked'               => 1,
-            'scheduled_at'            => now(),
-            'operation_id'            => null,
-            'product_id'              => $record->product_id,
-            'result_package_id'       => $record->package_id,
-            'lot_id'                  => $record->lot_id,
-            'uom_id'                  => $record->product->uom_id,
-            'source_location_id'      => $sourceLocationId,
-            'destination_location_id' => $destinationLocationId,
-            'reference'               => $move->reference,
-            'company_id'              => $record->company_id,
-            'creator_id'              => Auth::id(),
-        ]);
     }
 }

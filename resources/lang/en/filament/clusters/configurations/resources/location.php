@@ -176,8 +176,8 @@ return [
                 'title' => 'Record Information',
 
                 'entries' => [
-                    'created-by' => 'Created By',
-                    'created-at' => 'Created At',
+                    'created-by'   => 'Created By',
+                    'created-at'   => 'Created At',
                     'last-updated' => 'Last Updated',
                 ],
             ],

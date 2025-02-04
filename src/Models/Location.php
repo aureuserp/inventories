@@ -99,6 +99,16 @@ class Location extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function getIsStockLocationAttribute(): bool
+    {
+        if (! $this->warehouse_id) {
+            return false;
+        }
+
+        return $this->warehouse->lot_stock_location_id == $this->id
+            || ($this->parent_id && $this->parent->is_stock_location);
+    }
+
     /**
      * Bootstrap any application services.
      */
@@ -107,10 +117,14 @@ class Location extends Model
         parent::boot();
 
         static::saving(function ($category) {
+            $category->updateParentPath();
+
             $category->updateFullName();
         });
 
         static::updated(function ($category) {
+            $category->updateChildrenParentPaths();
+
             if ($category->wasChanged('full_name')) {
                 $category->updateChildrenFullNames();
             }
@@ -131,6 +145,20 @@ class Location extends Model
         }
     }
 
+    /**
+     * Update the full name without triggering additional events
+     */
+    public function updateParentPath()
+    {
+        if ($this->type === LocationType::VIEW) {
+            $this->parent_path = $this->id.'/';
+        } else {
+            $this->parent_path = $this->parent
+                ? $this->parent->parent_path.$this->id.'/'
+                : $this->id.'/';
+        }
+    }
+
     public function updateChildrenFullNames(): void
     {
         $children = $this->children()->getModel()
@@ -143,6 +171,21 @@ class Location extends Model
             $child->saveQuietly();
 
             $child->updateChildrenFullNames();
+        });
+    }
+
+    public function updateChildrenParentPaths(): void
+    {
+        $children = $this->children()->getModel()
+            ->withTrashed()
+            ->where('parent_id', $this->id)
+            ->get();
+
+        $children->each(function ($child) {
+            $child->updateParentPath();
+            $child->saveQuietly();
+
+            $child->updateChildrenParentPaths();
         });
     }
 

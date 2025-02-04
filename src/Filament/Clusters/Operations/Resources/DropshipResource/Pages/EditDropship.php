@@ -7,8 +7,8 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Webkul\Chatter\Filament\Actions\ChatterAction;
 use Webkul\Inventory\Enums;
-use Webkul\Inventory\Filament\Clusters\Operations\Resources\OperationResource;
 use Webkul\Inventory\Filament\Clusters\Operations\Resources\DropshipResource;
+use Webkul\Inventory\Filament\Clusters\Operations\Resources\OperationResource;
 use Webkul\Inventory\Models\Operation;
 
 class EditDropship extends EditRecord
@@ -50,7 +50,16 @@ class EditDropship extends EditRecord
 
                     $this->fillForm();
                 })
-                ->hidden(fn () => $this->getRecord()->state == Enums\OperationState::DONE),
+                ->hidden(fn () => in_array($this->getRecord()->state, [Enums\OperationState::DONE, Enums\OperationState::CANCELED])),
+            Actions\Action::make('cancelAction')
+                ->label(__('inventories::filament/clusters/operations/resources/dropship/pages/edit-dropship.header-actions.cancel.label'))
+                ->color('gray')
+                ->action(function (Operation $record) {
+                    OperationResource::cancel($record);
+
+                    $this->fillForm();
+                })
+                ->visible(fn () => ! in_array($this->getRecord()->state, [Enums\OperationState::DONE, Enums\OperationState::CANCELED])),
             Actions\Action::make('return')
                 ->label(__('inventories::filament/clusters/operations/resources/dropship/pages/edit-dropship.header-actions.return.label'))
                 ->color('gray')

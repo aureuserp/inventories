@@ -4,8 +4,11 @@ namespace Webkul\Inventory\Filament\Clusters\Configurations\Resources;
 
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Support\Enums\FontWeight;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
@@ -13,9 +16,6 @@ use Webkul\Inventory\Filament\Clusters\Configurations;
 use Webkul\Inventory\Filament\Clusters\Configurations\Resources\PackagingResource\Pages;
 use Webkul\Inventory\Models\Packaging;
 use Webkul\Inventory\Settings\ProductSettings;
-use Filament\Infolists;
-use Filament\Infolists\Infolist;
-use Filament\Support\Enums\FontWeight;
 
 class PackagingResource extends Resource
 {

@@ -91,6 +91,14 @@ class EditScrap extends EditRecord
                     $this->createMove($record, $record->qty, $record->source_location_id, $record->destination_location_id);
                 })
                 ->hidden(fn () => $this->getRecord()->state == Enums\ScrapState::DONE),
+            Actions\DeleteAction::make()
+                ->hidden(fn () => $this->getRecord()->state == Enums\ScrapState::DONE)
+                ->successNotification(
+                    Notification::make()
+                        ->success()
+                        ->title(__('inventories::filament/clusters/operations/resources/scrap/pages/edit-scrap.header-actions.delete.notification.title'))
+                        ->body(__('inventories::filament/clusters/operations/resources/scrap/pages/edit-scrap.header-actions.delete.notification.body')),
+                ),
         ];
     }
 

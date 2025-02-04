@@ -29,6 +29,7 @@ return [
             'quantity'         => 'Quantity',
             'package'          => 'Package',
             'on-hand'          => 'On Hand Quantity',
+            'reserved-quantity' => 'Reserved Quantity',
 
             'on-hand-before-state-updated' => [
                 'notification' => [

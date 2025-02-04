@@ -74,23 +74,23 @@ return [
     'infolist' => [
         'sections' => [
             'general' => [
-                'title' => 'General Information',
+                'title'   => 'General Information',
                 'entries' => [
-                    'name' => 'Name',
+                    'name'      => 'Name',
                     'fieldsets' => [
                         'size' => [
-                            'title' => 'Package Dimensions',
+                            'title'   => 'Package Dimensions',
                             'entries' => [
                                 'length' => 'Length',
-                                'width' => 'Width',
+                                'width'  => 'Width',
                                 'height' => 'Height',
                             ],
                         ],
                     ],
-                    'weight' => 'Base Weight',
+                    'weight'     => 'Base Weight',
                     'max-weight' => 'Maximum Weight',
-                    'barcode' => 'Barcode',
-                    'company' => 'Company',
+                    'barcode'    => 'Barcode',
+                    'company'    => 'Company',
                     'created-at' => 'Created At',
                     'updated-at' => 'Last Updated',
                 ],
@@ -100,8 +100,8 @@ return [
                 'title' => 'Record Information',
 
                 'entries' => [
-                    'created-by' => 'Created By',
-                    'created-at' => 'Created At',
+                    'created-by'   => 'Created By',
+                    'created-at'   => 'Created At',
                     'last-updated' => 'Last Updated',
                 ],
             ],

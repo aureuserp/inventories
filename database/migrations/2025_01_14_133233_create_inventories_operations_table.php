@@ -63,6 +63,11 @@ return new class extends Migration
                 ->constrained('partners_partners')
                 ->nullOnDelete();
 
+            $table->foreignId('partner_address_id')
+                ->nullable()
+                ->constrained('partners_addresses')
+                ->nullOnDelete();
+
             $table->foreignId('company_id')
                 ->nullable()
                 ->constrained('companies')

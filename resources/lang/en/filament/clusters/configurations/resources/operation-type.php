@@ -210,28 +210,28 @@ return [
                 'title' => 'Record Information',
 
                 'entries' => [
-                    'created-by' => 'Created By',
-                    'created-at' => 'Created At',
+                    'created-by'   => 'Created By',
+                    'created-at'   => 'Created At',
                     'last-updated' => 'Last Updated',
                 ],
             ],
         ],
-        
+
         'tabs' => [
             'general' => [
                 'title' => 'General',
 
                 'entries' => [
-                    'type' => 'Operation Type',
-                    'sequence_code' => 'Sequence Code',
-                    'print_label' => 'Print Label',
-                    'warehouse' => 'Warehouse',
-                    'reservation_method' => 'Reservation Method',
+                    'type'                       => 'Operation Type',
+                    'sequence_code'              => 'Sequence Code',
+                    'print_label'                => 'Print Label',
+                    'warehouse'                  => 'Warehouse',
+                    'reservation_method'         => 'Reservation Method',
                     'auto_show_reception_report' => 'Auto Show Reception Report',
-                    'company' => 'Company',
-                    'return_operation_type' => 'Return Operation Type',
-                    'create_backorder' => 'Create Backorder',
-                    'move_type' => 'Move Type',
+                    'company'                    => 'Company',
+                    'return_operation_type'      => 'Return Operation Type',
+                    'create_backorder'           => 'Create Backorder',
+                    'move_type'                  => 'Move Type',
                 ],
 
                 'fieldsets' => [
@@ -239,7 +239,7 @@ return [
                         'title' => 'Lots',
 
                         'entries' => [
-                            'use_create_lots' => 'Use Create Lots',
+                            'use_create_lots'   => 'Use Create Lots',
                             'use_existing_lots' => 'Use Existing Lots',
                         ],
                     ],
@@ -248,7 +248,7 @@ return [
                         'title' => 'Locations',
 
                         'entries' => [
-                            'source_location' => 'Source Location',
+                            'source_location'      => 'Source Location',
                             'destination_location' => 'Destination Location',
                         ],
                     ],
@@ -262,13 +262,13 @@ return [
                         'title' => 'Print on Validation',
 
                         'entries' => [
-                            'auto_print_delivery_slip' => 'Auto Print Delivery Slip',
-                            'auto_print_return_slip' => 'Auto Print Return Slip',
-                            'auto_print_product_labels' => 'Auto Print Product Labels',
-                            'auto_print_lot_labels' => 'Auto Print Lot Labels',
-                            'auto_print_reception_report' => 'Auto Print Reception Report',
+                            'auto_print_delivery_slip'           => 'Auto Print Delivery Slip',
+                            'auto_print_return_slip'             => 'Auto Print Return Slip',
+                            'auto_print_product_labels'          => 'Auto Print Product Labels',
+                            'auto_print_lot_labels'              => 'Auto Print Lot Labels',
+                            'auto_print_reception_report'        => 'Auto Print Reception Report',
                             'auto_print_reception_report_labels' => 'Auto Print Reception Report Labels',
-                            'auto_print_packages' => 'Auto Print Packages',
+                            'auto_print_packages'                => 'Auto Print Packages',
                         ],
                     ],
 

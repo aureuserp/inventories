@@ -8,7 +8,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Webkul\Inventory\Database\Factories\ProductQuantityFactory;
 use Webkul\Partner\Models\Partner;
 use Webkul\Security\Models\User;
+use Webkul\Inventory\Settings\OperationSettings;
 use Webkul\Support\Models\Company;
+use Carbon\Carbon;
 
 class ProductQuantity extends Model
 {
@@ -105,6 +107,35 @@ class ProductQuantity extends Model
     public function getAvailableQuantityAttribute(): float
     {
         return $this->quantity - $this->reserved_quantity;
+    }
+
+    /**
+     * Bootstrap any application services.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::saving(function ($productQuantity) {
+            $productQuantity->updateScheduledAt();
+        });
+    }
+
+    /**
+     * Update the scheduled_at attribute
+     */
+    public function updateScheduledAt()
+    {
+        $this->scheduled_at = Carbon::create(
+            now()->year,
+            app(OperationSettings::class)->annual_inventory_month,
+            app(OperationSettings::class)->annual_inventory_day,
+            0, 0, 0
+        );
+
+        if ($this->location?->cyclic_inventory_frequency) {
+            $this->scheduled_at = now()->addDays($this->location->cyclic_inventory_frequency);
+        }
     }
 
     protected static function newFactory(): ProductQuantityFactory

@@ -19,6 +19,10 @@ return [
             'label' => 'Validate',
         ],
 
+        'cancel' => [
+            'label' => 'Cancel',
+        ],
+
         'return' => [
             'label' => 'Return',
         ],

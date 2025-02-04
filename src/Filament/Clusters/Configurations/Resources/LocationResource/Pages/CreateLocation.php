@@ -6,6 +6,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Facades\Auth;
 use Webkul\Inventory\Filament\Clusters\Configurations\Resources\LocationResource;
+use Webkul\Inventory\Models\Location;
 
 class CreateLocation extends CreateRecord
 {
@@ -27,6 +28,14 @@ class CreateLocation extends CreateRecord
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $data['creator_id'] = Auth::id();
+
+        $parentLocation = Location::find($data['parent_id']);
+
+        $data['warehouse_id'] = $parentLocation?->warehouse_id;
+        
+        $data['next_inventory_date'] = $data['cyclic_inventory_frequency'] 
+            ? now()->addDays((int) $data['cyclic_inventory_frequency']) 
+            : null;
 
         return $data;
     }

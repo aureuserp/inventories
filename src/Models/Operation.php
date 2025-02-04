@@ -12,6 +12,7 @@ use Webkul\Field\Traits\HasCustomFields;
 use Webkul\Inventory\Database\Factories\OperationFactory;
 use Webkul\Inventory\Enums;
 use Webkul\Partner\Models\Partner;
+use Webkul\Partner\Models\Address;
 use Webkul\Security\Models\User;
 use Webkul\Support\Models\Company;
 
@@ -52,6 +53,7 @@ class Operation extends Model
         'back_order_id',
         'return_id',
         'partner_id',
+        'partner_address_id',
         'company_id',
         'creator_id',
     ];
@@ -74,6 +76,29 @@ class Operation extends Model
     ];
 
     protected array $logAttributes = [
+        'name',
+        'origin',
+        'move_type',
+        'state',
+        'is_favorite',
+        'description',
+        'has_deadline_issue',
+        'is_printed',
+        'is_locked',
+        'deadline',
+        'scheduled_at',
+        'closed_at',
+        'user.name' => 'User',
+        'owner.name' => 'Owner',
+        'operationType.name' => 'Operation Type',
+        'sourceLocation.full_name' => 'Source Location',
+        'destinationLocation.full_name' => 'Destination Location',
+        'backOrder.name' => 'Back Order',
+        'return.name' => 'Return',
+        'partner.name' => 'Partner',
+        'partnerAddress.name' => 'Partner Address',
+        'company.name' => 'Company',
+        'creator.name' => 'Creator',
     ];
 
     public function user(): BelongsTo
@@ -114,6 +139,11 @@ class Operation extends Model
     public function partner(): BelongsTo
     {
         return $this->belongsTo(Partner::class);
+    }
+
+    public function partnerAddress(): BelongsTo
+    {
+        return $this->belongsTo(Address::class);
     }
 
     public function company(): BelongsTo

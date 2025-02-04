@@ -4,6 +4,8 @@ namespace Webkul\Inventory\Filament\Clusters\Configurations\Resources;
 
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Pages\SubNavigationPosition;
 use Filament\Resources\Pages\Page;
@@ -18,8 +20,6 @@ use Webkul\Inventory\Filament\Clusters\Configurations\Resources\StorageCategoryR
 use Webkul\Inventory\Filament\Clusters\Configurations\Resources\StorageCategoryResource\RelationManagers;
 use Webkul\Inventory\Models\StorageCategory;
 use Webkul\Inventory\Settings\WarehouseSettings;
-use Filament\Infolists;
-use Filament\Infolists\Infolist;
 
 class StorageCategoryResource extends Resource
 {

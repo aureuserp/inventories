@@ -15,7 +15,6 @@ use Filament\Tables\Filters\QueryBuilder\Constraints\RelationshipConstraint\Oper
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
 use Webkul\Field\Filament\Traits\HasCustomFields;
-use Webkul\Inventory\Enums\ProductTracking;
 use Webkul\Inventory\Filament\Clusters\Configurations\Resources\ProductCategoryResource;
 use Webkul\Inventory\Filament\Clusters\Configurations\Resources\ProductCategoryResource\Pages\ManageProducts;
 use Webkul\Inventory\Filament\Clusters\Products;
@@ -24,6 +23,8 @@ use Webkul\Inventory\Models\Category;
 use Webkul\Inventory\Models\Product;
 use Webkul\Product\Enums\ProductType;
 use Webkul\Support\Models\UOM;
+use Webkul\Inventory\Models\Move;
+use Webkul\Inventory\Enums;
 
 class ProductResource extends Resource
 {
@@ -93,7 +94,7 @@ class ProductResource extends Resource
                                             ->live()
                                             ->afterStateUpdated(function (Forms\Set $set, Forms\Get $get) {
                                                 if (! $get('is_storable')) {
-                                                    $set('tracking', ProductTracking::QTY->value);
+                                                    $set('tracking', Enums\ProductTracking::QTY->value);
 
                                                     $set('use_expiration_date', false);
                                                 }
@@ -101,19 +102,19 @@ class ProductResource extends Resource
                                         Forms\Components\Select::make('tracking')
                                             ->label(__('inventories::filament/clusters/products/resources/product.form.sections.inventory.fieldsets.tracking.fields.track-by'))
                                             ->selectablePlaceholder(false)
-                                            ->options(ProductTracking::class)
-                                            ->default(ProductTracking::QTY->value)
+                                            ->options(Enums\ProductTracking::class)
+                                            ->default(Enums\ProductTracking::QTY->value)
                                             ->visible(fn (Forms\Get $get): bool => (bool) $get('is_storable'))
                                             ->live()
                                             ->afterStateUpdated(function (Forms\Set $set, Forms\Get $get) {
-                                                if ($get('tracking') == ProductTracking::QTY->value) {
+                                                if ($get('tracking') == Enums\ProductTracking::QTY->value) {
                                                     $set('use_expiration_date', false);
                                                 }
                                             }),
                                         Forms\Components\Toggle::make('use_expiration_date')
                                             ->label(__('inventories::filament/clusters/products/resources/product.form.sections.inventory.fieldsets.tracking.fields.expiration-date'))
                                             ->hintIcon('heroicon-m-question-mark-circle', tooltip: __('inventories::filament/clusters/products/resources/product.form.sections.inventory.fieldsets.tracking.fields.expiration-date-hint-tooltip'))
-                                            ->visible(fn (Forms\Get $get): bool => $get('tracking') != ProductTracking::QTY->value)
+                                            ->visible(fn (Forms\Get $get): bool => $get('tracking') != Enums\ProductTracking::QTY->value)
                                             ->live(),
                                     ])
                                     ->columns(1),
@@ -682,5 +683,42 @@ class ProductResource extends Resource
             'moves'      => Pages\ManageMoves::route('/{record}/moves'),
             'quantities' => Pages\ManageQuantities::route('/{record}/quantities'),
         ];
+    }
+
+    public static function createMove($record, $currentQuantity, $sourceLocationId, $destinationLocationId)
+    {
+        $move = Move::create([
+            'name'                    => 'Product Quantity Updated',
+            'state'                   => Enums\MoveState::DONE,
+            'product_id'              => $record->product_id,
+            'source_location_id'      => $sourceLocationId,
+            'destination_location_id' => $destinationLocationId,
+            'requested_qty'           => abs($currentQuantity),
+            'requested_uom_qty'       => abs($currentQuantity),
+            'received_qty'            => abs($currentQuantity),
+            'reference'               => 'Product Quantity Updated',
+            'scheduled_at'            => now(),
+            'uom_id'                  => $record->product->uom_id,
+            'creator_id'              => Auth::id(),
+            'company_id'              => $record->company_id,
+        ]);
+
+        $move->lines()->create([
+            'state'                   => Enums\MoveState::DONE,
+            'qty'                     => abs($currentQuantity),
+            'uom_qty'                 => abs($currentQuantity),
+            'is_picked'               => 1,
+            'scheduled_at'            => now(),
+            'operation_id'            => null,
+            'product_id'              => $record->product_id,
+            'result_package_id'       => $record->package_id,
+            'lot_id'                  => $record->lot_id,
+            'uom_id'                  => $record->product->uom_id,
+            'source_location_id'      => $sourceLocationId,
+            'destination_location_id' => $destinationLocationId,
+            'reference'               => $move->reference,
+            'company_id'              => $record->company_id,
+            'creator_id'              => Auth::id(),
+        ]);
     }
 }

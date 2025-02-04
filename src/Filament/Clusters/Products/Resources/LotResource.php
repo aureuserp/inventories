@@ -4,14 +4,20 @@ namespace Webkul\Inventory\Filament\Clusters\Products\Resources;
 
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Pages\SubNavigationPosition;
 use Filament\Resources\Pages\Page;
 use Filament\Resources\Resource;
+use Filament\Support\Enums\FontWeight;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Webkul\Inventory\Enums;
+use Webkul\Inventory\Filament\Clusters\Operations\Resources\DeliveryResource\Pages\EditDelivery;
+use Webkul\Inventory\Filament\Clusters\Operations\Resources\DropshipResource\Pages\EditDropship;
+use Webkul\Inventory\Filament\Clusters\Operations\Resources\InternalResource\Pages\EditInternal;
 use Webkul\Inventory\Filament\Clusters\Operations\Resources\ReceiptResource\Pages\EditReceipt;
 use Webkul\Inventory\Filament\Clusters\Operations\Resources\ScrapResource\Pages\CreateScrap;
 use Webkul\Inventory\Filament\Clusters\Operations\Resources\ScrapResource\Pages\EditScrap;
@@ -20,9 +26,6 @@ use Webkul\Inventory\Filament\Clusters\Products\Resources\LotResource\Pages;
 use Webkul\Inventory\Filament\Clusters\Products\Resources\ProductResource\Pages\ManageQuantities;
 use Webkul\Inventory\Models\Lot;
 use Webkul\Inventory\Settings\TraceabilitySettings;
-use Filament\Infolists;
-use Filament\Infolists\Infolist;
-use Filament\Support\Enums\FontWeight;
 
 class LotResource extends Resource
 {
@@ -77,7 +80,15 @@ class LotResource extends Resource
                                     ->searchable()
                                     ->preload()
                                     ->hintIcon('heroicon-m-question-mark-circle', tooltip: __('inventories::filament/clusters/products/resources/lot.form.sections.general.fields.product-hint-tooltip'))
-                                    ->hiddenOn([EditReceipt::class, ManageQuantities::class, CreateScrap::class, EditScrap::class]),
+                                    ->hiddenOn([
+                                        EditReceipt::class,
+                                        EditDelivery::class,
+                                        EditInternal::class,
+                                        EditDropship::class,
+                                        ManageQuantities::class,
+                                        CreateScrap::class,
+                                        EditScrap::class,
+                                    ]),
                                 Forms\Components\TextInput::make('reference')
                                     ->label(__('inventories::filament/clusters/products/resources/lot.form.sections.general.fields.reference'))
                                     ->maxLength(255)

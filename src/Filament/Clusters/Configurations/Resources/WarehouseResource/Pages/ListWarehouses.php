@@ -9,6 +9,7 @@ use Filament\Resources\Pages\ListRecords;
 use Illuminate\Support\Facades\Auth;
 use Webkul\Inventory\Filament\Clusters\Configurations\Resources\WarehouseResource;
 use Webkul\Inventory\Models\Warehouse;
+use Webkul\Inventory\Settings\WarehouseSettings;
 
 class ListWarehouses extends ListRecords
 {
@@ -20,6 +21,7 @@ class ListWarehouses extends ListRecords
             Actions\CreateAction::make()
                 ->label(__('inventories::filament/clusters/configurations/resources/warehouse/pages/list-warehouses.header-actions.create.label'))
                 ->icon('heroicon-o-plus-circle')
+                ->visible(fn (WarehouseSettings $settings) => $settings->enable_locations)
                 ->mutateFormDataUsing(function ($data) {
                     $user = Auth::user();
 

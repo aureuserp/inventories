@@ -85,9 +85,9 @@ return [
                 'title' => 'General Information',
 
                 'entries' => [
-                    'name' => 'Name',
-                    'parent' => 'Parent Category',
-                    'full_name' => 'Full Category Name',
+                    'name'        => 'Name',
+                    'parent'      => 'Parent Category',
+                    'full_name'   => 'Full Category Name',
                     'parent_path' => 'Category Path',
                 ],
             ],
@@ -98,9 +98,9 @@ return [
                 'subsections' => [
                     'logistics' => [
                         'title' => 'Logistics',
-                        
+
                         'entries' => [
-                            'routes' => 'Warehouse Routes',
+                            'routes'     => 'Warehouse Routes',
                             'route_name' => 'Route Name',
                         ],
                     ],
@@ -111,7 +111,7 @@ return [
                 'title' => 'Record Information',
 
                 'entries' => [
-                    'creator' => 'Created By',
+                    'creator'    => 'Created By',
                     'created_at' => 'Created At',
                     'updated_at' => 'Last Updated At',
                 ],

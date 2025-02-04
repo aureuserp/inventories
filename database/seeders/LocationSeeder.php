@@ -22,6 +22,8 @@ class LocationSeeder extends Seeder
 
         DB::table('inventories_product_quantities')->delete();
 
+        DB::table('inventories_scraps')->delete();
+
         DB::table('inventories_moves')->delete();
 
         DB::table('inventories_move_lines')->delete();

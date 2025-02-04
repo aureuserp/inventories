@@ -110,15 +110,15 @@ return [
             ],
         ],
     ],
-    
+
     'infolist' => [
         'sections' => [
             'general' => [
                 'title' => 'General Information',
-                
+
                 'entries' => [
-                    'name' => 'Warehouse Name',
-                    'code' => 'Warehouse Code',
+                    'name'    => 'Warehouse Name',
+                    'code'    => 'Warehouse Code',
                     'company' => 'Company',
                     'address' => 'Address',
                 ],
@@ -129,10 +129,10 @@ return [
 
                 'entries' => [
                     'shipment-management' => 'Shipment Management',
-                    'incoming-shipments' => 'Incoming Shipments',
-                    'outgoing-shipments' => 'Outgoing Shipments',
+                    'incoming-shipments'  => 'Incoming Shipments',
+                    'outgoing-shipments'  => 'Outgoing Shipments',
                     'resupply-management' => 'Resupply Management',
-                    'resupply-from' => 'Resupply From',
+                    'resupply-from'       => 'Resupply From',
                 ],
             ],
 
@@ -140,8 +140,8 @@ return [
                 'title' => 'Record Information',
 
                 'entries' => [
-                    'created-by' => 'Created By',
-                    'created-at' => 'Created At',
+                    'created-by'   => 'Created By',
+                    'created-at'   => 'Created At',
                     'last-updated' => 'Last Updated',
                 ],
             ],

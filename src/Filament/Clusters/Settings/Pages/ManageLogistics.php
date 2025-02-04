@@ -6,13 +6,10 @@ use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Pages\SettingsPage;
-use Illuminate\Validation\Rules\Enum;
+use Webkul\Inventory\Enums;
+use Webkul\Inventory\Models\OperationType;
 use Webkul\Inventory\Settings\LogisticSettings;
 use Webkul\Support\Filament\Clusters\Settings;
-use Webkul\Inventory\Models\OperationType;
-use Webkul\Inventory\Models\Warehouse;
-use Webkul\Inventory\Settings\WarehouseSettings;
-use Webkul\Inventory\Enums;
 
 class ManageLogistics extends SettingsPage
 {

@@ -52,6 +52,25 @@ class Scrap extends Model
         'creator_id',
     ];
 
+    protected array $logAttributes = [
+        'name',
+        'origin',
+        'state',
+        'qty',
+        'should_replenish',
+        'closed_at',
+        'product.name' => 'Product',
+        'uom.name' => 'UOM',
+        'lot.name' => 'Lot',
+        'package.name' => 'Package',
+        'partner.name' => 'Partner',
+        'operation.name' => 'Operation',
+        'sourceLocation.full_name' => 'Source Location',
+        'destinationLocation.full_name' => 'Destination Location',
+        'company.name' => 'Company',
+        'creator.name' => 'Creator',
+    ];
+
     /**
      * Table name.
      *

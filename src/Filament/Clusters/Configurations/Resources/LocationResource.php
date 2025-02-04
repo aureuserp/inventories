@@ -4,10 +4,13 @@ namespace Webkul\Inventory\Filament\Clusters\Configurations\Resources;
 
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Pages\SubNavigationPosition;
 use Filament\Resources\Pages\Page;
 use Filament\Resources\Resource;
+use Filament\Support\Enums\FontWeight;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
@@ -15,11 +18,9 @@ use Webkul\Inventory\Enums\LocationType;
 use Webkul\Inventory\Filament\Clusters\Configurations;
 use Webkul\Inventory\Filament\Clusters\Configurations\Resources\LocationResource\Pages;
 use Webkul\Inventory\Filament\Clusters\Configurations\Resources\StorageCategoryResource\Pages\ManageLocations;
+use Webkul\Inventory\Filament\Clusters\Configurations\Resources\StorageCategoryResource;
 use Webkul\Inventory\Models\Location;
 use Webkul\Inventory\Settings\WarehouseSettings;
-use Filament\Infolists;
-use Filament\Infolists\Infolist;
-use Filament\Support\Enums\FontWeight;
 
 class LocationResource extends Resource
 {
@@ -113,6 +114,7 @@ class LocationResource extends Resource
                                     ->relationship('storageCategory', 'name')
                                     ->searchable()
                                     ->preload()
+                                    ->createOptionForm(fn (Form $form): Form => StorageCategoryResource::form($form))
                                     ->visible(fn (Forms\Get $get): bool => $get('type') === LocationType::INTERNAL->value)
                                     ->hiddenOn(ManageLocations::class),
                                 Forms\Components\Toggle::make('is_scrap')
@@ -133,33 +135,20 @@ class LocationResource extends Resource
                                     ->hintIcon('heroicon-m-question-mark-circle', tooltip: __('inventories::filament/clusters/configurations/resources/location.form.sections.settings.fields.is-replenish-hint-tooltip'))
                                     ->visible(fn (Forms\Get $get): bool => $get('type') === LocationType::INTERNAL->value),
 
-                                // Forms\Components\Fieldset::make(__('inventories::filament/clusters/configurations/resources/location.form.sections.settings.fields.logistics'))
-                                //     ->schema([
-                                //         Forms\Components\Radio::make('removal_strategy')
-                                //             ->label(__('inventories::filament/clusters/configurations/resources/location.form.sections.settings.fields.removal-strategy'))
-                                //             ->options(ProductRemoval::class)
-                                //             ->hintIcon('heroicon-m-question-mark-circle', tooltip: __('inventories::filament/clusters/configurations/resources/location.form.sections.settings.fields.removal-strategy-hint-tooltip')),
-                                //     ])
-                                //     ->columns(1)
-                                //     ->visible(fn (Forms\Get $get): bool => in_array($get('type'), [LocationType::VIEW->value, LocationType::INTERNAL->value, LocationType::TRANSIT->value]) && ! $get('is_scrap')),
-
                                 Forms\Components\Fieldset::make(__('inventories::filament/clusters/configurations/resources/location.form.sections.settings.fields.cyclic-counting'))
                                     ->schema([
                                         Forms\Components\TextInput::make('cyclic_inventory_frequency')
                                             ->label(__('inventories::filament/clusters/configurations/resources/location.form.sections.settings.fields.inventory-frequency'))
-                                            ->integer(),
-                                        Forms\Components\DatePicker::make('cyclic_inventory_frequency')
+                                            ->integer()
+                                            ->default(0),
+                                        Forms\Components\Placeholder::make('last_inventory_date')
                                             ->label(__('inventories::filament/clusters/configurations/resources/location.form.sections.settings.fields.last-inventory'))
                                             ->hintIcon('heroicon-m-question-mark-circle', tooltip: __('inventories::filament/clusters/configurations/resources/location.form.sections.settings.fields.last-inventory-hint-tooltip'))
-                                            ->native(false)
-                                            ->readOnly()
-                                            ->disabled(),
-                                        Forms\Components\DatePicker::make('cyclic_inventory_frequency')
+                                            ->content(fn ($record) => $record?->last_inventory_date?->toFormattedDateString() ?? '—'),
+                                        Forms\Components\Placeholder::make('next_inventory_date')
                                             ->label(__('inventories::filament/clusters/configurations/resources/location.form.sections.settings.fields.next-expected'))
                                             ->hintIcon('heroicon-m-question-mark-circle', tooltip: __('inventories::filament/clusters/configurations/resources/location.form.sections.settings.fields.next-expected-hint-tooltip'))
-                                            ->native(false)
-                                            ->readOnly()
-                                            ->disabled(),
+                                            ->content(fn ($record) => $record?->next_inventory_date?->toFormattedDateString() ?? '—'),
                                     ])
                                     ->visible(fn (Forms\Get $get): bool => in_array($get('type'), [LocationType::INTERNAL->value, LocationType::TRANSIT->value]))
                                     ->columns(1),

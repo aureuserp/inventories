@@ -5,6 +5,8 @@ namespace Webkul\Inventory\Filament\Clusters\Operations\Resources;
 use Filament\Forms;
 use Filament\Forms\Components\Actions\Action;
 use Filament\Forms\Form;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Pages\SubNavigationPosition;
 use Filament\Resources\Pages\Page;
@@ -29,9 +31,7 @@ use Webkul\Inventory\Settings\OperationSettings;
 use Webkul\Inventory\Settings\ProductSettings;
 use Webkul\Inventory\Settings\TraceabilitySettings;
 use Webkul\Inventory\Settings\WarehouseSettings;
-use Filament\Infolists;
-use Filament\Infolists\Infolist;
-use Filament\Support\Enums\FontWeight;
+use Webkul\Inventory\Filament\Resources\PartnerResource;
 
 class ScrapResource extends Resource
 {
@@ -104,7 +104,7 @@ class ScrapResource extends Resource
                                             ->searchable()
                                             ->preload()
                                             ->required()
-                                            ->visible(fn (ProductSettings $productSettings) => $productSettings->enable_uom)
+                                            ->visible(fn (ProductSettings $settings) => $settings->enable_uom)
                                             ->disabled(fn ($record): bool => $record?->state == Enums\ScrapState::DONE),
                                         Forms\Components\Select::make('lot_id')
                                             ->label(__('inventories::filament/clusters/operations/resources/scrap.form.sections.general.fields.lot'))
@@ -117,8 +117,8 @@ class ScrapResource extends Resource
                                                 modifyQueryUsing: fn (Builder $query, Forms\Get $get) => $query->where('product_id', $get('product_id')),
                                             )
                                             ->disabled(fn ($record): bool => $record?->state == Enums\ScrapState::DONE)
-                                            ->visible(function (TraceabilitySettings $traceabilitySettings, Forms\Get $get): bool {
-                                                if (! $traceabilitySettings->enable_lots_serial_numbers) {
+                                            ->visible(function (TraceabilitySettings $settings, Forms\Get $get): bool {
+                                                if (! $settings->enable_lots_serial_numbers) {
                                                     return false;
                                                 }
 
@@ -161,13 +161,14 @@ class ScrapResource extends Resource
                                             ->searchable()
                                             ->preload()
                                             ->createOptionForm(fn (Form $form): Form => PackageResource::form($form))
-                                            ->visible(fn (OperationSettings $operationSettings) => $operationSettings->enable_packages)
+                                            ->visible(fn (OperationSettings $settings) => $settings->enable_packages)
                                             ->disabled(fn ($record): bool => $record?->state == Enums\ScrapState::DONE),
                                         Forms\Components\Select::make('partner_id')
                                             ->label(__('inventories::filament/clusters/operations/resources/scrap.form.sections.general.fields.owner'))
                                             ->relationship('partner', 'name')
                                             ->searchable()
                                             ->preload()
+                                            ->createOptionForm(fn (Form $form): Form => PartnerResource::form($form))
                                             ->disabled(fn ($record): bool => $record?->state == Enums\ScrapState::DONE),
                                         Forms\Components\Select::make('source_location_id')
                                             ->label(__('inventories::filament/clusters/operations/resources/scrap.form.sections.general.fields.source-location'))
@@ -187,6 +188,7 @@ class ScrapResource extends Resource
 
                                                 return $scrapLocation?->id;
                                             })
+                                            ->visible(fn (WarehouseSettings $settings): bool => $settings->enable_locations)
                                             ->disabled(fn ($record): bool => $record?->state == Enums\ScrapState::DONE),
                                         Forms\Components\Select::make('destination_location_id')
                                             ->label(__('inventories::filament/clusters/operations/resources/scrap.form.sections.general.fields.destination-location'))
@@ -205,6 +207,7 @@ class ScrapResource extends Resource
 
                                                 return $scrapLocation?->id;
                                             })
+                                            ->visible(fn (WarehouseSettings $settings): bool => $settings->enable_locations)
                                             ->disabled(fn ($record): bool => $record?->state == Enums\ScrapState::DONE),
                                         Forms\Components\TextInput::make('origin')
                                             ->label(__('inventories::filament/clusters/operations/resources/scrap.form.sections.general.fields.source-document')),
@@ -245,28 +248,28 @@ class ScrapResource extends Resource
                     ->searchable()
                     ->sortable()
                     ->placeholder('—')
-                    ->visible(fn (TraceabilitySettings $traceabilitySettings) => $traceabilitySettings->enable_lots_serial_numbers),
+                    ->visible(fn (TraceabilitySettings $settings) => $settings->enable_lots_serial_numbers),
                 Tables\Columns\TextColumn::make('package.name')
                     ->label(__('inventories::filament/clusters/operations/resources/scrap.table.columns.package'))
                     ->searchable()
                     ->sortable()
                     ->placeholder('—')
-                    ->visible(fn (OperationSettings $operationSettings) => $operationSettings->enable_packages),
+                    ->visible(fn (OperationSettings $settings) => $settings->enable_packages),
                 Tables\Columns\TextColumn::make('sourceLocation.full_name')
                     ->label(__('inventories::filament/clusters/operations/resources/scrap.table.columns.source-location'))
                     ->sortable()
-                    ->visible(fn (WarehouseSettings $warehouseSettings) => $warehouseSettings->enable_locations),
+                    ->visible(fn (WarehouseSettings $settings) => $settings->enable_locations),
                 Tables\Columns\TextColumn::make('destinationLocation.full_name')
                     ->label(__('inventories::filament/clusters/operations/resources/scrap.table.columns.scrap-location'))
                     ->sortable()
-                    ->visible(fn (WarehouseSettings $warehouseSettings) => $warehouseSettings->enable_locations),
+                    ->visible(fn (WarehouseSettings $settings) => $settings->enable_locations),
                 Tables\Columns\TextColumn::make('qty')
                     ->label(__('inventories::filament/clusters/operations/resources/scrap.table.columns.quantity'))
                     ->sortable(),
                 Tables\Columns\TextColumn::make('uom.name')
                     ->label(__('inventories::filament/clusters/operations/resources/scrap.table.columns.uom'))
                     ->sortable()
-                    ->visible(fn (WarehouseSettings $warehouseSettings) => $warehouseSettings->enable_locations),
+                    ->visible(fn (WarehouseSettings $settings) => $settings->enable_locations),
                 Tables\Columns\TextColumn::make('state')
                     ->label(__('inventories::filament/clusters/operations/resources/scrap.table.columns.state'))
                     ->sortable()
@@ -460,59 +463,57 @@ class ScrapResource extends Resource
                                                 Infolists\Components\TextEntry::make('product.name')
                                                     ->label(__('inventories::filament/clusters/operations/resources/scrap.infolist.sections.general.entries.product'))
                                                     ->icon('heroicon-o-shopping-bag'),
-                                                
+
                                                 Infolists\Components\TextEntry::make('qty')
                                                     ->label(__('inventories::filament/clusters/operations/resources/scrap.infolist.sections.general.entries.quantity'))
                                                     ->icon('heroicon-o-calculator')
-                                                    ->suffix(fn (Scrap $record) => ' ' . $record->uom?->name),
-                                                
+                                                    ->suffix(fn (Scrap $record) => ' '.$record->uom?->name),
+
                                                 Infolists\Components\TextEntry::make('lot.name')
                                                     ->label(__('inventories::filament/clusters/operations/resources/scrap.infolist.sections.general.entries.lot'))
                                                     ->icon('heroicon-o-rectangle-stack')
                                                     ->placeholder('—')
-                                                    ->visible(fn (TraceabilitySettings $traceabilitySettings) => 
-                                                        $traceabilitySettings->enable_lots_serial_numbers),
-                                                
+                                                    ->visible(fn (TraceabilitySettings $settings) => $settings->enable_lots_serial_numbers),
+
                                                 Infolists\Components\TextEntry::make('tags.name')
                                                     ->label(__('inventories::filament/clusters/operations/resources/scrap.infolist.sections.general.entries.tags'))
                                                     ->icon('heroicon-o-tag')
                                                     ->badge()
                                                     ->separator(','),
                                             ]),
-                                        
+
                                         Infolists\Components\Group::make()
                                             ->schema([
                                                 Infolists\Components\TextEntry::make('package.name')
                                                     ->label(__('inventories::filament/clusters/operations/resources/scrap.infolist.sections.general.entries.package'))
                                                     ->icon('heroicon-o-cube')
                                                     ->placeholder('—')
-                                                    ->visible(fn (OperationSettings $operationSettings) => 
-                                                        $operationSettings->enable_packages),
-                                                
+                                                    ->visible(fn (OperationSettings $settings) => $settings->enable_packages),
+
                                                 Infolists\Components\TextEntry::make('partner.name')
                                                     ->label(__('inventories::filament/clusters/operations/resources/scrap.infolist.sections.general.entries.owner'))
                                                     ->icon('heroicon-o-user-circle'),
-                                                
+
                                                 Infolists\Components\TextEntry::make('sourceLocation.full_name')
                                                     ->label(__('inventories::filament/clusters/operations/resources/scrap.infolist.sections.general.entries.source-location'))
                                                     ->icon('heroicon-o-map-pin'),
-                                                
+
                                                 Infolists\Components\TextEntry::make('destinationLocation.full_name')
                                                     ->label(__('inventories::filament/clusters/operations/resources/scrap.infolist.sections.general.entries.destination-location'))
                                                     ->icon('heroicon-o-map-pin'),
-                                                
+
                                                 Infolists\Components\TextEntry::make('origin')
                                                     ->label(__('inventories::filament/clusters/operations/resources/scrap.infolist.sections.general.entries.source-document'))
                                                     ->icon('heroicon-o-document-text')
                                                     ->placeholder('—'),
-                                                
+
                                                 Infolists\Components\TextEntry::make('company.name')
                                                     ->label(__('inventories::filament/clusters/operations/resources/scrap.infolist.sections.general.entries.company'))
                                                     ->icon('heroicon-o-building-office'),
-                                            ])
+                                            ]),
                                     ])
-                                    ->columns(2)
-                        ]),
+                                    ->columns(2),
+                            ]),
                     ])
                     ->columnSpan(['lg' => 2]),
 

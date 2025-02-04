@@ -23,10 +23,6 @@ return [
             ],
         ],
 
-        'return' => [
-            'label' => 'Return',
-        ],
-
         'delete' => [
             'notification' => [
                 'title' => 'Scrap deleted',

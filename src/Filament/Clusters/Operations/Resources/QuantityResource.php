@@ -18,6 +18,7 @@ use Webkul\Inventory\Filament\Clusters\Operations;
 use Webkul\Inventory\Filament\Clusters\Operations\Resources\QuantityResource\Pages;
 use Webkul\Inventory\Filament\Clusters\Products\Resources\LotResource;
 use Webkul\Inventory\Filament\Clusters\Products\Resources\PackageResource;
+use Webkul\Inventory\Filament\Clusters\Products\Resources\ProductResource;
 use Webkul\Inventory\Models\Location;
 use Webkul\Inventory\Models\Move;
 use Webkul\Inventory\Models\Product;
@@ -64,7 +65,7 @@ class QuantityResource extends Resource
                     ->searchable()
                     ->preload()
                     ->required()
-                    ->visible(fn (WarehouseSettings $warehouseSettings) => $warehouseSettings->enable_locations),
+                    ->visible(fn (WarehouseSettings $settings) => $settings->enable_locations),
                 Forms\Components\Select::make('product_id')
                     ->label(__('inventories::filament/clusters/operations/resources/quantity.form.fields.product'))
                     ->relationship(
@@ -97,8 +98,8 @@ class QuantityResource extends Resource
                                 return $data;
                             });
                     })
-                    ->visible(function (TraceabilitySettings $traceabilitySettings, Forms\Get $get): bool {
-                        if (! $traceabilitySettings->enable_lots_serial_numbers) {
+                    ->visible(function (TraceabilitySettings $settings, Forms\Get $get): bool {
+                        if (! $settings->enable_lots_serial_numbers) {
                             return false;
                         }
 
@@ -116,7 +117,7 @@ class QuantityResource extends Resource
                     ->searchable()
                     ->preload()
                     ->createOptionForm(fn (Form $form): Form => PackageResource::form($form))
-                    ->visible(fn (OperationSettings $operationSettings) => $operationSettings->enable_packages),
+                    ->visible(fn (OperationSettings $settings) => $settings->enable_packages),
                 Forms\Components\TextInput::make('counted_quantity')
                     ->label(__('inventories::filament/clusters/operations/resources/quantity.form.fields.counted-qty'))
                     ->numeric()
@@ -140,14 +141,14 @@ class QuantityResource extends Resource
                     ->label(__('inventories::filament/clusters/operations/resources/quantity.table.columns.location'))
                     ->searchable()
                     ->sortable()
-                    ->visible(fn (WarehouseSettings $warehouseSettings) => $warehouseSettings->enable_locations),
+                    ->visible(fn (WarehouseSettings $settings) => $settings->enable_locations),
                 Tables\Columns\TextColumn::make('storageCategory.name')
                     ->label(__('inventories::filament/clusters/operations/resources/quantity.table.columns.storage-category'))
                     ->searchable()
                     ->sortable()
                     ->placeholder('—')
                     ->toggleable(isToggledHiddenByDefault: true)
-                    ->visible(fn (WarehouseSettings $warehouseSettings) => $warehouseSettings->enable_locations),
+                    ->visible(fn (WarehouseSettings $settings) => $settings->enable_locations),
                 Tables\Columns\TextColumn::make('product.name')
                     ->label(__('inventories::filament/clusters/operations/resources/quantity.table.columns.product'))
                     ->searchable()
@@ -162,13 +163,13 @@ class QuantityResource extends Resource
                     ->searchable()
                     ->sortable()
                     ->placeholder('—')
-                    ->visible(fn (TraceabilitySettings $traceabilitySettings) => $traceabilitySettings->enable_lots_serial_numbers),
+                    ->visible(fn (TraceabilitySettings $settings) => $settings->enable_lots_serial_numbers),
                 Tables\Columns\TextColumn::make('package.name')
                     ->label(__('inventories::filament/clusters/operations/resources/quantity.table.columns.package'))
                     ->searchable()
                     ->sortable()
                     ->placeholder('—')
-                    ->visible(fn (OperationSettings $operationSettings) => $operationSettings->enable_packages),
+                    ->visible(fn (OperationSettings $settings) => $settings->enable_packages),
                 Tables\Columns\TextColumn::make('available_quantity')
                     ->label(__('inventories::filament/clusters/operations/resources/quantity.table.columns.available-quantity'))
                     ->searchable()
@@ -485,7 +486,7 @@ class QuantityResource extends Resource
                             $destinationLocationId = $record->location_id;
                         }
 
-                        static::createMove($record, abs($diffQuantity), $sourceLocationId, $destinationLocationId);
+                        ProductResource::createMove($record, abs($diffQuantity), $sourceLocationId, $destinationLocationId);
                     }),
                 Tables\Actions\Action::make('clear')
                     ->label(__('inventories::filament/clusters/operations/resources/quantity.table.actions.clear.label'))
@@ -525,40 +526,5 @@ class QuantityResource extends Resource
         return [
             'index'  => Pages\ManageQuantities::route('/'),
         ];
-    }
-
-    private static function createMove($record, $currentQuantity, $sourceLocationId, $destinationLocationId)
-    {
-        $move = Move::create([
-            'name'                    => 'Product Quantity Updated',
-            'state'                   => Enums\MoveState::DONE,
-            'product_id'              => $record->product_id,
-            'source_location_id'      => $sourceLocationId,
-            'destination_location_id' => $destinationLocationId,
-            'requested_qty'           => abs($currentQuantity),
-            'requested_uom_qty'       => abs($currentQuantity),
-            'received_qty'            => abs($currentQuantity),
-            'reference'               => 'Product Quantity Updated',
-            'creator_id'              => Auth::id(),
-            'company_id'              => $record->company_id,
-        ]);
-
-        $move->lines()->create([
-            'state'                   => Enums\MoveState::DONE,
-            'qty'                     => abs($currentQuantity),
-            'uom_qty'                 => abs($currentQuantity),
-            'is_picked'               => 1,
-            'scheduled_at'            => now(),
-            'operation_id'            => null,
-            'product_id'              => $record->product_id,
-            'result_package_id'       => $record->package_id,
-            'lot_id'                  => $record->lot_id,
-            'uom_id'                  => $record->product->uom_id,
-            'source_location_id'      => $sourceLocationId,
-            'destination_location_id' => $destinationLocationId,
-            'reference'               => $move->reference,
-            'company_id'              => $record->company_id,
-            'creator_id'              => Auth::id(),
-        ]);
     }
 }

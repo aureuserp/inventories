@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Auth;
 use Webkul\Inventory\Enums;
 use Webkul\Inventory\Filament\Clusters\Operations\Resources\ScrapResource;
 use Webkul\Inventory\Models\Product;
+use Webkul\Inventory\Models\Warehouse;
+use Webkul\Inventory\Models\Location;
 
 class CreateScrap extends CreateRecord
 {
@@ -30,6 +32,10 @@ class CreateScrap extends CreateRecord
         $data['state'] ??= Enums\ScrapState::DRAFT;
 
         $data['creator_id'] = Auth::id();
+
+        $data['source_location_id'] ??= Warehouse::first()->lot_stock_location_id;
+
+        $data['destination_location_id'] ??= Location::where('is_scrap', true)->first()->id;
 
         $data['company_id'] ??= Auth::user()->default_company_id;
 

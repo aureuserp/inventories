@@ -70,13 +70,13 @@ return [
                 'title' => 'Package Details',
 
                 'entries' => [
-                    'name' => 'Package Name',
+                    'name'         => 'Package Name',
                     'package-type' => 'Package Type',
-                    'pack-date' => 'Pack Date',
-                    'location' => 'Location',
-                    'company' => 'Company',
-                    'created-at' => 'Created At',
-                    'updated-at' => 'Last Updated',
+                    'pack-date'    => 'Pack Date',
+                    'location'     => 'Location',
+                    'company'      => 'Company',
+                    'created-at'   => 'Created At',
+                    'updated-at'   => 'Last Updated',
                 ],
             ],
 
@@ -84,8 +84,8 @@ return [
                 'title' => 'Record Information',
 
                 'entries' => [
-                    'created-by' => 'Created By',
-                    'created-at' => 'Created At',
+                    'created-by'   => 'Created By',
+                    'created-at'   => 'Created At',
                     'last-updated' => 'Last Updated',
                 ],
             ],

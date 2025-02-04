@@ -11,7 +11,6 @@ use Webkul\Chatter\Filament\Actions\ChatterAction;
 use Webkul\Inventory\Enums;
 use Webkul\Inventory\Filament\Clusters\Products\Resources\ProductResource;
 use Webkul\Inventory\Models\Location;
-use Webkul\Inventory\Models\Move;
 use Webkul\Inventory\Models\Product;
 use Webkul\Inventory\Models\ProductQuantity;
 use Webkul\Inventory\Models\Warehouse;
@@ -50,7 +49,7 @@ class EditProduct extends EditRecord
                         ->numeric()
                         ->minValue(0)
                         ->required()
-                        ->default($record->quantities()->sum('quantity')),
+                        ->default($record->on_hand_quantity),
                 ])
                 ->modalSubmitActionLabel(__('inventories::filament/clusters/products/resources/product/pages/edit-product.header-actions.update-quantity.modal-submit-action-label'))
                 ->beforeFormFilled(function (
@@ -71,7 +70,7 @@ class EditProduct extends EditRecord
                     }
                 })
                 ->action(function (Product $record, array $data): void {
-                    $previousQuantity = $record->quantities()->sum('quantity');
+                    $previousQuantity = $record->on_hand_quantity;
 
                     if ($previousQuantity == $data['quantity']) {
                         return;
@@ -95,38 +94,6 @@ class EditProduct extends EditRecord
                         $destinationLocationId = $warehouse->lot_stock_location_id;
                     }
 
-                    $move = Move::create([
-                        'name'                    => 'Product Quantity Updated',
-                        'state'                   => Enums\MoveState::DONE,
-                        'product_id'              => $record->id,
-                        'source_location_id'      => $sourceLocationId,
-                        'destination_location_id' => $destinationLocationId,
-                        'requested_qty'           => abs($currentQuantity),
-                        'requested_uom_qty'       => abs($currentQuantity),
-                        'received_qty'            => abs($currentQuantity),
-                        'package_id'              => $data['package_id'] ?? null,
-                        'lot_id'                  => $data['lot_id'] ?? null,
-                        'reference'               => 'Product Quantity Updated',
-                        'creator_id'              => Auth::id(),
-                        'company_id'              => $record->company_id,
-                    ]);
-
-                    $move->lines()->create([
-                        'state'                   => Enums\MoveState::DONE,
-                        'qty'                     => abs($currentQuantity),
-                        'uom_qty'                 => abs($currentQuantity),
-                        'is_picked'               => 1,
-                        'scheduled_at'            => now(),
-                        'operation_id'            => null,
-                        'product_id'              => $record->id,
-                        'uom_id'                  => $record->uom_id,
-                        'source_location_id'      => $sourceLocationId,
-                        'destination_location_id' => $destinationLocationId,
-                        'reference'               => $move->reference,
-                        'company_id'              => $record->company_id,
-                        'creator_id'              => Auth::id(),
-                    ]);
-
                     $productQuantity = ProductQuantity::where('product_id', $record->id)
                         ->where('location_id', $data['location_id'] ?? $warehouse->lot_stock_location_id)
                         ->first();
@@ -134,8 +101,9 @@ class EditProduct extends EditRecord
                     if ($productQuantity) {
                         $productQuantity->update(['quantity' => $data['quantity']]);
                     } else {
-                        ProductQuantity::create([
-                            'product_id'        => $record->id->product_id,
+                        $productQuantity = ProductQuantity::create([
+                            'product_id'        => $record->id,
+                            'company_id'        => $record->company_id,
                             'location_id'       => $data['location_id'] ?? $warehouse->lot_stock_location_id,
                             'package_id'        => $data['package_id'] ?? null,
                             'lot_id'            => $data['lot_id'] ?? null,
@@ -145,6 +113,8 @@ class EditProduct extends EditRecord
                             'creator_id'        => Auth::id(),
                         ]);
                     }
+
+                    ProductResource::createMove($productQuantity, $currentQuantity, $sourceLocationId, $destinationLocationId);
                 }),
             Actions\DeleteAction::make()
                 ->successNotification(

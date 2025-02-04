@@ -4,10 +4,13 @@ namespace Webkul\Inventory\Filament\Clusters\Products\Resources;
 
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Pages\SubNavigationPosition;
 use Filament\Resources\Pages\Page;
 use Filament\Resources\Resource;
+use Filament\Support\Enums\FontWeight;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Webkul\Inventory\Filament\Clusters\Configurations\Resources\PackageTypeResource;
@@ -16,9 +19,6 @@ use Webkul\Inventory\Filament\Clusters\Products\Resources\PackageResource\Pages;
 use Webkul\Inventory\Filament\Clusters\Products\Resources\PackageResource\RelationManagers;
 use Webkul\Inventory\Models\Package;
 use Webkul\Inventory\Settings\OperationSettings;
-use Filament\Infolists;
-use Filament\Infolists\Infolist;
-use Filament\Support\Enums\FontWeight;
 
 class PackageResource extends Resource
 {
@@ -158,7 +158,7 @@ class PackageResource extends Resource
                     ),
             ]);
     }
-    
+
     public static function infolist(Infolist $infolist): Infolist
     {
         return $infolist
@@ -224,7 +224,6 @@ class PackageResource extends Resource
             ])
             ->columns(3);
     }
-
 
     public static function getRecordSubNavigation(Page $page): array
     {
