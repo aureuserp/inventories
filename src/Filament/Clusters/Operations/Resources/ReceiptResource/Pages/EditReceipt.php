@@ -45,7 +45,28 @@ class EditReceipt extends EditRecord
             Actions\Action::make('validate')
                 ->label(__('inventories::filament/clusters/operations/resources/receipt/pages/edit-receipt.header-actions.validate.label'))
                 ->color('gray')
+                ->requiresConfirmation(function (Operation $record) {
+                    if ($record->operationType->create_backorder != Enums\CreateBackorder::ASK) {
+                        return;
+                    }
+
+                    return OperationResource::canProcessBackOrder($record);
+                })
+                ->modalHeading(__('inventories::filament/clusters/operations/resources/receipt/pages/edit-receipt.header-actions.validate.modal-heading'))
+                ->modalDescription(__('inventories::filament/clusters/operations/resources/receipt/pages/edit-receipt.header-actions.validate.modal-description'))
+                ->extraModalFooterActions([
+                    Actions\Action::make('no-backorder')
+                        ->label(__('inventories::filament/clusters/operations/resources/receipt/pages/edit-receipt.header-actions.validate.extra-modal-footer-actions.no-backorder.label'))
+                        ->color('danger')
+                        ->action(function (Operation $record) {
+                            OperationResource::validate($record);
+
+                            $this->fillForm();
+                        }),
+                ])
                 ->action(function (Operation $record) {
+                    OperationResource::backOrder($record);
+
                     OperationResource::validate($record);
 
                     $this->fillForm();

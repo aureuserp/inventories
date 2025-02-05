@@ -628,6 +628,7 @@ class OperationResource extends Resource
                     'uom_id'                  => $data['uom_id'] ?? $product->uom_id,
                     'requested_uom_qty'       => $data['requested_qty'],
                     'operation_type_id'       => $record->operation_type_id,
+                    'received_qty'            => NULL,
                     'source_location_id'      => $record->source_location_id,
                     'destination_location_id' => $record->destination_location_id,
                     'scheduled_at'            => $record->scheduled_at ?? now(),
@@ -637,15 +638,15 @@ class OperationResource extends Resource
                 return $data;
             })
             ->mutateRelationshipDataBeforeSaveUsing(function (array $data, $record) {
-                $moveQty = null;
+                if (isset($data['received_qty'])) {
+                    $record->fill([
+                        'received_qty' => $data['received_qty'] ?? NULL,
+                    ]);
 
-                if ($data['received_qty'] != $record->requested_qty) {
-                    $moveQty = $data['received_qty'];
+                    static::updateOrCreateMoveLines($record);
+
+                    static::updateOperationState($record->operation);
                 }
-
-                static::updateOrCreateMoveLines($record, $moveQty);
-
-                static::updateOperationState($record->operation);
 
                 return $data;
             })
@@ -892,7 +893,11 @@ class OperationResource extends Resource
             ->action(function (Forms\Set $set, array $data, Move $record): void {
                 $totalQty = $record->lines()->sum('qty');
 
-                static::updateOrCreateMoveLines($record, $totalQty);
+                $record->fill([
+                    'received_qty' => $totalQty,
+                ]);
+
+                static::updateOrCreateMoveLines($record);
 
                 $set('received_qty', $totalQty);
             });
@@ -1153,11 +1158,47 @@ class OperationResource extends Resource
         static::updateOperationState($record);
     }
 
-    public static function updateOrCreateMoveLines(Move $record, $moveQty = null)
+    public static function backOrder(Operation $record)
+    {
+        if (! static::canProcessBackOrder($record)) {
+            return;
+        }
+
+        $operation = $record->replicate()->fill([
+            'state' => Enums\OperationState::DRAFT,
+            'origin' => $record->name,
+            'user_id' => Auth::id(),
+            'creator_id' => Auth::id(),
+        ]);
+
+        $operation->save();
+
+        foreach ($record->moves as $move) {
+            if ($move->requested_qty <= $move->received_qty) {
+                continue;
+            }
+
+            $newMove = $move->replicate()->fill([
+                'operation_id' => $operation->id,
+                'reference'    => $operation->name,
+                'state' => Enums\MoveState::DRAFT,
+                'requested_qty' => $move->requested_qty - $move->received_qty,
+                'requested_uom_qty' => $move->requested_qty - $move->received_qty,
+            ]);
+
+            $newMove->save();
+        }
+
+        static::checkAvailability($operation->refresh());
+
+        $record->update(['back_order_id' => $operation->id]);
+    }
+
+    public static function updateOrCreateMoveLines(Move $record)
     {
         $lines = $record->lines()->orderBy('created_at')->get();
 
-        $remainingQty = $moveQty ?? $record->requested_qty;
+        $remainingQty = $record->received_qty ?? $record->requested_qty;
 
         $updatedLines = collect();
 
@@ -1292,7 +1333,7 @@ class OperationResource extends Resource
         if ($availableQuantity <= 0) {
             $record->update([
                 'state'        => Enums\MoveState::CONFIRMED,
-                'received_qty' => 0,
+                'received_qty' => NULL,
             ]);
 
             $record->lines()->update([
@@ -1338,6 +1379,15 @@ class OperationResource extends Resource
         }
     }
 
+    public static function canProcessBackOrder(Operation $record): bool
+    {
+        if ($record->operationType->create_backorder == Enums\CreateBackorder::NEVER) {
+            return false;
+        }
+
+        return $record->moves->sum('requested_qty') > $record->moves->sum('received_qty');
+    }
+
     public static function applyPushRules(Operation $record)
     {
         $rules = [];
@@ -1365,7 +1415,6 @@ class OperationResource extends Resource
             $operation = Operation::create([
                 'state'                   => Enums\OperationState::DRAFT,
                 'origin'                  => $record->name,
-                'parent_id'               => $rule['rule']->id,
                 'operation_type_id'       => $rule['rule']->operation_type_id,
                 'source_location_id'      => $rule['rule']->source_location_id,
                 'destination_location_id' => $rule['rule']->destination_location_id,
