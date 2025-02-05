@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Webkul\Inventory\Database\Factories\MoveFactory;
 use Webkul\Inventory\Enums;
 use Webkul\Partner\Models\Partner;
@@ -162,6 +163,11 @@ class Move extends Model
         return $this->hasMany(MoveLine::class);
     }
 
+    public function moveDestinations(): BelongsToMany
+    {
+        return $this->belongsToMany(Move::class, 'inventories_move_destinations', 'origin_move_id', 'destination_move_id');
+    }
+
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
@@ -170,6 +176,11 @@ class Move extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function shouldBypassReservation(): bool
+    {
+        return $this->sourceLocation->shouldBypassReservation() || ! $this->product->is_storable;
     }
 
     protected static function newFactory(): MoveFactory

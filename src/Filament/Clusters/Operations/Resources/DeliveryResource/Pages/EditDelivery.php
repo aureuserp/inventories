@@ -34,7 +34,7 @@ class EditDelivery extends EditRecord
             ChatterAction::make()
                 ->setResource(static::$resource),
             Actions\Action::make('todo')
-                ->label(__('inventories::filament/clusters/operations/resources/delivery/pages/edit-internal.header-actions.todo.label'))
+                ->label(__('inventories::filament/clusters/operations/resources/delivery/pages/edit-delivery.header-actions.todo.label'))
                 ->requiresConfirmation()
                 ->action(function (Operation $record) {
                     OperationResource::markAsTodo($record);
@@ -43,7 +43,7 @@ class EditDelivery extends EditRecord
                 })
                 ->hidden(fn () => $this->getRecord()->state !== Enums\OperationState::DRAFT),
             Actions\Action::make('check_availability')
-                ->label(__('inventories::filament/clusters/operations/resources/delivery/pages/edit-internal.header-actions.check-availability.label'))
+                ->label(__('inventories::filament/clusters/operations/resources/delivery/pages/edit-delivery.header-actions.check-availability.label'))
                 ->action(function (Operation $record) {
                     OperationResource::checkAvailability($record);
 
@@ -57,7 +57,7 @@ class EditDelivery extends EditRecord
                     return ! $this->getRecord()->moves->contains(fn ($move) => in_array($move->state, [Enums\MoveState::CONFIRMED, Enums\MoveState::PARTIALLY_ASSIGNED]));
                 }),
             Actions\Action::make('validate')
-                ->label(__('inventories::filament/clusters/operations/resources/delivery/pages/edit-internal.header-actions.validate.label'))
+                ->label(__('inventories::filament/clusters/operations/resources/delivery/pages/edit-delivery.header-actions.validate.label'))
                 ->color('gray')
                 ->action(function (Operation $record) {
                     OperationResource::validate($record);
@@ -75,7 +75,7 @@ class EditDelivery extends EditRecord
                 })
                 ->visible(fn () => ! in_array($this->getRecord()->state, [Enums\OperationState::DONE, Enums\OperationState::CANCELED])),
             Actions\Action::make('return')
-                ->label(__('inventories::filament/clusters/operations/resources/delivery/pages/edit-internal.header-actions.return.label'))
+                ->label(__('inventories::filament/clusters/operations/resources/delivery/pages/edit-delivery.header-actions.return.label'))
                 ->color('gray')
                 ->visible(fn () => $this->getRecord()->state == Enums\OperationState::DONE),
             Actions\DeleteAction::make()
@@ -83,8 +83,8 @@ class EditDelivery extends EditRecord
                 ->successNotification(
                     Notification::make()
                         ->success()
-                        ->title(__('inventories::filament/clusters/operations/resources/delivery/pages/edit-internal.header-actions.delete.notification.title'))
-                        ->body(__('inventories::filament/clusters/operations/resources/delivery/pages/edit-internal.header-actions.delete.notification.body')),
+                        ->title(__('inventories::filament/clusters/operations/resources/delivery/pages/edit-delivery.header-actions.delete.notification.title'))
+                        ->body(__('inventories::filament/clusters/operations/resources/delivery/pages/edit-delivery.header-actions.delete.notification.body')),
                 ),
         ];
     }

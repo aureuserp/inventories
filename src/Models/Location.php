@@ -109,6 +109,16 @@ class Location extends Model
             || ($this->parent_id && $this->parent->is_stock_location);
     }
 
+    public function shouldBypassReservation(): bool
+    {
+        return in_array($this->type, [
+            LocationType::SUPPLIER,
+            LocationType::CUSTOMER,
+            LocationType::INVENTORY,
+            LocationType::PRODUCTION,
+        ]) || $this->is_scrap;
+    }
+
     /**
      * Bootstrap any application services.
      */

@@ -416,7 +416,7 @@ class CreateWarehouse extends CreateRecord
         $this->routeIds[] = Rule::create([
             'sort'                     => 1,
             'name'                     => $data['code'].': Vendors → Stock',
-            'route_sequence'           => 9,
+            'route_sort'               => 9,
             'group_propagation_option' => Enums\GroupPropagation::PROPAGATE,
             'action'                   => Enums\RuleAction::PULL,
             'procure_method'           => Enums\ProcureMethod::MAKE_TO_STOCK,
@@ -435,7 +435,7 @@ class CreateWarehouse extends CreateRecord
         $this->routeIds[] = Rule::create([
             'sort'                      => 2,
             'name'                      => $data['code'].': Stock → Customers',
-            'route_sequence'            => 10,
+            'route_sort'                => 10,
             'group_propagation_option'  => Enums\GroupPropagation::PROPAGATE,
             'action'                    => Enums\RuleAction::PULL,
             'procure_method'            => Enums\ProcureMethod::MAKE_TO_STOCK,
@@ -454,7 +454,7 @@ class CreateWarehouse extends CreateRecord
         $this->routeIds[] = Rule::create([
             'sort'                     => 3,
             'name'                     => $data['code'].': Vendors → Customers',
-            'route_sequence'           => 20,
+            'route_sort'               => 20,
             'group_propagation_option' => Enums\GroupPropagation::PROPAGATE,
             'action'                   => Enums\RuleAction::PULL,
             'procure_method'           => Enums\ProcureMethod::MAKE_TO_STOCK,
@@ -474,7 +474,7 @@ class CreateWarehouse extends CreateRecord
         $this->routeIds[] = Rule::create([
             'sort'                     => 4,
             'name'                     => $data['code'].': Input → Output',
-            'route_sequence'           => 20,
+            'route_sort'               => 20,
             'group_propagation_option' => Enums\GroupPropagation::PROPAGATE,
             'action'                   => Enums\RuleAction::PUSH,
             'procure_method'           => Enums\ProcureMethod::MAKE_TO_ORDER,
@@ -494,7 +494,7 @@ class CreateWarehouse extends CreateRecord
         $this->routeIds[] = $data['mto_pull_id'] = Rule::create([
             'sort'                     => 5,
             'name'                     => $data['code'].': Stock → Customers (MTO)',
-            'route_sequence'           => 5,
+            'route_sort'               => 5,
             'group_propagation_option' => Enums\GroupPropagation::PROPAGATE,
             'action'                   => Enums\RuleAction::PULL,
             'procure_method'           => Enums\ProcureMethod::MAKE_TO_ORDER,
@@ -512,7 +512,7 @@ class CreateWarehouse extends CreateRecord
         $this->routeIds[] = Rule::create([
             'sort'                     => 6,
             'name'                     => $data['code'].': Input → Quality Control',
-            'route_sequence'           => 6,
+            'route_sort'               => 6,
             'group_propagation_option' => Enums\GroupPropagation::PROPAGATE,
             'action'                   => Enums\RuleAction::PUSH,
             'procure_method'           => Enums\ProcureMethod::MAKE_TO_ORDER,
@@ -531,7 +531,7 @@ class CreateWarehouse extends CreateRecord
         $this->routeIds[] = Rule::create([
             'sort'                     => 7,
             'name'                     => $data['code'].': Quality Control → Stock',
-            'route_sequence'           => 7,
+            'route_sort'               => 7,
             'group_propagation_option' => Enums\GroupPropagation::PROPAGATE,
             'action'                   => Enums\RuleAction::PUSH,
             'procure_method'           => Enums\ProcureMethod::MAKE_TO_ORDER,
@@ -551,7 +551,7 @@ class CreateWarehouse extends CreateRecord
         $this->routeIds[] = Rule::create([
             'sort'                     => 8,
             'name'                     => $data['code'].': Stock → Customers',
-            'route_sequence'           => 8,
+            'route_sort'               => 8,
             'group_propagation_option' => Enums\GroupPropagation::PROPAGATE,
             'action'                   => Enums\RuleAction::PULL,
             'procure_method'           => Enums\ProcureMethod::MAKE_TO_STOCK,
@@ -570,7 +570,7 @@ class CreateWarehouse extends CreateRecord
         $this->routeIds[] = Rule::create([
             'sort'                     => 9,
             'name'                     => $data['code'].': Packing Zone → Output',
-            'route_sequence'           => 9,
+            'route_sort'               => 9,
             'group_propagation_option' => Enums\GroupPropagation::PROPAGATE,
             'action'                   => Enums\RuleAction::PUSH,
             'procure_method'           => Enums\ProcureMethod::MAKE_TO_ORDER,
@@ -589,7 +589,7 @@ class CreateWarehouse extends CreateRecord
         $this->routeIds[] = Rule::create([
             'sort'                     => 10,
             'name'                     => $data['code'].': Output → Customers',
-            'route_sequence'           => 10,
+            'route_sort'               => 10,
             'group_propagation_option' => Enums\GroupPropagation::PROPAGATE,
             'action'                   => Enums\RuleAction::PUSH,
             'procure_method'           => Enums\ProcureMethod::MAKE_TO_ORDER,
@@ -608,7 +608,7 @@ class CreateWarehouse extends CreateRecord
         $this->routeIds[] = Rule::create([
             'sort'                     => 11,
             'name'                     => $data['code'].': Input → Stock',
-            'route_sequence'           => 11,
+            'route_sort'               => 11,
             'group_propagation_option' => Enums\GroupPropagation::PROPAGATE,
             'action'                   => Enums\RuleAction::PUSH,
             'procure_method'           => Enums\ProcureMethod::MAKE_TO_ORDER,
@@ -627,7 +627,7 @@ class CreateWarehouse extends CreateRecord
         $this->routeIds[] = Rule::create([
             'sort'                     => 12,
             'name'                     => $data['code'].': False → Customers',
-            'route_sequence'           => 12,
+            'route_sort'               => 12,
             'group_propagation_option' => Enums\GroupPropagation::PROPAGATE,
             'action'                   => Enums\RuleAction::BUY,
             'procure_method'           => Enums\ProcureMethod::MAKE_TO_STOCK,

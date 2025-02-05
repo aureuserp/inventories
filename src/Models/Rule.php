@@ -32,7 +32,7 @@ class Rule extends Model
     protected $fillable = [
         'sort',
         'name',
-        'route_sequence',
+        'route_sort',
         'delay',
         'group_propagation_option',
         'action',

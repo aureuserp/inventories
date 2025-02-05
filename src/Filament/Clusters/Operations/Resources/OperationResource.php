@@ -23,6 +23,7 @@ use Webkul\Inventory\Filament\Clusters\Products\Resources\LotResource;
 use Webkul\Inventory\Filament\Clusters\Products\Resources\PackageResource;
 use Webkul\Inventory\Models\Rule;
 use Webkul\Inventory\Models\Move;
+use Webkul\Inventory\Models\Location;
 use Webkul\Inventory\Models\Operation;
 use Webkul\Inventory\Models\OperationType;
 use Webkul\Inventory\Models\Product;
@@ -57,8 +58,6 @@ class OperationResource extends Resource
                     ->disabled(),
                 Forms\Components\Section::make(__('inventories::filament/clusters/operations/resources/operation.form.sections.general.title'))
                     ->schema([
-                        Forms\Components\Hidden::make('move_type')
-                            ->default(Enums\MoveType::DIRECT),
                         Forms\Components\Select::make('partner_id')
                             ->label(__('inventories::filament/clusters/operations/resources/operation.form.sections.general.fields.receive-from'))
                             ->relationship('partner', 'name')
@@ -142,6 +141,7 @@ class OperationResource extends Resource
                                 Forms\Components\Select::make('move_type')
                                     ->label(__('inventories::filament/clusters/operations/resources/operation.form.tabs.additional.fields.shipping-policy'))
                                     ->options(Enums\MoveType::class)
+                                    ->default(Enums\MoveType::DIRECT)
                                     ->hintIcon('heroicon-m-question-mark-circle', tooltip: __('inventories::filament/clusters/operations/resources/operation.form.tabs.additional.fields.shipping-policy-hint-tooltip'))
                                     ->visible(fn (Forms\Get $get): bool => OperationType::find($get('operation_type_id'))?->type != Enums\OperationType::INCOMING)
                                     ->disabled(fn ($record): bool => in_array($record?->state, [Enums\OperationState::DONE, Enums\OperationState::CANCELED])),
@@ -621,6 +621,7 @@ class OperationResource extends Resource
                 $data = array_merge($data, [
                     'creator_id'              => Auth::id(),
                     'company_id'              => Auth::user()->default_company_id,
+                    'warehouse_id'            => $record->destinationLocation->warehouse_id,
                     'state'                   => $record->state->value,
                     'name'                    => $product->name,
                     'procure_method'          => Enums\ProcureMethod::MAKE_TO_STOCK,
@@ -947,15 +948,7 @@ class OperationResource extends Resource
             return;
         }
 
-        foreach ($record->moves as $move) {
-            $move->fill([
-                'received_qty' => $move->requested_qty,
-            ]);
-
-            static::updateOrCreateMoveLines($move, $move->requested_qty);
-        }
-
-        static::updateOperationState($record);
+        static::checkAvailability($record);
 
         Notification::make()
             ->success()
@@ -976,10 +969,6 @@ class OperationResource extends Resource
 
     public static function validate(Operation $record)
     {
-        static::checkAndCreateNextOperation($record);
-
-        return;
-
         static::checkAvailability($record);
 
         foreach ($record->moves as $move) {
@@ -1146,6 +1135,8 @@ class OperationResource extends Resource
         }
 
         static::updateOperationState($record);
+
+        static::applyPushRules($record);
     }
 
     public static function cancel(Operation $record)
@@ -1179,6 +1170,7 @@ class OperationResource extends Resource
         if (! $isSupplierSource) {
             $productQuantities = ProductQuantity::with(['location', 'lot', 'package'])
                 ->where('product_id', $record->product_id)
+                //Todo: Fix this to handle nesting
                 ->whereHas('location', function (Builder $query) use ($record) {
                     $query->where('id', $record->source_location_id)
                         ->orWhere('parent_id', $record->source_location_id);
@@ -1346,20 +1338,155 @@ class OperationResource extends Resource
         }
     }
 
-    public static function checkAndCreateNextOperation(Operation $record)
+    public static function applyPushRules(Operation $record)
     {
-        $locationIds = explode('/', $record->destinationLocation->parent_path);
-
-        $rules = Rule::whereIn('source_location_id', $locationIds)
-            ->whereIn('action', [Enums\RuleAction::PUSH, Enums\RuleAction::PULL_PUSH])
-            ->where('warehouse_id', $record->destinationLocation->warehouse_id)
-            ->get();
-
-        dd($rules);
-
+        $rules = [];
 
         foreach ($record->moves as $move) {
+            $rule = static::getPushRule($move);
 
+            if (! $rule) {
+                continue;
+            }
+
+            if (! isset($rules[$rule->id])) {
+                $rules[$rule->id] = [
+                    'rule' => $rule,
+                    'moves' => [static::runPushRule($rule, $move)],
+                ];
+
+                continue;
+            }
+
+            $rules[$rule->id]['moves'][] = static::runPushRule($rule, $move);
         }
-    }    
+
+        foreach ($rules as $rule) {
+            $operation = Operation::create([
+                'state'                   => Enums\OperationState::DRAFT,
+                'origin'                  => $record->name,
+                'parent_id'               => $rule['rule']->id,
+                'operation_type_id'       => $rule['rule']->operation_type_id,
+                'source_location_id'      => $rule['rule']->source_location_id,
+                'destination_location_id' => $rule['rule']->destination_location_id,
+                'scheduled_at'            => now()->addDays($rule['rule']->delay),
+                'company_id'              => $rule['rule']->company_id,
+                'user_id'                 => Auth::id(),
+                'creator_id'              => Auth::id(),
+            ]);
+
+            foreach ($rule['moves'] as $move) {
+                $move->update([
+                    'operation_id' => $operation->id,
+                    'reference'    => $operation->name,
+                ]);
+            }
+
+            static::checkAvailability($operation->refresh());
+        }
+    }
+
+    public static function getPushRule(Move $move, array $filters = [])
+    {
+        $foundRule = null;
+
+        $location = $move->destinationLocation;
+
+        $filters['action'] = [Enums\RuleAction::PUSH, Enums\RuleAction::PULL_PUSH];
+
+        while (! $foundRule && $location) {
+            $filters['source_location_id'] = $location->id;
+
+            $foundRule = static::searchPushRule(
+                $move->productPackaging,
+                $move->product,
+                $move->warehouse,
+                $filters
+            );
+
+            $location = $location->parent;
+        }
+
+        return $foundRule;
+    }
+
+    public static function runPushRule(Rule $rule, Move $move)
+    {
+        if ($rule->auto != Enums\RuleAuto::MANUAL) {
+            return;
+        }
+
+        $newMove = $move->replicate()->fill([
+            'state' => Enums\MoveState::DRAFT,
+            'reference' => null,
+            'requested_qty' => $move->received_qty,
+            'requested_uom_qty' => $move->received_qty,
+            'origin' => $move->origin ?? $move->operation->name ?? '/',
+            'operation_id' => null,
+            'source_location_id' => $move->destination_location_id,
+            'destination_location_id' => $rule->destination_location_id,
+            'final_location_id' => $move->final_location_id,
+            'rule_id' => $rule->id,
+            'scheduled_at' => $move->scheduled_at->addDays($rule->delay),
+            'company_id' => $rule->company_id,
+            'operation_type_id' => $rule->operation_type_id,
+            'propagate_cancel' => $rule->propagate_cancel,
+            'warehouse_id' => $rule->warehouse_id,
+            'procure_method' => Enums\ProcureMethod::MAKE_TO_ORDER,
+        ]);
+
+        $newMove->save();
+
+        if ($newMove->shouldBypassReservation()) {
+            $newMove->update([
+                'procure_method' => Enums\ProcureMethod::MAKE_TO_STOCK,
+            ]);
+        }
+
+        if (! $newMove->sourceLocation->shouldBypassReservation()) {
+            $move->moveDestinations()->attach($newMove->id);
+        }
+
+        return $newMove;
+    }
+
+    public static function searchPushRule($productPackaging, $product, $warehouse, array $filters)
+    {
+        if ($warehouse) {
+            $filters['warehouse_id'] = $warehouse->id;
+        }
+
+        $routeSources = [
+            [$productPackaging, 'routes'],
+            [$product, 'routes'],
+            [$product?->category, 'routes'],
+            [$warehouse, 'routes']
+        ];
+
+        foreach ($routeSources as [$source, $relationName]) {
+            if (! $source || ! $source->{$relationName}) {
+                continue;
+            }
+
+            $routeIds = $source->{$relationName}->pluck('id');
+            
+            if ($routeIds->isEmpty()) {
+                continue;
+            }
+
+            $foundRule = Rule::whereIn('route_id', $routeIds)
+                ->where($filters)
+                ->orderBy('route_sort', 'asc')
+                ->orderBy('sort', 'asc')
+                ->first();
+
+            if (! $foundRule) {
+                continue;
+            }
+
+            return $foundRule;
+        }
+
+        return null;
+    }
 }

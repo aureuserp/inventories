@@ -45,6 +45,7 @@ class InventoryServiceProvider extends PackageServiceProvider
                 '2025_01_14_133250_create_inventories_scraps_table',
                 '2025_01_14_133255_create_inventories_scrap_tags_table',
                 '2025_01_14_133260_create_inventories_moves_table',
+                '2025_01_14_133266_create_inventories_move_destinations_table',
                 '2025_01_15_095753_create_inventories_move_lines_table',
             ])
             ->runsMigrations()

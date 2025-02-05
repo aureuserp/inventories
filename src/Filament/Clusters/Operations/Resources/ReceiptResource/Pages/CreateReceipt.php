@@ -51,6 +51,8 @@ class CreateReceipt extends CreateRecord
     {
         $operationType = OperationType::find($data['operation_type_id']);
 
+        $data['company_id'] ??= $operationType->destinationLocation->company_id;
+
         $data['source_location_id'] ??= $operationType->source_location_id;
 
         $data['destination_location_id'] ??= $operationType->destination_location_id;

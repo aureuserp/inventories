@@ -200,6 +200,7 @@ class QuantityResource extends Resource
                 Tables\Columns\TextColumn::make('inventory_diff_quantity')
                     ->label(__('inventories::filament/clusters/operations/resources/quantity.table.columns.difference'))
                     ->sortable()
+                    ->formatStateUsing(fn ($record) => $record->inventory_quantity_set ? $record->inventory_diff_quantity : '')
                     ->color(fn ($record) => $record->inventory_diff_quantity > 0 ? 'success' : 'danger'),
                 Tables\Columns\TextColumn::make('scheduled_at')
                     ->label(__('inventories::filament/clusters/operations/resources/quantity.table.columns.scheduled-at'))
