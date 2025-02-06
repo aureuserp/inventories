@@ -46,4 +46,9 @@ class EditReceipt extends EditRecord
                 ),
         ];
     }
+
+    public function updateForm(): void
+    {
+        $this->fillForm();
+    }
 }

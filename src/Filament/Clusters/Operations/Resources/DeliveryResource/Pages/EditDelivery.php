@@ -47,4 +47,9 @@ class EditDelivery extends EditRecord
                 ),
         ];
     }
+
+    public function updateForm(): void
+    {
+        $this->fillForm();
+    }
 }

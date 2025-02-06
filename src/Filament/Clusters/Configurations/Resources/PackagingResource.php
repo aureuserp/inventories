@@ -2,6 +2,7 @@
 
 namespace Webkul\Inventory\Filament\Clusters\Configurations\Resources;
 
+use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Infolists;
@@ -173,6 +174,20 @@ class PackagingResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\BulkAction::make('print')
+                        ->label(__('inventories::filament/clusters/configurations/resources/location.table.bulk-actions.print.label'))
+                        ->icon('heroicon-o-printer')
+                        ->action(function ($records) {
+                            $pdf = PDF::loadView('inventories::filament.clusters.configurations.packagings.actions.print', [
+                                'records' => $records,
+                            ]);
+
+                            $pdf->setPaper('a4', 'portrait');
+
+                            return response()->streamDownload(function () use ($pdf) {
+                                echo $pdf->output();
+                            }, 'Packaging-Barcode.pdf');
+                        }),
                     Tables\Actions\DeleteBulkAction::make()
                         ->successNotification(
                             Notification::make()

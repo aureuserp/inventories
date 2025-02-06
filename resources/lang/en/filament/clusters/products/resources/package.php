@@ -55,6 +55,14 @@ return [
         ],
 
         'bulk-actions' => [
+            'print-without-content' => [
+                'label' => 'Print Barcode',
+            ],
+
+            'print-with-content' => [
+                'label' => 'Print Barcode With Content',
+            ],
+
             'delete' => [
                 'notification' => [
                     'title' => 'Products deleted',

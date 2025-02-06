@@ -3,6 +3,7 @@
 namespace Webkul\Inventory\Filament\Clusters\Products\Resources;
 
 use Filament\Forms;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Forms\Form;
 use Filament\Infolists;
 use Filament\Infolists\Infolist;
@@ -149,13 +150,43 @@ class PackageResource extends Resource
                 ]),
             ])
             ->bulkActions([
-                Tables\Actions\DeleteBulkAction::make()
-                    ->successNotification(
-                        Notification::make()
-                            ->success()
-                            ->title(__('inventories::filament/clusters/products/resources/package.table.bulk-actions.delete.notification.title'))
-                            ->body(__('inventories::filament/clusters/products/resources/package.table.bulk-actions.delete.notification.body')),
-                    ),
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\BulkAction::make('print-without-content')
+                        ->label(__('inventories::filament/clusters/products/resources/package.table.bulk-actions.print-without-content.label'))
+                        ->icon('heroicon-o-printer')
+                        ->action(function ($records) {
+                            $pdf = PDF::loadView('inventories::filament.clusters.products.packages.actions.print-without-content', [
+                                'records' => $records,
+                            ]);
+
+                            $pdf->setPaper('a4', 'portrait');
+
+                            return response()->streamDownload(function () use ($pdf) {
+                                echo $pdf->output();
+                            }, 'Package-Barcode.pdf');
+                        }),
+                    Tables\Actions\BulkAction::make('print-with-content')
+                        ->label(__('inventories::filament/clusters/products/resources/package.table.bulk-actions.print-with-content.label'))
+                        ->icon('heroicon-o-printer')
+                        ->action(function ($records) {
+                            $pdf = PDF::loadView('inventories::filament.clusters.products.packages.actions.print-with-content', [
+                                'records' => $records,
+                            ]);
+
+                            $pdf->setPaper('a4', 'portrait');
+
+                            return response()->streamDownload(function () use ($pdf) {
+                                echo $pdf->output();
+                            }, 'Package-Barcode.pdf');
+                        }),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->successNotification(
+                            Notification::make()
+                                ->success()
+                                ->title(__('inventories::filament/clusters/products/resources/package.table.bulk-actions.delete.notification.title'))
+                                ->body(__('inventories::filament/clusters/products/resources/package.table.bulk-actions.delete.notification.body')),
+                        ),
+                ]),
             ]);
     }
 

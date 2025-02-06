@@ -133,7 +133,7 @@ class Move extends Model
         return $this->belongsTo(OperationType::class);
     }
 
-    public function originReturnMove(): BelongsTo
+    public function originReturnedMove(): BelongsTo
     {
         return $this->belongsTo(self::class);
     }

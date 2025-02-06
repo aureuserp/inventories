@@ -63,6 +63,18 @@ class ReceiptResource extends Resource
                 ]),
             ])
             ->bulkActions([
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\BulkAction::make('delete')
+                        ->requiresConfirmation()
+                        ->action(fn ($records) => $records->each->delete()),
+                    Tables\Actions\BulkAction::make('forceDelete')
+                        ->requiresConfirmation()
+                        ->action(fn ($records) => $records->each->forceDelete()),
+                ])
+                ->icon('heroicon-o-printer')
+                ->label('Print')
+                ->color('gray')
+                ->button(),
                 Tables\Actions\DeleteBulkAction::make()
                     ->successNotification(
                         Notification::make()

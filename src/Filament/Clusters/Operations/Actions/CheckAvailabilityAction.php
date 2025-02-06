@@ -6,6 +6,7 @@ use Filament\Actions\Action;
 use Webkul\Inventory\Enums;
 use Webkul\Inventory\Filament\Clusters\Operations\Resources\OperationResource;
 use Webkul\Inventory\Models\Operation;
+use Livewire\Component;
 
 class CheckAvailabilityAction extends Action
 {
@@ -20,16 +21,14 @@ class CheckAvailabilityAction extends Action
 
         $this
             ->label(__('inventories::filament/clusters/operations/actions/check-availability.label'))
-            ->action(function (Operation $record): void {
+            ->action(function (Operation $record, Component $livewire): void {
                 foreach ($record->moves as $move) {
                     OperationResource::updateOrCreateMoveLines($move);
                 }
 
                 OperationResource::updateOperationState($record);
 
-                $this->fillForm([
-                    'record' => $record,
-                ]);
+                $livewire->updateForm();
             })
             ->hidden(function () {
                 if (! in_array($this->getRecord()->state, [Enums\OperationState::CONFIRMED, Enums\OperationState::ASSIGNED])) {

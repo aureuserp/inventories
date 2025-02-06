@@ -2,6 +2,10 @@
 
 return [
     'header-actions' => [
+        'print' => [
+            'label' => 'Print',
+        ],
+
         'delete' => [
             'notification' => [
                 'title' => 'Lot Deleted',

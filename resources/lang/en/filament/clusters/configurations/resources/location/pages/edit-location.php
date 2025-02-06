@@ -7,6 +7,10 @@ return [
     ],
 
     'header-actions' => [
+        'print' => [
+            'label' => 'Print',
+        ],
+
         'delete' => [
             'notification' => [
                 'title' => 'Location deleted',

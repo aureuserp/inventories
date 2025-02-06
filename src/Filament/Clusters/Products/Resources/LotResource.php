@@ -4,6 +4,7 @@ namespace Webkul\Inventory\Filament\Clusters\Products\Resources;
 
 use Filament\Forms;
 use Filament\Forms\Form;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Infolists;
 use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
@@ -179,13 +180,29 @@ class LotResource extends Resource
                 ]),
             ])
             ->bulkActions([
-                Tables\Actions\DeleteBulkAction::make()
-                    ->successNotification(
-                        Notification::make()
-                            ->success()
-                            ->title(__('inventories::filament/clusters/products/resources/lot.table.bulk-actions.delete.notification.title'))
-                            ->body(__('inventories::filament/clusters/products/resources/lot.table.bulk-actions.delete.notification.body')),
-                    ),
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\BulkAction::make('print')
+                        ->label(__('inventories::filament/clusters/products/resources/lot.table.bulk-actions.print.label'))
+                        ->icon('heroicon-o-printer')
+                        ->action(function ($records) {
+                            $pdf = PDF::loadView('inventories::filament.clusters.products.lots.actions.print', [
+                                'records' => $records,
+                            ]);
+
+                            $pdf->setPaper('a4', 'portrait');
+
+                            return response()->streamDownload(function () use ($pdf) {
+                                echo $pdf->output();
+                            }, 'Lot-Barcode.pdf');
+                        }),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->successNotification(
+                            Notification::make()
+                                ->success()
+                                ->title(__('inventories::filament/clusters/products/resources/lot.table.bulk-actions.delete.notification.title'))
+                                ->body(__('inventories::filament/clusters/products/resources/lot.table.bulk-actions.delete.notification.body')),
+                        ),
+                ]),
             ]);
     }
 

@@ -3,6 +3,7 @@
 namespace Webkul\Inventory\Filament\Clusters\Configurations\Resources;
 
 use Filament\Forms;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Forms\Form;
 use Filament\Infolists;
 use Filament\Infolists\Infolist;
@@ -262,6 +263,20 @@ class LocationResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\BulkAction::make('print')
+                        ->label(__('inventories::filament/clusters/configurations/resources/location.table.bulk-actions.print.label'))
+                        ->icon('heroicon-o-printer')
+                        ->action(function ($records) {
+                            $pdf = PDF::loadView('inventories::filament.clusters.configurations.locations.actions.print', [
+                                'records' => $records,
+                            ]);
+
+                            $pdf->setPaper('a4', 'portrait');
+
+                            return response()->streamDownload(function () use ($pdf) {
+                                echo $pdf->output();
+                            }, 'Location-Barcode.pdf');
+                        }),
                     Tables\Actions\RestoreBulkAction::make()
                         ->successNotification(
                             Notification::make()

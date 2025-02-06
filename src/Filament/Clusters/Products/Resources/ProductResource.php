@@ -2,6 +2,7 @@
 
 namespace Webkul\Inventory\Filament\Clusters\Products\Resources;
 
+use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Infolists;
@@ -450,6 +451,46 @@ class ProductResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\BulkAction::make('print')
+                        ->label(__('inventories::filament/clusters/products/resources/product.table.bulk-actions.print.label'))
+                        ->icon('heroicon-o-printer')
+                        ->form([
+                            Forms\Components\TextInput::make('quantity')
+                                ->label(__('inventories::filament/clusters/products/resources/product.table.bulk-actions.print.form.fields.quantity'))
+                                ->required()
+                                ->numeric()
+                                ->minValue(1)
+                                ->maxValue(100),
+                            Forms\Components\Radio::make('format')
+                                ->label(__('inventories::filament/clusters/products/resources/product.table.bulk-actions.print.form.fields.format'))
+                                ->options([
+                                    'dymo'       => __('inventories::filament/clusters/products/resources/product.table.bulk-actions.print.form.fields.format-options.dymo'),
+                                    '2x7_price'  => __('inventories::filament/clusters/products/resources/product.table.bulk-actions.print.form.fields.format-options.2x7_price'),
+                                    '4x7_price'  => __('inventories::filament/clusters/products/resources/product.table.bulk-actions.print.form.fields.format-options.4x7_price'),
+                                    '4x12'       => __('inventories::filament/clusters/products/resources/product.table.bulk-actions.print.form.fields.format-options.4x12'),
+                                    '4x12_price' => __('inventories::filament/clusters/products/resources/product.table.bulk-actions.print.form.fields.format-options.4x12_price'),
+                                ])
+                                ->default('2x7_price')
+                                ->required(),
+                        ])
+                        ->action(function (array $data, $records) {
+                            $pdf = PDF::loadView('inventories::filament.clusters.products.products.actions.print', [
+                                'records' => $records,
+                                'quantity' => $data['quantity'],
+                                'format'   => $data['format'],
+                            ]);
+
+                            $paperSize = match ($data['format']) {
+                                'dymo'  => [0, 0, 252.2, 144],
+                                default => 'a4',
+                            };
+
+                            $pdf->setPaper($paperSize, 'portrait');
+
+                            return response()->streamDownload(function () use ($pdf) {
+                                echo $pdf->output();
+                            }, 'Product-Barcode.pdf');
+                        }),
                     Tables\Actions\RestoreBulkAction::make()
                         ->successNotification(
                             Notification::make()

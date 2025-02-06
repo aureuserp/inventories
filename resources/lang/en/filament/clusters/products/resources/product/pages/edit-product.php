@@ -19,7 +19,7 @@ return [
             ],
         ],
 
-        'print-labels' => [
+        'print' => [
             'label' => 'Print Labels',
 
             'form' => [
@@ -36,7 +36,6 @@ return [
                     ],
                 ],
             ],
-
         ],
 
         'delete' => [

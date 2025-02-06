@@ -1,4 +1,3 @@
-<!-- resources/views/pdf/product-labels.blade.php -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -25,24 +24,18 @@
             background: white;
             overflow: hidden;
         }
-        /* Different cell sizes based on format */
         .format-4x7_price td,
         .format-4x12 td,
         .format-4x12_price td {
-            width: 22%; /* Slightly less than 25% to account for spacing */
+            width: 22%;
         }
         .format-2x7_price td {
-            width: 47%; /* Slightly less than 50% to account for spacing */
+            width: 47%;
         }
-        .product-name {
+        .record-name {
             font-size: 12px;
             font-weight: bold;
             text-transform: uppercase;
-            margin-bottom: 3px;
-            text-align: center;
-        }
-        .product-name-small {
-            font-size: 10px;
             margin-bottom: 3px;
             text-align: center;
         }
@@ -51,11 +44,15 @@
             margin: 5px 0;
         }
         .barcode img {
-            width: 100% !important; /* Override inline styles from barcode generator */
-            height: 30px !important; /* Smaller height for 4-column layout */
+            width: 100% !important;
+            height: 30px !important;
             max-width: 100%;
         }
-        /* Larger barcode for 2-column layout */
+        .barcode-name {
+            font-size: 10px;
+            margin-bottom: 3px;
+            text-align: center;
+        }
         .format-2x7_price .barcode img {
             height: 40px !important;
         }
@@ -69,7 +66,6 @@
             content: '$ ';
         }
         
-        /* Specific spacing for Dymo format */
         .format-dymo table {
             border-spacing: 0;
         }
@@ -94,26 +90,40 @@
         
         $showPrice = str_contains($format, 'price');
         
-        // Adjust barcode scale based on format
+        $flatRecords = [];
+
+        foreach ($records as $record) {
+            for ($i = 0; $i < $quantity; $i++) {
+                $flatRecords[] = $record;
+            }
+        }
+        
+        $totalProducts = count($flatRecords);
+        
         $barcodeScale = $columns == 4 ? 1 : 2;
     @endphp
 
     <table>
-        @for ($i = 0; $i < $quantity; $i += $columns)
+        @for ($i = 0; $i < $totalProducts; $i += $columns)
             <tr>
-                @for ($j = 0; $j < $columns && ($i + $j) < $quantity; $j++)
-                    <td>
-                        <div class="product-name">{{ $product->name }}</div>
-                        <div class="product-name-small">{{ $product->name }}</div>
+                @for ($j = 0; $j < $columns && ($i + $j) < $totalProducts; $j++)
+                    @php
+                        $currentRecord = $flatRecords[$i + $j];
+                    @endphp
 
-                        @if ($product->barcode)
+                    <td>
+                        <div class="record-name">{{ $currentRecord->name }}</div>
+
+                        @if ($currentRecord->barcode)
                             <div class="barcode">
-                                {!! DNS1D::getBarcodeHTML($product->barcode, 'C128', $barcodeScale, 30) !!}
+                                {!! DNS1D::getBarcodeHTML($currentRecord->barcode, 'C128', $barcodeScale, 30) !!}
                             </div>
+
+                            <div class="barcode-name">{{ $currentRecord->barcode }}</div>
                         @endif
 
                         @if ($showPrice)
-                            <div class="price">{{ number_format($product->price, 2) }}</div>
+                            <div class="price">{{ number_format($currentRecord->price, 2) }}</div>
                         @endif
                     </td>
                 @endfor

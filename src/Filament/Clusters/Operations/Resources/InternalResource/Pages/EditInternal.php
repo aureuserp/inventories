@@ -47,4 +47,9 @@ class EditInternal extends EditRecord
                 ),
         ];
     }
+
+    public function updateForm(): void
+    {
+        $this->fillForm();
+    }
 }

@@ -366,10 +366,10 @@ class OperationResource extends Resource
                 fn (Tables\Actions\Action $action) => $action
                     ->slideOver(),
             )
-            ->filtersFormColumns(2)
-            ->checkIfRecordIsSelectableUsing(
-                fn (Model $record): bool => static::can('delete', $record) && $record->state !== Enums\OperationState::DONE,
-            );
+            ->filtersFormColumns(2);
+            // ->checkIfRecordIsSelectableUsing(
+            //     fn (Model $record): bool => static::can('delete', $record) && $record->state !== Enums\OperationState::DONE,
+            // );
     }
 
     public static function infolist(Infolist $infolist): Infolist
@@ -1098,7 +1098,7 @@ class OperationResource extends Resource
         return $record;
     }
 
-    private static function updateOperationState(Operation $record)
+    public static function updateOperationState(Operation $record)
     {
         $record->refresh();
 

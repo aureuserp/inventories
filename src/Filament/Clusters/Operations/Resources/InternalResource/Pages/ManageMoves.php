@@ -42,7 +42,7 @@ class ManageMoves extends ManageRelatedRecords
                     ->sortable()
                     ->placeholder('—')
                     ->visible(fn (TraceabilitySettings $settings) => $settings->enable_lots_serial_numbers && $this->getOwnerRecord()->tracking != Enums\ProductTracking::QTY),
-                Tables\Columns\TextColumn::make('package.name')
+                Tables\Columns\TextColumn::make('resultPackage.name')
                     ->label(__('inventories::filament/clusters/operations/resources/internal/pages/manage-moves.table.columns.package'))
                     ->sortable()
                     ->placeholder('—')

@@ -7,6 +7,7 @@ use Filament\Notifications\Notification;
 use Webkul\Inventory\Enums;
 use Webkul\Inventory\Filament\Clusters\Operations\Resources\OperationResource;
 use Webkul\Inventory\Models\Operation;
+use Livewire\Component;
 
 class TodoAction extends Action
 {
@@ -21,7 +22,7 @@ class TodoAction extends Action
 
         $this
             ->label(__('inventories::filament/clusters/operations/actions/todo.label'))
-            ->action(function (Operation $record): void {
+            ->action(function (Operation $record, Component $livewire): void {
                 if (! $record->moves->count()) {
                     Notification::make()
                         ->success()
@@ -39,9 +40,7 @@ class TodoAction extends Action
 
                 OperationResource::updateOperationState($record);
 
-                $this->fillForm([
-                    'record' => $record,
-                ]);
+                $livewire->updateForm();
 
                 Notification::make()
                     ->success()

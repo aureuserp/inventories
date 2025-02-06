@@ -2,11 +2,14 @@
 
 namespace Webkul\Inventory\Filament\Clusters\Products\Resources\ProductResource\Pages;
 
+use Filament\Forms;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Webkul\Chatter\Filament\Actions\ChatterAction;
 use Webkul\Inventory\Filament\Clusters\Products\Resources\ProductResource;
+use Webkul\Inventory\Models\Product;
 
 class ViewProduct extends ViewRecord
 {
@@ -17,6 +20,47 @@ class ViewProduct extends ViewRecord
         return [
             ChatterAction::make()
                 ->setResource(static::$resource),
+            Actions\Action::make('print')
+                ->label(__('inventories::filament/clusters/products/resources/product/pages/edit-product.header-actions.print.label'))
+                ->color('gray')
+                ->icon('heroicon-o-printer')
+                ->form([
+                    Forms\Components\TextInput::make('quantity')
+                        ->label(__('inventories::filament/clusters/products/resources/product/pages/edit-product.header-actions.print.form.fields.quantity'))
+                        ->required()
+                        ->numeric()
+                        ->minValue(1)
+                        ->maxValue(100),
+                    Forms\Components\Radio::make('format')
+                        ->label(__('inventories::filament/clusters/products/resources/product/pages/edit-product.header-actions.print.form.fields.format'))
+                        ->options([
+                            'dymo'       => __('inventories::filament/clusters/products/resources/product/pages/edit-product.header-actions.print.form.fields.format-options.dymo'),
+                            '2x7_price'  => __('inventories::filament/clusters/products/resources/product/pages/edit-product.header-actions.print.form.fields.format-options.2x7_price'),
+                            '4x7_price'  => __('inventories::filament/clusters/products/resources/product/pages/edit-product.header-actions.print.form.fields.format-options.4x7_price'),
+                            '4x12'       => __('inventories::filament/clusters/products/resources/product/pages/edit-product.header-actions.print.form.fields.format-options.4x12'),
+                            '4x12_price' => __('inventories::filament/clusters/products/resources/product/pages/edit-product.header-actions.print.form.fields.format-options.4x12_price'),
+                        ])
+                        ->default('2x7_price')
+                        ->required(),
+                ])
+                ->action(function (array $data, $record) {
+                    $pdf = PDF::loadView('inventories::filament.clusters.products.products.actions.print', [
+                        'records'  => collect([$record]),
+                        'quantity' => $data['quantity'],
+                        'format'   => $data['format'],
+                    ]);
+
+                    $paperSize = match ($data['format']) {
+                        'dymo'  => [0, 0, 252.2, 144],
+                        default => 'a4',
+                    };
+
+                    $pdf->setPaper($paperSize, 'portrait');
+
+                    return response()->streamDownload(function () use ($pdf) {
+                        echo $pdf->output();
+                    }, 'Product-'.$record->name.'.pdf');
+                }),
             Actions\DeleteAction::make()
                 ->successNotification(
                     Notification::make()

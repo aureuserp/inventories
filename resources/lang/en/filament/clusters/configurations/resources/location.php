@@ -106,6 +106,10 @@ return [
         ],
 
         'bulk-actions' => [
+            'print' => [
+                'label' => 'Print Barcode',
+            ],
+
             'restore' => [
                 'notification' => [
                     'title' => 'Locations restored',

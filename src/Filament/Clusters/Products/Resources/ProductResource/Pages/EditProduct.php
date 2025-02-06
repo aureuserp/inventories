@@ -117,31 +117,32 @@ class EditProduct extends EditRecord
 
                     ProductResource::createMove($productQuantity, $currentQuantity, $sourceLocationId, $destinationLocationId);
                 }),
-            Actions\Action::make('printLabels')
-                ->label(__('inventories::filament/clusters/products/resources/product/pages/edit-product.header-actions.print-labels.label'))
+            Actions\Action::make('print')
+                ->label(__('inventories::filament/clusters/products/resources/product/pages/edit-product.header-actions.print.label'))
                 ->color('gray')
+                ->icon('heroicon-o-printer')
                 ->form([
                     Forms\Components\TextInput::make('quantity')
-                        ->label(__('inventories::filament/clusters/products/resources/product/pages/edit-product.header-actions.print-labels.form.fields.quantity'))
+                        ->label(__('inventories::filament/clusters/products/resources/product/pages/edit-product.header-actions.print.form.fields.quantity'))
                         ->required()
                         ->numeric()
                         ->minValue(1)
                         ->maxValue(100),
                     Forms\Components\Radio::make('format')
-                        ->label(__('inventories::filament/clusters/products/resources/product/pages/edit-product.header-actions.print-labels.form.fields.format'))
+                        ->label(__('inventories::filament/clusters/products/resources/product/pages/edit-product.header-actions.print.form.fields.format'))
                         ->options([
-                            'dymo'       => __('inventories::filament/clusters/products/resources/product/pages/edit-product.header-actions.print-labels.form.fields.format-options.dymo'),
-                            '2x7_price'  => __('inventories::filament/clusters/products/resources/product/pages/edit-product.header-actions.print-labels.form.fields.format-options.2x7_price'),
-                            '4x7_price'  => __('inventories::filament/clusters/products/resources/product/pages/edit-product.header-actions.print-labels.form.fields.format-options.4x7_price'),
-                            '4x12'       => __('inventories::filament/clusters/products/resources/product/pages/edit-product.header-actions.print-labels.form.fields.format-options.4x12'),
-                            '4x12_price' => __('inventories::filament/clusters/products/resources/product/pages/edit-product.header-actions.print-labels.form.fields.format-options.4x12_price'),
+                            'dymo'       => __('inventories::filament/clusters/products/resources/product/pages/edit-product.header-actions.print.form.fields.format-options.dymo'),
+                            '2x7_price'  => __('inventories::filament/clusters/products/resources/product/pages/edit-product.header-actions.print.form.fields.format-options.2x7_price'),
+                            '4x7_price'  => __('inventories::filament/clusters/products/resources/product/pages/edit-product.header-actions.print.form.fields.format-options.4x7_price'),
+                            '4x12'       => __('inventories::filament/clusters/products/resources/product/pages/edit-product.header-actions.print.form.fields.format-options.4x12'),
+                            '4x12_price' => __('inventories::filament/clusters/products/resources/product/pages/edit-product.header-actions.print.form.fields.format-options.4x12_price'),
                         ])
                         ->default('2x7_price')
                         ->required(),
                 ])
                 ->action(function (array $data, $record) {
-                    $pdf = PDF::loadView('inventories::filament.clusters.products.actions.print-labels', [
-                        'product'  => $record,
+                    $pdf = PDF::loadView('inventories::filament.clusters.products.products.actions.print', [
+                        'records'  => collect([$record]),
                         'quantity' => $data['quantity'],
                         'format'   => $data['format'],
                     ]);
@@ -155,7 +156,7 @@ class EditProduct extends EditRecord
 
                     return response()->streamDownload(function () use ($pdf) {
                         echo $pdf->output();
-                    }, 'product-labels.pdf');
+                    }, 'Product-'.$record->name.'.pdf');
                 }),
             Actions\DeleteAction::make()
                 ->successNotification(

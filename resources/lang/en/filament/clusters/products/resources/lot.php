@@ -57,6 +57,10 @@ return [
         ],
 
         'bulk-actions' => [
+            'print' => [
+                'label' => 'Print Barcode',
+            ],
+            
             'delete' => [
                 'notification' => [
                     'title' => 'Lots deleted',
