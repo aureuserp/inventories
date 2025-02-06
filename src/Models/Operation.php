@@ -11,8 +11,8 @@ use Webkul\Chatter\Traits\HasLogActivity;
 use Webkul\Field\Traits\HasCustomFields;
 use Webkul\Inventory\Database\Factories\OperationFactory;
 use Webkul\Inventory\Enums;
-use Webkul\Partner\Models\Partner;
 use Webkul\Partner\Models\Address;
+use Webkul\Partner\Models\Partner;
 use Webkul\Security\Models\User;
 use Webkul\Support\Models\Company;
 
@@ -88,17 +88,17 @@ class Operation extends Model
         'deadline',
         'scheduled_at',
         'closed_at',
-        'user.name' => 'User',
-        'owner.name' => 'Owner',
-        'operationType.name' => 'Operation Type',
-        'sourceLocation.full_name' => 'Source Location',
+        'user.name'                     => 'User',
+        'owner.name'                    => 'Owner',
+        'operationType.name'            => 'Operation Type',
+        'sourceLocation.full_name'      => 'Source Location',
         'destinationLocation.full_name' => 'Destination Location',
-        'backOrder.name' => 'Back Order',
-        'return.name' => 'Return',
-        'partner.name' => 'Partner',
-        'partnerAddress.name' => 'Partner Address',
-        'company.name' => 'Company',
-        'creator.name' => 'Creator',
+        'backOrder.name'                => 'Back Order',
+        'return.name'                   => 'Return',
+        'partner.name'                  => 'Partner',
+        'partnerAddress.name'           => 'Partner Address',
+        'company.name'                  => 'Company',
+        'creator.name'                  => 'Creator',
     ];
 
     public function user(): BelongsTo

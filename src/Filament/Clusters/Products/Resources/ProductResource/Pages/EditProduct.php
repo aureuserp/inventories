@@ -2,6 +2,7 @@
 
 namespace Webkul\Inventory\Filament\Clusters\Products\Resources\ProductResource\Pages;
 
+use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Actions;
 use Filament\Forms;
 use Filament\Notifications\Notification;
@@ -115,6 +116,46 @@ class EditProduct extends EditRecord
                     }
 
                     ProductResource::createMove($productQuantity, $currentQuantity, $sourceLocationId, $destinationLocationId);
+                }),
+            Actions\Action::make('printLabels')
+                ->label(__('inventories::filament/clusters/products/resources/product/pages/edit-product.header-actions.print-labels.label'))
+                ->color('gray')
+                ->form([
+                    Forms\Components\TextInput::make('quantity')
+                        ->label(__('inventories::filament/clusters/products/resources/product/pages/edit-product.header-actions.print-labels.form.fields.quantity'))
+                        ->required()
+                        ->numeric()
+                        ->minValue(1)
+                        ->maxValue(100),
+                    Forms\Components\Radio::make('format')
+                        ->label(__('inventories::filament/clusters/products/resources/product/pages/edit-product.header-actions.print-labels.form.fields.format'))
+                        ->options([
+                            'dymo'       => __('inventories::filament/clusters/products/resources/product/pages/edit-product.header-actions.print-labels.form.fields.format-options.dymo'),
+                            '2x7_price'  => __('inventories::filament/clusters/products/resources/product/pages/edit-product.header-actions.print-labels.form.fields.format-options.2x7_price'),
+                            '4x7_price'  => __('inventories::filament/clusters/products/resources/product/pages/edit-product.header-actions.print-labels.form.fields.format-options.4x7_price'),
+                            '4x12'       => __('inventories::filament/clusters/products/resources/product/pages/edit-product.header-actions.print-labels.form.fields.format-options.4x12'),
+                            '4x12_price' => __('inventories::filament/clusters/products/resources/product/pages/edit-product.header-actions.print-labels.form.fields.format-options.4x12_price'),
+                        ])
+                        ->default('2x7_price')
+                        ->required(),
+                ])
+                ->action(function (array $data, $record) {
+                    $pdf = PDF::loadView('inventories::filament.clusters.products.actions.print-labels', [
+                        'product'  => $record,
+                        'quantity' => $data['quantity'],
+                        'format'   => $data['format'],
+                    ]);
+
+                    $paperSize = match ($data['format']) {
+                        'dymo'  => [0, 0, 252.2, 144],
+                        default => 'a4',
+                    };
+
+                    $pdf->setPaper($paperSize, 'portrait');
+
+                    return response()->streamDownload(function () use ($pdf) {
+                        echo $pdf->output();
+                    }, 'product-labels.pdf');
                 }),
             Actions\DeleteAction::make()
                 ->successNotification(

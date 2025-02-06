@@ -32,9 +32,9 @@ class CreateLocation extends CreateRecord
         $parentLocation = Location::find($data['parent_id']);
 
         $data['warehouse_id'] = $parentLocation?->warehouse_id;
-        
-        $data['next_inventory_date'] = $data['cyclic_inventory_frequency'] 
-            ? now()->addDays((int) $data['cyclic_inventory_frequency']) 
+
+        $data['next_inventory_date'] = $data['cyclic_inventory_frequency']
+            ? now()->addDays((int) $data['cyclic_inventory_frequency'])
             : null;
 
         return $data;

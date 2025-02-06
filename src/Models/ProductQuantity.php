@@ -2,15 +2,15 @@
 
 namespace Webkul\Inventory\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Webkul\Inventory\Database\Factories\ProductQuantityFactory;
+use Webkul\Inventory\Settings\OperationSettings;
 use Webkul\Partner\Models\Partner;
 use Webkul\Security\Models\User;
-use Webkul\Inventory\Settings\OperationSettings;
 use Webkul\Support\Models\Company;
-use Carbon\Carbon;
 
 class ProductQuantity extends Model
 {

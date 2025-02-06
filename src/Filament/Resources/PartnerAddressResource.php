@@ -73,6 +73,6 @@ class PartnerAddressResource extends Resource
             Forms\Components\Hidden::make('creator_id')
                 ->default(Auth::user()->id),
         ])
-        ->columns(2);
+            ->columns(2);
     }
 }

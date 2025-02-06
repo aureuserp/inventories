@@ -15,16 +15,16 @@ use Filament\Tables\Filters\QueryBuilder\Constraints\RelationshipConstraint\Oper
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
 use Webkul\Field\Filament\Traits\HasCustomFields;
+use Webkul\Inventory\Enums;
 use Webkul\Inventory\Filament\Clusters\Configurations\Resources\ProductCategoryResource;
 use Webkul\Inventory\Filament\Clusters\Configurations\Resources\ProductCategoryResource\Pages\ManageProducts;
 use Webkul\Inventory\Filament\Clusters\Products;
 use Webkul\Inventory\Filament\Clusters\Products\Resources\ProductResource\Pages;
 use Webkul\Inventory\Models\Category;
+use Webkul\Inventory\Models\Move;
 use Webkul\Inventory\Models\Product;
 use Webkul\Product\Enums\ProductType;
 use Webkul\Support\Models\UOM;
-use Webkul\Inventory\Models\Move;
-use Webkul\Inventory\Enums;
 
 class ProductResource extends Resource
 {

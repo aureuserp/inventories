@@ -24,6 +24,7 @@ use Webkul\Inventory\Filament\Clusters\Operations\Resources\ScrapResource\Pages;
 use Webkul\Inventory\Filament\Clusters\Products\Resources\LotResource;
 use Webkul\Inventory\Filament\Clusters\Products\Resources\PackageResource;
 use Webkul\Inventory\Filament\Clusters\Products\Resources\ProductResource;
+use Webkul\Inventory\Filament\Resources\PartnerResource;
 use Webkul\Inventory\Models\Location;
 use Webkul\Inventory\Models\Product;
 use Webkul\Inventory\Models\Scrap;
@@ -31,7 +32,6 @@ use Webkul\Inventory\Settings\OperationSettings;
 use Webkul\Inventory\Settings\ProductSettings;
 use Webkul\Inventory\Settings\TraceabilitySettings;
 use Webkul\Inventory\Settings\WarehouseSettings;
-use Webkul\Inventory\Filament\Resources\PartnerResource;
 
 class ScrapResource extends Resource
 {

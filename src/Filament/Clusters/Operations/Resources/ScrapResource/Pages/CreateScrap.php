@@ -7,9 +7,9 @@ use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Auth;
 use Webkul\Inventory\Enums;
 use Webkul\Inventory\Filament\Clusters\Operations\Resources\ScrapResource;
+use Webkul\Inventory\Models\Location;
 use Webkul\Inventory\Models\Product;
 use Webkul\Inventory\Models\Warehouse;
-use Webkul\Inventory\Models\Location;
 
 class CreateScrap extends CreateRecord
 {

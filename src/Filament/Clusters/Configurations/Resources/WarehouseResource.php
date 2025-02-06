@@ -19,9 +19,9 @@ use Webkul\Inventory\Enums\DeliveryStep;
 use Webkul\Inventory\Enums\ReceptionStep;
 use Webkul\Inventory\Filament\Clusters\Configurations;
 use Webkul\Inventory\Filament\Clusters\Configurations\Resources\WarehouseResource\Pages;
+use Webkul\Inventory\Filament\Resources\PartnerAddressResource;
 use Webkul\Inventory\Models\Warehouse;
 use Webkul\Inventory\Settings\WarehouseSettings;
-use Webkul\Inventory\Filament\Resources\PartnerAddressResource;
 
 class WarehouseResource extends Resource
 {

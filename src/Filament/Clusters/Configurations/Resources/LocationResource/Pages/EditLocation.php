@@ -34,8 +34,8 @@ class EditLocation extends EditRecord
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
-        $data['next_inventory_date'] = $data['cyclic_inventory_frequency'] 
-            ? now()->addDays((int) $data['cyclic_inventory_frequency']) 
+        $data['next_inventory_date'] = $data['cyclic_inventory_frequency']
+            ? now()->addDays((int) $data['cyclic_inventory_frequency'])
             : null;
 
         return $data;

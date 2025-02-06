@@ -23,12 +23,12 @@ return [
 
     'table' => [
         'columns' => [
-            'location'         => 'Location',
-            'lot'              => 'Lot / Serial Numbers',
-            'storage-category' => 'Storage Category',
-            'quantity'         => 'Quantity',
-            'package'          => 'Package',
-            'on-hand'          => 'On Hand Quantity',
+            'location'          => 'Location',
+            'lot'               => 'Lot / Serial Numbers',
+            'storage-category'  => 'Storage Category',
+            'quantity'          => 'Quantity',
+            'package'           => 'Package',
+            'on-hand'           => 'On Hand Quantity',
             'reserved-quantity' => 'Reserved Quantity',
 
             'on-hand-before-state-updated' => [

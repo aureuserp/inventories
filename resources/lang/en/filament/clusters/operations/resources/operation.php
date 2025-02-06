@@ -223,41 +223,4 @@ return [
         'done'     => 'Done',
         'canceled' => 'Canceled',
     ],
-
-    'header-actions' => [
-        'todo' => [
-            'notification' => [
-                'warning' => [
-                    'title' => 'Receipt has no moves',
-                    'body'  => 'The receipt has no moves to mark as todo.',
-                ],
-
-                'success' => [
-                    'title' => 'Receipt marked as todo',
-                    'body'  => 'The receipt has been marked as todo successfully.',
-                ],
-            ],
-        ],
-
-        'validate' => [
-            'notification' => [
-                'warning' => [
-                    'lines-missing' => [
-                        'title' => 'No quantities are reserved',
-                        'body'  => 'No quantities are reserved for the transfer.',
-                    ],
-
-                    'lot-missing' => [
-                        'title' => 'Supply Lot/Serial Number',
-                        'body'  => 'You need to supply a Lot/Serial Number for products',
-                    ],
-
-                    'partial-package' => [
-                        'title' => 'Can not move same package content',
-                        'body'  => 'You cannot move the same package content more than once in the same transfer or split the same package into two location.',
-                    ],
-                ],
-            ],
-        ],
-    ],
 ];
